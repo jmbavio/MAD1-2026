@@ -1,0 +1,293 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{whale}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstdefinestyle{rcode}{
+  language=R,
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  rulecolor=\color{gray!50},
+  breaklines=true,
+  keywordstyle=\color{blue!80!black}\bfseries,
+  commentstyle=\color{green!50!black}\itshape,
+  stringstyle=\color{red!70!black},
+  showstringspaces=false,
+  numbers=none,
+  tabsize=2
+}
+
+\title{Métodos de Análisis de Datos 1}
+\subtitle{Clase 13: Visualización con R}
+\author{Depto.\ de Matemática -- UNS}
+\institute{Universidad Nacional del Sur}
+\date{1er Cuatrimestre 2026}
+
+\AtBeginSection[]{
+  \begin{frame}{Contenidos}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenidos}
+  \tableofcontents
+\end{frame}
+
+%=============================================================
+\section{Sistemas de graficado en R}
+%=============================================================
+
+\begin{frame}{Los tres sistemas principales}
+  \begin{center}
+    \begin{tabular}{lll}
+      \toprule
+      \textbf{Sistema} & \textbf{Paradigma} & \textbf{Características} \\
+      \midrule
+      \texttt{base R} & Tradicional & Simple, funciones como \texttt{plot()}, \texttt{hist()} \\
+      \texttt{lattice} & Fórmulas & Paneles múltiples, datos condicionados \\
+      \texttt{ggplot2} & Gramática & Capas declarativas, muy flexible y elegante \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  \bigskip
+  \begin{block}{Enfoque del curso}
+    Usaremos \texttt{ggplot2} como sistema principal por su coherencia conceptual y la calidad de sus gráficos. También veremos funciones de \texttt{base R} para análisis rápido.
+  \end{block}
+\end{frame}
+
+%=============================================================
+\section{Gramática de los Gráficos}
+%=============================================================
+
+\begin{frame}{Gramática de los Gráficos (Wilkinson, 2005)}
+  \begin{block}{Idea central}
+    Un gráfico es la composición de capas independientes. Cada capa describe un aspecto del gráfico.
+  \end{block}
+  \bigskip
+  \textbf{Componentes de la gramática en \texttt{ggplot2}:}
+  \begin{enumerate}
+    \item \textbf{Data}: el DataFrame con los datos.
+    \item \textbf{Aesthetics} (\texttt{aes}): mapeo de variables a propiedades visuales ($x$, $y$, color, tamaño, forma).
+    \item \textbf{Geometries} (\texttt{geom\_*}): tipo de gráfico (puntos, líneas, barras, boxplot).
+    \item \textbf{Statistics} (\texttt{stat\_*}): transformaciones estadísticas.
+    \item \textbf{Scales}: control de ejes, colores, tamaños.
+    \item \textbf{Facets}: paneles múltiples por grupo.
+    \item \textbf{Theme}: apariencia general.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{Estructura básica de un gráfico ggplot2}
+\begin{lstlisting}[style=rcode]
+library(ggplot2)
+
+# Estructura general
+ggplot(data = mis_datos,
+       aes(x = variable_x, y = variable_y)) +
+  geom_TIPO() +
+  labs(title = "Titulo", x = "Eje X", y = "Eje Y") +
+  theme_bw()
+
+# Ejemplo: scatter plot
+ggplot(data = iris,
+       aes(x = Sepal.Length, y = Sepal.Width,
+           color = Species)) +
+  geom_point(size = 2, alpha = 0.7) +
+  labs(title = "Iris: longitud vs. ancho del sepalo",
+       x = "Longitud (cm)", y = "Ancho (cm)") +
+  theme_bw()
+\end{lstlisting}
+\end{frame}
+
+%=============================================================
+\section{Gráficos univariados}
+%=============================================================
+
+\begin{frame}[fragile]{Histograma y densidad con ggplot2}
+\begin{lstlisting}[style=rcode]
+library(ggplot2)
+
+datos <- data.frame(x = rnorm(500, mean = 50, sd = 10))
+
+# Histograma con curva de densidad superpuesta
+ggplot(datos, aes(x = x)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 bins = 25, fill = "steelblue",
+                 color = "white") +
+  geom_density(color = "red", linewidth = 1) +
+  labs(title = "Histograma con densidad",
+       x = "Valor", y = "Densidad") +
+  theme_bw()
+\end{lstlisting}
+
+\medskip
+\textbf{Nota}: \texttt{after\_stat(density)} escala el histograma a densidad para que sea comparable con la curva KDE (Kernel Density Estimate).
+\end{frame}
+
+\begin{frame}[fragile]{Boxplot y violin plot}
+\begin{lstlisting}[style=rcode]
+library(ggplot2)
+
+# Boxplot por grupo
+ggplot(iris, aes(x = Species, y = Sepal.Length,
+                 fill = Species)) +
+  geom_boxplot(alpha = 0.7, outlier.colour = "red") +
+  labs(title = "Longitud del sepalo por especie",
+       x = "Especie", y = "Longitud (cm)") +
+  theme_bw() +
+  theme(legend.position = "none")
+
+# Violin plot (reemplazar geom_boxplot por):
+# geom_violin(alpha = 0.7, trim = FALSE) +
+# geom_boxplot(width = 0.1, fill = "white")
+\end{lstlisting}
+\end{frame}
+
+%=============================================================
+\section{Gráficos bivariados}
+%=============================================================
+
+\begin{frame}[fragile]{Scatter plot con regresión}
+\begin{lstlisting}[style=rcode]
+library(ggplot2)
+
+ggplot(mtcars, aes(x = wt, y = mpg)) +
+  geom_point(color = "steelblue", size = 3,
+             alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE,
+              color = "red", fill = "red",
+              alpha = 0.15) +
+  labs(title = "Consumo vs. peso del vehículo",
+       x = "Peso (1000 lbs)",
+       y = "Millas por galón (mpg)") +
+  theme_bw()
+\end{lstlisting}
+
+\medskip
+\texttt{se = TRUE} muestra el intervalo de confianza del 95\% para la línea de regresión.
+\end{frame}
+
+\begin{frame}[fragile]{Heatmap de correlaciones}
+\begin{lstlisting}[style=rcode]
+library(ggplot2)
+library(reshape2)
+
+# Calcular matriz de correlacion
+corr_mat <- cor(mtcars)
+
+# Pasar a formato largo
+corr_long <- melt(corr_mat)
+
+# Heatmap
+ggplot(corr_long, aes(x = Var1, y = Var2,
+                      fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", mid = "white",
+                       high = "red", midpoint = 0) +
+  labs(title = "Matriz de correlaciones - mtcars",
+       x = "", y = "", fill = "r") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1))
+\end{lstlisting}
+\end{frame}
+
+%=============================================================
+\section{Paneles y temas}
+%=============================================================
+
+\begin{frame}[fragile]{Facetas: paneles múltiples}
+\begin{lstlisting}[style=rcode]
+library(ggplot2)
+
+# facet_wrap: una variable de agrupacion
+ggplot(iris,
+       aes(x = Sepal.Length, y = Petal.Length)) +
+  geom_point(aes(color = Species), alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~ Species, ncol = 3) +
+  labs(title = "Relacion longitud sepalo-petalo",
+       x = "Longitud sepalo (cm)",
+       y = "Longitud petalo (cm)") +
+  theme_bw() +
+  theme(legend.position = "none")
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Temas (\texttt{theme}) en ggplot2}
+  Los temas controlan la apariencia general del gráfico.
+  \bigskip
+  \textbf{Temas predefinidos más usados:}
+  \begin{itemize}
+    \item \texttt{theme\_grey()} — predeterminado (fondo gris).
+    \item \texttt{theme\_bw()} — fondo blanco, cuadrícula gris. Recomendado para publicaciones.
+    \item \texttt{theme\_classic()} — sin cuadrícula, ejes limpios.
+    \item \texttt{theme\_minimal()} — minimalista, sin bordes.
+    \item \texttt{theme\_void()} — sin ejes ni fondo (útil para mapas).
+  \end{itemize}
+  \bigskip
+  \begin{block}{Personalización}
+    Cualquier elemento se puede ajustar con \texttt{theme(element = element\_*(...))}. Por ejemplo: tamaño de texto, posición de leyenda, ángulo de etiquetas.
+  \end{block}
+\end{frame}
+
+%=============================================================
+\section{Exportación}
+%=============================================================
+
+\begin{frame}[fragile]{Guardar gráficos}
+\begin{lstlisting}[style=rcode]
+# Con ggsave (recomendado para ggplot2)
+p <- ggplot(iris, aes(x = Sepal.Length,
+                      y = Sepal.Width)) +
+  geom_point()
+
+ggsave(filename = "mi_grafico.pdf",
+       plot = p,
+       width = 8, height = 5,
+       units = "in")
+
+ggsave("mi_grafico.png", plot = p,
+       width = 8, height = 5, dpi = 300)
+
+# Con funciones base R
+pdf("grafico_base.pdf", width = 8, height = 5)
+hist(iris$Sepal.Length, main = "Histograma",
+     xlab = "Longitud (cm)")
+dev.off()
+\end{lstlisting}
+\end{frame}
+
+%=============================================================
+\section{Resumen}
+%=============================================================
+
+\begin{frame}{Resumen de la clase y de la Unidad 2}
+  \begin{block}{Visualización con R -- conceptos clave}
+    \begin{itemize}
+      \item Gramática de los Gráficos: datos + estéticas + geometrías + temas.
+      \item Construcción por capas con el operador \texttt{+}.
+      \item Facetas para paneles múltiples: \texttt{facet\_wrap()}, \texttt{facet\_grid()}.
+      \item Exportación con \texttt{ggsave()} en PDF o PNG.
+    \end{itemize}
+  \end{block}
+  \bigskip
+  \begin{block}{Cierre de la Unidad 2}
+    Hemos cubierto el análisis exploratorio completo: estadística descriptiva univariada, distribuciones, detección de outliers, análisis bivariado y visualización en Python y R.
+    La Unidad 3 abordará los métodos de \textbf{regresión}.
+  \end{block}
+\end{frame}
+
+\end{document}

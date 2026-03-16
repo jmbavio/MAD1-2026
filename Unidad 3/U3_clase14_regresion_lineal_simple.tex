@@ -1,0 +1,505 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{whale}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{pythonstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=pythonstyle}
+
+\title{Regresión Lineal Simple}
+\subtitle{Conceptos y Estimación}
+\author{Métodos de Análisis de Datos 1}
+\institute{Universidad Nacional del Sur}
+\date{Unidad 3 - Clase 14}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Contenidos}
+\tableofcontents
+\end{frame}
+
+%==============================================================================
+\section{Introducción al Modelado}
+%==============================================================================
+
+\begin{frame}{¿Qué es un modelo estadístico?}
+\begin{block}{Definición}
+Un modelo estadístico es una representación matemática de un fenómeno del mundo real que usa datos observados.
+\end{block}
+
+\vspace{0.5cm}
+\textbf{Objetivos principales:}
+\begin{itemize}
+    \item \textbf{Descripción:} Entender cómo se relacionan las variables
+    \item \textbf{Predicción:} Estimar valores futuros de una variable
+    \item \textbf{Inferencia:} Determinar qué variables son importantes
+    \item \textbf{Control:} Ajustar por factores confusores
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Modelos de regresión}
+La \textbf{regresión} modela la relación entre:
+\begin{itemize}
+    \item Variable \textbf{respuesta} $Y$ (dependiente, outcome)
+    \item Variable(s) \textbf{predictora(s)} $X$ (independiente(s), explicativa(s))
+\end{itemize}
+
+\vspace{0.5cm}
+\begin{table}
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Tipo} & \textbf{Características} \\
+\midrule
+Lineal simple & 1 predictor, relación lineal \\
+Lineal múltiple & $\geq 2$ predictores, relación lineal \\
+Polinomial & 1 predictor, relación no lineal \\
+Logística & Variable respuesta binaria \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+\textbf{Esta clase:} Regresión lineal simple
+\end{frame}
+
+%==============================================================================
+\section{Modelo de Regresión Lineal Simple}
+%==============================================================================
+
+\begin{frame}{Definición del modelo}
+\begin{block}{Modelo de regresión lineal simple}
+\[
+Y_i = \beta_0 + \beta_1 X_i + \epsilon_i, \quad i = 1, 2, \ldots, n
+\]
+\end{block}
+
+donde:
+\begin{itemize}
+    \item $Y_i$: valor observado de la respuesta
+    \item $X_i$: valor del predictor
+    \item $\beta_0$: \textbf{intercepto} (ordenada al origen)
+    \item $\beta_1$: \textbf{pendiente}
+    \item $\epsilon_i$: \textbf{error aleatorio}, $\epsilon_i \sim N(0, \sigma^2)$ independientes
+    \item $n$: tamaño de la muestra
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Interpretación gráfica}
+\begin{center}
+\includegraphics[width=0.7\textwidth]{regresion_simple.png}
+\end{center}
+
+\begin{itemize}
+    \item La línea representa $E(Y|X) = \beta_0 + \beta_1 X$
+    \item Los puntos son los datos observados $(X_i, Y_i)$
+    \item Las distancias verticales son los residuos $\epsilon_i$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Interpretación de los parámetros}
+\begin{block}{Intercepto $\beta_0$}
+Valor esperado de $Y$ cuando $X = 0$
+\end{block}
+
+\begin{block}{Pendiente $\beta_1$}
+Cambio esperado en $Y$ cuando $X$ aumenta en 1 unidad
+\end{block}
+
+\vspace{0.5cm}
+\textbf{Ejemplo:} Precio de casas vs metros cuadrados
+\[
+Y = 50 + 1.2 X
+\]
+\begin{itemize}
+    \item $\beta_0 = 50$: precio base (50 mil \$)
+    \item $\beta_1 = 1.2$: cada m$^2$ adicional suma 1.2 mil \$ (1200 \$)
+\end{itemize}
+\end{frame}
+
+%==============================================================================
+\section{Supuestos del Modelo}
+%==============================================================================
+
+\begin{frame}{Supuestos fundamentales}
+Para que la inferencia sea válida:
+
+\begin{enumerate}
+    \item \textbf{Linealidad:} La relación entre $X$ e $Y$ es lineal
+    \item \textbf{Independencia:} Las observaciones son independientes
+    \item \textbf{Homocedasticidad:} Varianza constante de los errores
+    \[
+    \text{Var}(\epsilon_i) = \sigma^2 \text{ para todo } i
+    \]
+    \item \textbf{Normalidad:} Los errores siguen una distribución normal
+    \[
+    \epsilon_i \sim N(0, \sigma^2)
+    \]
+\end{enumerate}
+
+\vspace{0.3cm}
+\textbf{Nota:} Los veremos en detalle en la clase de diagnóstico
+\end{frame}
+
+\begin{frame}{¿Qué pasa si se violan los supuestos?}
+\begin{itemize}
+    \item \textbf{Linealidad:} Predicciones sesgadas, bajo $R^2$
+    \item \textbf{Independencia:} Errores estándar incorrectos (muy optimistas)
+    \item \textbf{Homocedasticidad:} Errores estándar incorrectos, intervalos inválidos
+    \item \textbf{Normalidad:} Tests e intervalos menos confiables (especialmente con $n$ pequeño)
+\end{itemize}
+
+\vspace{0.5cm}
+\begin{alertblock}{Importante}
+La próxima clase veremos cómo \textbf{diagnosticar} y \textbf{corregir} estas violaciones
+\end{alertblock}
+\end{frame}
+
+%==============================================================================
+\section{Estimación por Mínimos Cuadrados}
+%==============================================================================
+
+\begin{frame}{Método de Mínimos Cuadrados Ordinarios (MCO)}
+\textbf{Objetivo:} Encontrar la recta que mejor se ajusta a los datos
+
+\vspace{0.3cm}
+\textbf{Criterio:} Minimizar la suma de los cuadrados de los residuos
+\[
+\text{SCR} = \sum_{i=1}^{n} (Y_i - \hat{Y}_i)^2 = \sum_{i=1}^{n} (Y_i - \hat{\beta}_0 - \hat{\beta}_1 X_i)^2
+\]
+
+donde $\hat{Y}_i = \hat{\beta}_0 + \hat{\beta}_1 X_i$ es el valor predicho.
+
+\vspace{0.5cm}
+\begin{center}
+\includegraphics[width=0.55\textwidth]{residuos.png}
+\end{center}
+\end{frame}
+
+\begin{frame}{Fórmulas de MCO}
+Las estimaciones que minimizan SCR son:
+
+\begin{block}{Pendiente}
+\[
+\hat{\beta}_1 = \frac{\sum_{i=1}^{n} (X_i - \bar{X})(Y_i - \bar{Y})}{\sum_{i=1}^{n} (X_i - \bar{X})^2} = \frac{S_{XY}}{S_{XX}}
+\]
+\end{block}
+
+\begin{block}{Intercepto}
+\[
+\hat{\beta}_0 = \bar{Y} - \hat{\beta}_1 \bar{X}
+\]
+\end{block}
+
+donde:
+\begin{itemize}
+    \item $\bar{X}, \bar{Y}$: medias muestrales
+    \item $S_{XY} = \sum (X_i - \bar{X})(Y_i - \bar{Y})$: suma de productos cruzados
+    \item $S_{XX} = \sum (X_i - \bar{X})^2$: suma de cuadrados de $X$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ejemplo numérico}
+Datos: Altura ($X$, cm) vs Peso ($Y$, kg) de 5 personas
+
+\begin{table}
+\centering
+\begin{tabular}{ccccc}
+\toprule
+$X_i$ & $Y_i$ & $X_i - \bar{X}$ & $Y_i - \bar{Y}$ & $(X_i-\bar{X})(Y_i-\bar{Y})$ \\
+\midrule
+160 & 55 & -10 & -10 & 100 \\
+165 & 60 & -5 & -5 & 25 \\
+170 & 65 & 0 & 0 & 0 \\
+175 & 70 & 5 & 5 & 25 \\
+180 & 75 & 10 & 10 & 100 \\
+\midrule
+$\bar{X}=170$ & $\bar{Y}=65$ & & & $S_{XY}=250$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+$S_{XX} = 10^2 + 5^2 + 0^2 + 5^2 + 10^2 = 250$
+
+\vspace{0.3cm}
+$\hat{\beta}_1 = \frac{250}{250} = 1.0$, \quad $\hat{\beta}_0 = 65 - 1.0 \times 170 = -105$
+
+\vspace{0.3cm}
+Modelo: $\hat{Y} = -105 + 1.0 X$
+\end{frame}
+
+\begin{frame}{Propiedades de MCO}
+Los estimadores por MCO tienen propiedades deseables:
+
+\begin{itemize}
+    \item \textbf{Insesgados:} $E(\hat{\beta}_0) = \beta_0$, $E(\hat{\beta}_1) = \beta_1$
+    \item \textbf{Consistentes:} Convergen al valor verdadero cuando $n \to \infty$
+    \item \textbf{BLUE (Best Linear Unbiased Estimator):} 
+    \begin{itemize}
+        \item Tienen la menor varianza entre todos los estimadores lineales insesgados
+        \item Teorema de Gauss-Markov
+    \end{itemize}
+\end{itemize}
+
+\vspace{0.5cm}
+\begin{alertblock}{Importante}
+Estas propiedades se cumplen \textbf{bajo los supuestos del modelo}
+\end{alertblock}
+\end{frame}
+
+%==============================================================================
+\section{Coeficiente de Determinación $R^2$}
+%==============================================================================
+
+\begin{frame}{Descomposición de la variabilidad}
+La variabilidad total de $Y$ se descompone en:
+
+\[
+\underbrace{\sum_{i=1}^{n} (Y_i - \bar{Y})^2}_{\text{SCT (Total)}} = \underbrace{\sum_{i=1}^{n} (\hat{Y}_i - \bar{Y})^2}_{\text{SCE (Explicada)}} + \underbrace{\sum_{i=1}^{n} (Y_i - \hat{Y}_i)^2}_{\text{SCR (Residual)}}
+\]
+
+\vspace{0.5cm}
+\begin{itemize}
+    \item \textbf{SCT:} Variabilidad total de $Y$ (sin modelo)
+    \item \textbf{SCE:} Variabilidad explicada por el modelo
+    \item \textbf{SCR:} Variabilidad no explicada (error)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Coeficiente de determinación $R^2$}
+\begin{block}{Definición}
+\[
+R^2 = \frac{\text{SCE}}{\text{SCT}} = 1 - \frac{\text{SCR}}{\text{SCT}}
+\]
+\end{block}
+
+\textbf{Interpretación:} Proporción de variabilidad de $Y$ explicada por $X$
+
+\vspace{0.5cm}
+\textbf{Propiedades:}
+\begin{itemize}
+    \item $0 \leq R^2 \leq 1$
+    \item $R^2 = 0$: el modelo no explica nada
+    \item $R^2 = 1$: ajuste perfecto
+    \item En regresión simple: $R^2 = r_{XY}^2$ (cuadrado de la correlación)
+\end{itemize}
+
+\vspace{0.3cm}
+\begin{alertblock}{Advertencia}
+$R^2$ alto no implica causalidad ni garantiza que el modelo sea adecuado
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Ejemplo de $R^2$}
+Continuando con el ejemplo altura-peso:
+
+\vspace{0.3cm}
+Modelo: $\hat{Y} = -105 + 1.0 X$
+
+\begin{table}
+\centering
+\begin{tabular}{cccc}
+\toprule
+$Y_i$ & $\hat{Y}_i$ & $(Y_i - \bar{Y})^2$ & $(Y_i - \hat{Y}_i)^2$ \\
+\midrule
+55 & 55 & 100 & 0 \\
+60 & 60 & 25 & 0 \\
+65 & 65 & 0 & 0 \\
+70 & 70 & 25 & 0 \\
+75 & 75 & 100 & 0 \\
+\midrule
+& & SCT = 250 & SCR = 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+$R^2 = 1 - \frac{0}{250} = 1.0$ (ajuste perfecto!)
+\end{frame}
+
+%==============================================================================
+\section{Implementación en Python}
+%==============================================================================
+
+\begin{frame}[fragile]{Regresión lineal con statsmodels}
+\begin{lstlisting}[language=Python]
+import pandas as pd
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+
+# Datos
+data = pd.DataFrame({
+    'altura': [160, 165, 170, 175, 180],
+    'peso': [55, 60, 65, 70, 75]
+})
+
+# Ajustar modelo
+modelo = ols('peso ~ altura', data=data).fit()
+
+# Resumen completo
+print(modelo.summary())
+
+# Coeficientes
+print(f"Intercepto: {modelo.params['Intercept']:.2f}")
+print(f"Pendiente: {modelo.params['altura']:.4f}")
+print(f"R^2: {modelo.rsquared:.4f}")
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Visualización}
+\begin{lstlisting}[language=Python]
+import matplotlib.pyplot as plt
+
+# Grafico de dispersion y recta ajustada
+plt.figure(figsize=(8, 5))
+plt.scatter(data['altura'], data['peso'], 
+            label='Datos', s=80, alpha=0.6)
+plt.plot(data['altura'], modelo.fittedvalues, 
+         'r-', linewidth=2, label='Ajuste')
+plt.xlabel('Altura (cm)')
+plt.ylabel('Peso (kg)')
+plt.title('Regresion Lineal Simple')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Predicción}
+\begin{lstlisting}[language=Python]
+# Predecir para nuevos valores
+nuevos_datos = pd.DataFrame({'altura': [172, 178, 168]})
+
+# Prediccion puntual
+predicciones = modelo.predict(nuevos_datos)
+print("Predicciones:", predicciones.values)
+
+# Prediccion con intervalo de confianza
+pred_intervalo = modelo.get_prediction(nuevos_datos)
+intervalos = pred_intervalo.summary_frame(alpha=0.05)
+print(intervalos)
+
+# Columnas: mean, mean_se, mean_ci_lower, mean_ci_upper,
+#           obs_ci_lower, obs_ci_upper
+\end{lstlisting}
+\end{frame}
+
+%==============================================================================
+\section{Implementación en R}
+%==============================================================================
+
+\begin{frame}[fragile]{Regresión lineal en R}
+\begin{lstlisting}[language=R]
+# Datos
+altura <- c(160, 165, 170, 175, 180)
+peso <- c(55, 60, 65, 70, 75)
+data <- data.frame(altura, peso)
+
+# Ajustar modelo
+modelo <- lm(peso ~ altura, data = data)
+
+# Resumen
+summary(modelo)
+
+# Coeficientes
+coef(modelo)
+
+# R^2
+summary(modelo)$r.squared
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Visualización en R}
+\begin{lstlisting}[language=R]
+# Grafico basico
+plot(data$altura, data$peso, 
+     xlab = "Altura (cm)", ylab = "Peso (kg)",
+     main = "Regresion Lineal Simple",
+     pch = 19, col = "blue")
+abline(modelo, col = "red", lwd = 2)
+
+# Con ggplot2
+library(ggplot2)
+ggplot(data, aes(x = altura, y = peso)) +
+  geom_point(size = 3, alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, 
+              color = "red", fill = "pink") +
+  theme_minimal() +
+  labs(title = "Regresion Lineal Simple")
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Predicción en R}
+\begin{lstlisting}[language=R]
+# Nuevos datos
+nuevos <- data.frame(altura = c(172, 178, 168))
+
+# Prediccion puntual
+predict(modelo, nuevos)
+
+# Intervalo de confianza para la media
+predict(modelo, nuevos, interval = "confidence")
+
+# Intervalo de prediccion para nuevas observaciones
+predict(modelo, nuevos, interval = "prediction")
+
+# El intervalo de prediccion es siempre mas ancho
+# que el de confianza
+\end{lstlisting}
+\end{frame}
+
+%==============================================================================
+\section{Resumen}
+%==============================================================================
+
+\begin{frame}{Resumen de la clase}
+\textbf{Aprendimos:}
+\begin{itemize}
+    \item El modelo de regresión lineal simple: $Y = \beta_0 + \beta_1 X + \epsilon$
+    \item Interpretación de intercepto y pendiente
+    \item Los 4 supuestos fundamentales (L.I.H.N.)
+    \item Estimación por mínimos cuadrados (MCO)
+    \item Coeficiente de determinación $R^2$
+    \item Implementación en Python (statsmodels) y R (lm)
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Próxima clase:}
+\begin{itemize}
+    \item Inferencia sobre los coeficientes (tests e intervalos)
+    \item Predicción (intervalos de confianza vs predicción)
+    \item ANOVA del modelo de regresión
+\end{itemize}
+\end{frame}
+
+\end{document}

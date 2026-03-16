@@ -1,0 +1,277 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{whale}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstdefinestyle{python}{
+  language=Python,
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  rulecolor=\color{gray!50},
+  breaklines=true,
+  keywordstyle=\color{blue!80!black}\bfseries,
+  commentstyle=\color{green!50!black}\itshape,
+  stringstyle=\color{red!70!black},
+  showstringspaces=false,
+  numbers=none,
+  tabsize=4
+}
+
+\title{Métodos de Análisis de Datos 1}
+\subtitle{Clase 12: Visualización con Python}
+\author{Depto.\ de Matemática -- UNS}
+\institute{Universidad Nacional del Sur}
+\date{1er Cuatrimestre 2026}
+
+\AtBeginSection[]{
+  \begin{frame}{Contenidos}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenidos}
+  \tableofcontents
+\end{frame}
+
+%=============================================================
+\section{Ecosistema de visualización en Python}
+%=============================================================
+
+\begin{frame}{Principales librerías}
+  \begin{center}
+    \begin{tabular}{lll}
+      \toprule
+      \textbf{Librería} & \textbf{Nivel} & \textbf{Fortaleza} \\
+      \midrule
+      \texttt{matplotlib} & Bajo nivel & Control total, base de todo \\
+      \texttt{seaborn} & Alto nivel & Gráficos estadísticos elegantes \\
+      \texttt{pandas} (.plot) & Alto nivel & Gráficos rápidos desde DataFrames \\
+      \texttt{plotly} & Interactivo & Dashboards, web \\
+      \texttt{bokeh} & Interactivo & Web, grandes datos \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  \bigskip
+  \begin{block}{Recomendación para el curso}
+    Comenzar con \texttt{matplotlib} para entender la base; usar \texttt{seaborn} para gráficos estadísticos en el análisis exploratorio de datos (EDA).
+  \end{block}
+\end{frame}
+
+%=============================================================
+\section{matplotlib}
+%=============================================================
+
+\begin{frame}{Estructura de una figura en matplotlib}
+  \textbf{Jerarquía de objetos:}
+  \begin{itemize}
+    \item \texttt{Figure}: contenedor principal (la ``hoja'').
+    \item \texttt{Axes}: área de graficado (el ``gráfico''). Una figura puede tener varios \texttt{Axes}.
+    \item Elementos: líneas, barras, puntos, textos, leyenda, ejes.
+  \end{itemize}
+  \bigskip
+  \textbf{Dos interfaces:}
+  \begin{itemize}
+    \item \textbf{Orientada a objetos (OO)}: \texttt{fig, ax = plt.subplots()} — recomendada.
+    \item \textbf{pyplot}: \texttt{plt.plot()}, \texttt{plt.show()} — rápida pero menos flexible.
+  \end{itemize}
+  \bigskip
+  \begin{alertblock}{Buena práctica}
+    Usar siempre la interfaz OO cuando el gráfico tiene más de un panel o requiere personalización.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]{Histograma y boxplot con matplotlib}
+\begin{lstlisting}[style=python]
+import matplotlib.pyplot as plt
+import numpy as np
+
+datos = np.random.normal(loc=50, scale=10, size=200)
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+# Histograma
+axes[0].hist(datos, bins=20, color='steelblue',
+             edgecolor='white', density=True)
+axes[0].set_title('Histograma')
+axes[0].set_xlabel('Valor')
+axes[0].set_ylabel('Densidad')
+
+# Boxplot
+axes[1].boxplot(datos, vert=True, patch_artist=True,
+                boxprops=dict(facecolor='steelblue'))
+axes[1].set_title('Boxplot')
+
+plt.tight_layout()
+plt.savefig('figura.png', dpi=150)
+plt.show()
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Gráfico de dispersión con matplotlib}
+\begin{lstlisting}[style=python]
+import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.random.normal(0, 1, 100)
+y = 2*x + np.random.normal(0, 0.5, 100)
+
+fig, ax = plt.subplots(figsize=(6, 5))
+
+ax.scatter(x, y, color='steelblue', alpha=0.6,
+           edgecolors='white', s=60)
+
+# Linea de tendencia
+m, b = np.polyfit(x, y, 1)
+ax.plot(sorted(x), [m*xi + b for xi in sorted(x)],
+        color='red', linewidth=2, label='Tendencia')
+
+ax.set_xlabel('Variable X')
+ax.set_ylabel('Variable Y')
+ax.set_title('Gráfico de dispersión')
+ax.legend()
+plt.tight_layout()
+plt.show()
+\end{lstlisting}
+\end{frame}
+
+%=============================================================
+\section{seaborn}
+%=============================================================
+
+\begin{frame}{seaborn: introducción}
+  \begin{block}{¿Qué es seaborn?}
+    Librería de alto nivel construida sobre \texttt{matplotlib}, diseñada para crear gráficos estadísticos atractivos con poco código.
+  \end{block}
+  \bigskip
+  \textbf{Características principales:}
+  \begin{itemize}
+    \item Trabaja nativamente con \texttt{pandas} DataFrames.
+    \item Paletas de colores perceptualmente uniformes por defecto.
+    \item Gráficos con separación por grupos (hue, col, row) muy sencilla.
+    \item Incluye modelos estadísticos integrados (regresión, KDE).
+  \end{itemize}
+  \bigskip
+  \textbf{Importación estándar:}
+  \begin{itemize}
+    \item \lstinline[style=python]|import seaborn as sns|
+    \item \lstinline[style=python]|sns.set_theme(style='whitegrid')|
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Gráficos univariados con seaborn}
+\begin{lstlisting}[style=python]
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.set_theme(style='whitegrid')
+tips = sns.load_dataset('tips')  # dataset de ejemplo
+
+fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+
+# Histograma + KDE
+sns.histplot(tips['total_bill'], kde=True,
+             ax=axes[0], color='steelblue')
+
+# Boxplot por grupo
+sns.boxplot(x='day', y='total_bill', data=tips,
+            ax=axes[1])
+
+# Violin plot
+sns.violinplot(x='day', y='total_bill', data=tips,
+               ax=axes[2], inner='quartile')
+
+plt.tight_layout()
+plt.show()
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Gráficos bivariados con seaborn}
+\begin{lstlisting}[style=python]
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.set_theme(style='whitegrid')
+tips = sns.load_dataset('tips')
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+# Scatter con regresion
+sns.regplot(x='total_bill', y='tip', data=tips,
+            ax=axes[0], scatter_kws={'alpha': 0.5})
+
+# Heatmap de correlacion
+corr = tips.select_dtypes('number').corr()
+sns.heatmap(corr, annot=True, fmt='.2f',
+            cmap='coolwarm', ax=axes[1])
+
+plt.tight_layout()
+plt.show()
+\end{lstlisting}
+\end{frame}
+
+%=============================================================
+\section{Buenas prácticas}
+%=============================================================
+
+\begin{frame}{Principios de visualización efectiva}
+  \begin{enumerate}
+    \item \textbf{Claridad}: cada gráfico debe comunicar un mensaje único y claro.
+    \item \textbf{Títulos y etiquetas}: siempre incluir título, etiquetas de ejes y unidades.
+    \item \textbf{Leyenda}: solo cuando hay más de una serie.
+    \item \textbf{Colores}: usar paletas accesibles (daltónicas). Evitar el arcoíris (\textit{jet}).
+    \item \textbf{Proporciones}: no truncar el eje $y$ arbitrariamente.
+    \item \textbf{Grillas}: usar con moderación; no sobrecargar.
+    \item \textbf{Resolución}: guardar en \texttt{.pdf} o \texttt{.svg} para publicaciones; \texttt{.png} con \texttt{dpi=150} o mayor.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Tipos de gráficos y cuándo usarlos}
+  \begin{center}
+    \begin{tabular}{lll}
+      \toprule
+      \textbf{Gráfico} & \textbf{Datos} & \textbf{Para mostrar} \\
+      \midrule
+      Barras & Cualit. & Frecuencias, comparación categorías \\
+      Histograma & Cuant. & Distribución \\
+      Boxplot & Cuant. & Distribución + outliers + grupos \\
+      Scatter & Cuant.+Cuant. & Asociación bivariada \\
+      Línea & Tiempo+Cuant. & Tendencia temporal \\
+      Heatmap & Matriz & Correlaciones, tablas de contingencia \\
+      Violín & Cuant.+Grupos & Distribución por grupo \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+\end{frame}
+
+%=============================================================
+\section{Resumen}
+%=============================================================
+
+\begin{frame}{Resumen de la clase}
+  \begin{block}{matplotlib}
+    Base de la visualización en Python. Interfaz OO con \texttt{fig, ax = plt.subplots()}.
+  \end{block}
+  \bigskip
+  \begin{block}{seaborn}
+    Alto nivel sobre matplotlib. Gráficos estadísticos elegantes con DataFrames y separación por grupos (hue).
+  \end{block}
+  \bigskip
+  \begin{block}{Próxima clase}
+    Clase 13: Visualización con R — el sistema \texttt{ggplot2} basado en la Gramática de los Gráficos.
+  \end{block}
+\end{frame}
+
+\end{document}

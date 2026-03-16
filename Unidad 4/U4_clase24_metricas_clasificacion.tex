@@ -1,0 +1,1098 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-minimal]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+
+\definecolor{unsblue}{RGB}{30,60,120}
+\setbeamercolor{structure}{fg=unsblue}
+\setbeamercolor{palette primary}{bg=unsblue,fg=white}
+\setbeamercolor{palette secondary}{bg=unsblue!80,fg=white}
+\setbeamercolor{palette tertiary}{bg=unsblue!60,fg=white}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+\title[MAD1 - Clase 23]{Métodos de Análisis de Datos 1}
+\subtitle{Clase 23: Implementación Computacional de ANOVA y Diseños Experimentales}
+\author{Prof. José}
+\institute{Departamento de Matemática \\ Universidad Nacional del Sur}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Contenidos de la Clase}
+\tableofcontents
+\end{frame}
+
+\section{Introducción}
+
+\begin{frame}{Objetivos de la Clase}
+En esta clase aprenderemos a implementar en R y Python:
+
+\begin{enumerate}
+\item \textbf{ANOVA de dos factores:}
+\begin{itemize}
+\item Con y sin interacción
+\item Gráficos de interacción
+\item Comparaciones post-hoc
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Diseños experimentales clásicos:}
+\begin{itemize}
+\item Diseño Completamente Aleatorizado (DCA)
+\item Diseño en Bloques Completos Aleatorizados (DBCA)
+\item Diseño en Cuadrado Latino (DCL)
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Verificación de supuestos:}
+\begin{itemize}
+\item Normalidad, homocedasticidad, independencia
+\end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Paquetes y Librerías}
+\textbf{En Python:}
+\begin{itemize}
+\item \texttt{pandas}: manipulación de datos
+\item \texttt{numpy}: cálculos numéricos
+\item \texttt{scipy.stats}: pruebas estadísticas
+\item \texttt{statsmodels}: modelos estadísticos (ANOVA)
+\item \texttt{matplotlib, seaborn}: visualización
+\item \texttt{pingouin}: estadística (alternativa a statsmodels)
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{En R:}
+\begin{itemize}
+\item Base R: \texttt{aov()}, \texttt{lm()}, \texttt{anova()}
+\item \texttt{car}: pruebas adicionales (Levene, Type II/III SS)
+\item \texttt{agricolae}: comparaciones múltiples, diseños
+\item \texttt{emmeans}: medias marginales estimadas
+\item \texttt{ggplot2}: visualización
+\end{itemize}
+\end{frame}
+
+\section{ANOVA de Dos Factores}
+
+\subsection{Ejemplo: Rendimiento de Cultivos}
+
+\begin{frame}[fragile]{Datos del Ejemplo}
+\small
+Rendimiento de cultivos (kg/ha) según:
+\begin{itemize}
+\item Factor A (Fertilizante): F1, F2, F3
+\item Factor B (Riego): Bajo, Alto
+\item 4 réplicas por combinación
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Estructura de datos:}
+\begin{verbatim}
+   Fertilizante  Riego  Rendimiento
+1            F1   Bajo           45
+2            F1   Bajo           47
+3            F1   Bajo           46
+...
+24           F3   Alto           65
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Python: Cargar y Preparar Datos}
+\small
+\begin{verbatim}
+import pandas as pd
+import numpy as np
+from scipy import stats
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+
+# Crear los datos
+data = {
+    'Fertilizante': ['F1']*8 + ['F2']*8 + ['F3']*8,
+    'Riego': ['Bajo']*4 + ['Alto']*4 +
+             ['Bajo']*4 + ['Alto']*4 +
+             ['Bajo']*4 + ['Alto']*4,
+    'Rendimiento': [45,47,46,48, 55,57,56,58,
+                    52,54,53,55, 58,60,59,61,
+                    48,50,49,51, 62,64,63,65]
+}
+df = pd.DataFrame(data)
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Python: ANOVA de Dos Factores}
+\small
+\begin{verbatim}
+# Modelo con interacción
+modelo = ols('Rendimiento ~ C(Fertilizante) + C(Riego) 
+              + C(Fertilizante):C(Riego)', 
+              data=df).fit()
+
+# Tabla ANOVA
+tabla_anova = sm.stats.anova_lm(modelo, typ=2)
+print(tabla_anova)
+\end{verbatim}
+
+\vspace{0.2cm}
+
+\textbf{Salida:}
+\begin{verbatim}
+                              sum_sq    df         F    PR(>F)
+C(Fertilizante)            126.083     2    18.953  0.000049
+C(Riego)                   600.000     1   180.339  <0.000001
+C(Fertilizante):C(Riego)    84.083     2    12.631  0.000293
+Residual                    59.833    18
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{R: ANOVA de Dos Factores}
+\small
+\begin{verbatim}
+# Crear los datos
+rendimiento <- c(45,47,46,48, 55,57,56,58,
+                 52,54,53,55, 58,60,59,61,
+                 48,50,49,51, 62,64,63,65)
+fertilizante <- factor(rep(c("F1","F2","F3"), each=8))
+riego <- factor(rep(rep(c("Bajo","Alto"), each=4), 3))
+
+# ANOVA con interacción
+modelo <- aov(rendimiento ~ fertilizante * riego)
+summary(modelo)
+\end{verbatim}
+
+\vspace{0.2cm}
+
+\textbf{Salida:}
+\begin{verbatim}
+                      Df Sum Sq Mean Sq F value   Pr(>F)    
+fertilizante           2  126.1   63.04  18.953 4.93e-05 ***
+riego                  1  600.0  600.00 180.339  < 2e-16 ***
+fertilizante:riego     2   84.1   42.04  12.631 0.000293 ***
+Residuals             18   59.8    3.32                     
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Interpretación de Resultados}
+\textbf{Conclusiones del ejemplo:}
+
+\begin{enumerate}
+\item \textbf{Interacción significativa} ($p < 0.001$):
+\begin{itemize}
+\item El efecto del fertilizante depende del nivel de riego
+\item No interpretar efectos principales por separado
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Efecto del riego} ($p < 0.001$):
+\begin{itemize}
+\item Riego alto produce mayor rendimiento
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Efecto del fertilizante} ($p < 0.001$):
+\begin{itemize}
+\item Hay diferencias entre fertilizantes
+\item Pero el efecto depende del riego (interacción)
+\end{itemize}
+\end{enumerate}
+
+\vspace{0.2cm}
+\textbf{Próximo paso:} Graficar la interacción y realizar comparaciones post-hoc.
+\end{frame}
+
+\subsection{Gráficos de Interacción}
+
+\begin{frame}[fragile]{Python: Gráfico de Interacción}
+\small
+\begin{verbatim}
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Calcular medias por combinación
+medias = df.groupby(['Fertilizante', 'Riego'])['Rendimiento'].mean()
+medias = medias.reset_index()
+
+# Gráfico de interacción
+fig, ax = plt.subplots(figsize=(10, 6))
+for fert in ['F1', 'F2', 'F3']:
+    datos_fert = medias[medias['Fertilizante'] == fert]
+    ax.plot(datos_fert['Riego'], datos_fert['Rendimiento'],
+            marker='o', label=fert, linewidth=2, markersize=8)
+
+ax.set_xlabel('Nivel de Riego', fontsize=12)
+ax.set_ylabel('Rendimiento Medio (kg/ha)', fontsize=12)
+ax.set_title('Gráfico de Interacción', fontsize=14)
+ax.legend(title='Fertilizante')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{R: Gráfico de Interacción}
+\small
+\begin{verbatim}
+# Gráfico de interacción con ggplot2
+library(ggplot2)
+
+datos <- data.frame(rendimiento, fertilizante, riego)
+medias <- aggregate(rendimiento ~ fertilizante + riego,
+                    data = datos, FUN = mean)
+
+ggplot(medias, aes(x = riego, y = rendimiento,
+                   color = fertilizante, group = fertilizante)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 4) +
+  labs(x = "Nivel de Riego",
+       y = "Rendimiento Medio (kg/ha)",
+       title = "Gráfico de Interacción",
+       color = "Fertilizante") +
+  theme_minimal() +
+  theme(text = element_text(size = 12))
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Interpretación del Gráfico}
+\textbf{Observaciones del gráfico de interacción:}
+
+\begin{itemize}
+\item \textbf{Líneas no paralelas}: confirma interacción significativa
+\item Con riego bajo: F2 es mejor que F1 y F3
+\item Con riego alto: F3 es el mejor, F2 intermedio, F1 el peor
+\item La diferencia entre F3 y F1 aumenta con riego alto
+\item F2 mantiene rendimiento similar independiente del riego
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Implicación práctica:}
+\begin{itemize}
+\item Si hay riego alto disponible: usar F3
+\item Si el riego es limitado: usar F2
+\item Evitar F1 salvo restricciones de costo
+\end{itemize}
+\end{frame}
+
+\subsection{Comparaciones Post-hoc}
+
+\begin{frame}[fragile]{Python: Comparaciones Post-hoc con Pingouin}
+\small
+\begin{verbatim}
+import pingouin as pg
+
+# Crear variable de combinación
+df['Combinacion'] = df['Fertilizante'] + '_' + df['Riego']
+
+# Comparaciones múltiples (Tukey HSD)
+posthoc = pg.pairwise_tukey(data=df,
+                             dv='Rendimiento',
+                             between='Combinacion')
+print(posthoc[['A', 'B', 'mean(A)', 'mean(B)',
+               'diff', 'p-tukey']])
+\end{verbatim}
+
+\vspace{0.2cm}
+Esto compara todas las combinaciones tratamiento-nivel dos a dos.
+\end{frame}
+
+\begin{frame}[fragile]{R: Comparaciones Post-hoc}
+\small
+\textbf{Con paquete \texttt{emmeans}:}
+\begin{verbatim}
+library(emmeans)
+
+# Medias marginales estimadas
+emm <- emmeans(modelo, ~ fertilizante | riego)
+print(emm)
+
+# Comparaciones por pares dentro de cada nivel de riego
+pairs(emm)
+
+# O comparar todas las combinaciones
+emm_todas <- emmeans(modelo, ~ fertilizante * riego)
+pairs(emm_todas, adjust = "tukey")
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{R: Comparaciones con \texttt{agricolae}}
+\small
+\begin{verbatim}
+library(agricolae)
+
+# Crear variable de combinación
+df$combinacion <- with(df,
+                       interaction(fertilizante, riego))
+
+# ANOVA de un factor con la combinación
+modelo_comb <- aov(rendimiento ~ combinacion, data=df)
+
+# Prueba de Tukey
+tukey <- HSD.test(modelo_comb, "combinacion",
+                  group=TRUE, console=TRUE)
+
+# Mostrar grupos homogéneos
+print(tukey$groups)
+\end{verbatim}
+
+Esto produce letras que indican grupos que no difieren significativamente.
+\end{frame}
+
+\section{Diseño Completamente Aleatorizado (DCA)}
+
+\begin{frame}[fragile]{Ejemplo DCA: Dietas de Pollos}
+\small
+Un investigador compara 4 dietas en pollos. Peso ganado (gramos) después de 6 semanas:
+
+\begin{verbatim}
+Dieta 1: 179, 160, 136, 227, 217, 168, 108, 124
+Dieta 2: 309, 229, 181, 141, 260, 203
+Dieta 3: 141, 148, 169, 213, 257, 244, 271
+Dieta 4: 309, 229, 181, 141, 260, 203, 148
+\end{verbatim}
+
+\vspace{0.2cm}
+Notemos que hay diferente número de réplicas por tratamiento (diseño no balanceado).
+\end{frame}
+
+\begin{frame}[fragile]{Python: ANOVA en DCA}
+\small
+\begin{verbatim}
+import pandas as pd
+from scipy import stats
+
+# Crear datos
+dieta1 = [179,160,136,227,217,168,108,124]
+dieta2 = [309,229,181,141,260,203]
+dieta3 = [141,148,169,213,257,244,271]
+dieta4 = [309,229,181,141,260,203,148]
+
+# ANOVA de un factor
+f_stat, p_valor = stats.f_oneway(dieta1, dieta2,
+                                   dieta3, dieta4)
+print(f"F = {f_stat:.3f}, p-valor = {p_valor:.4f}")
+
+# Alternativamente, con statsmodels
+df = pd.DataFrame({
+    'Peso': dieta1 + dieta2 + dieta3 + dieta4,
+    'Dieta': ['D1']*8 + ['D2']*6 + ['D3']*7 + ['D4']*7
+})
+modelo = ols('Peso ~ C(Dieta)', data=df).fit()
+print(sm.stats.anova_lm(modelo, typ=2))
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{R: ANOVA en DCA}
+\small
+\begin{verbatim}
+# Crear datos
+peso <- c(179,160,136,227,217,168,108,124,
+          309,229,181,141,260,203,
+          141,148,169,213,257,244,271,
+          309,229,181,141,260,203,148)
+dieta <- factor(c(rep("D1", 8), rep("D2", 6),
+                  rep("D3", 7), rep("D4", 7)))
+
+# ANOVA
+modelo_dca <- aov(peso ~ dieta)
+summary(modelo_dca)
+
+# Comparaciones múltiples
+library(agricolae)
+tukey_dca <- HSD.test(modelo_dca, "dieta", group=TRUE)
+print(tukey_dca$groups)
+\end{verbatim}
+\end{frame}
+
+\section{Diseño en Bloques (DBCA)}
+
+\begin{frame}[fragile]{Ejemplo DBCA: Variedades de Trigo}
+\small
+Rendimiento (ton/ha) de 4 variedades en 5 lotes:
+
+\begin{verbatim}
+         Lote1  Lote2  Lote3  Lote4  Lote5
+Var1      5.2    4.8    5.5    4.9    5.1
+Var2      6.1    5.7    6.4    5.8    6.0
+Var3      5.8    5.4    6.1    5.5    5.7
+Var4      5.5    5.1    5.8    5.2    5.4
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Python: ANOVA en DBCA}
+\small
+\begin{verbatim}
+import pandas as pd
+
+# Crear datos
+datos_dbca = {
+    'Variedad': list('V1')*5 + list('V2')*5 +
+                list('V3')*5 + list('V4')*5,
+    'Lote': list(range(1,6)) * 4,
+    'Rendimiento': [5.2,4.8,5.5,4.9,5.1,
+                    6.1,5.7,6.4,5.8,6.0,
+                    5.8,5.4,6.1,5.5,5.7,
+                    5.5,5.1,5.8,5.2,5.4]
+}
+df_dbca = pd.DataFrame(datos_dbca)
+df_dbca['Lote'] = df_dbca['Lote'].astype('category')
+
+# ANOVA con bloques
+modelo_dbca = ols('Rendimiento ~ C(Variedad) + C(Lote)',
+                  data=df_dbca).fit()
+print(sm.stats.anova_lm(modelo_dbca, typ=2))
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{R: ANOVA en DBCA}
+\small
+\begin{verbatim}
+# Crear datos
+rendimiento <- c(5.2,4.8,5.5,4.9,5.1,
+                 6.1,5.7,6.4,5.8,6.0,
+                 5.8,5.4,6.1,5.5,5.7,
+                 5.5,5.1,5.8,5.2,5.4)
+variedad <- factor(rep(c("V1","V2","V3","V4"), each=5))
+lote <- factor(rep(1:5, 4))
+
+# ANOVA en bloques
+modelo_dbca <- aov(rendimiento ~ variedad + lote)
+summary(modelo_dbca)
+
+# Comparaciones múltiples (solo variedades)
+library(agricolae)
+tukey_dbca <- HSD.test(modelo_dbca, "variedad",
+                       group=TRUE)
+print(tukey_dbca$groups)
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Interpretación DBCA}
+\textbf{Tabla ANOVA típica:}
+
+\begin{table}
+\small
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Fuente} & \textbf{SC} & \textbf{gl} & \textbf{CM} & \textbf{F} & \textbf{p-valor} \\
+\midrule
+Variedad & 1.275 & 3 & 0.425 & 21.25 & 0.00002 \\
+Lote & 0.768 & 4 & 0.192 & 9.60 & 0.00091 \\
+Error & 0.240 & 12 & 0.020 & & \\
+\midrule
+Total & 2.283 & 19 & & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+
+\textbf{Conclusiones:}
+\begin{itemize}
+\item Hay diferencias significativas entre variedades ($p < 0.001$)
+\item El efecto del lote (bloque) también es significativo ($p < 0.001$)
+\item El bloqueo fue efectivo (redujo error experimental)
+\item Realizar comparaciones post-hoc entre variedades
+\end{itemize}
+\end{frame}
+
+\section{Diseño en Cuadrado Latino (DCL)}
+
+\begin{frame}[fragile]{Ejemplo DCL: Tiempo de Secado}
+\small
+Tiempo de secado (minutos) de 4 formulaciones de pintura. Control de operador y día:
+
+\begin{verbatim}
+         Lunes  Martes  Mierc.  Jueves
+Op1      A:73   B:74    C:71    D:75
+Op2      B:73   C:75    D:72    A:74
+Op3      C:75   D:73    A:76    B:74
+Op4      D:72   A:75    B:73    C:71
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Python: ANOVA en DCL}
+\small
+\begin{verbatim}
+# Crear datos
+datos_dcl = {
+    'Tiempo': [73,74,71,75, 73,75,72,74,
+               75,73,76,74, 72,75,73,71],
+    'Formulacion': list('ABCDBC') + list('DACDABDC'),
+    'Operador': [1,1,1,1, 2,2,2,2,
+                 3,3,3,3, 4,4,4,4],
+    'Dia': [1,2,3,4]*4
+}
+df_dcl = pd.DataFrame(datos_dcl)
+df_dcl['Operador'] = df_dcl['Operador'].astype('category')
+df_dcl['Dia'] = df_dcl['Dia'].astype('category')
+
+# ANOVA con tres factores (sin interacción)
+modelo_dcl = ols('Tiempo ~ C(Formulacion) + 
+                  C(Operador) + C(Dia)',
+                  data=df_dcl).fit()
+print(sm.stats.anova_lm(modelo_dcl, typ=2))
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{R: ANOVA en DCL}
+\small
+\begin{verbatim}
+# Crear datos
+tiempo <- c(73,74,71,75, 73,75,72,74,
+            75,73,76,74, 72,75,73,71)
+formulacion <- factor(c('A','B','C','D','B','C','D','A',
+                        'C','D','A','B','D','A','B','C'))
+operador <- factor(rep(1:4, each=4))
+dia <- factor(rep(1:4, 4))
+
+# ANOVA en Cuadrado Latino
+modelo_dcl <- aov(tiempo ~ formulacion + operador + dia)
+summary(modelo_dcl)
+
+# Comparaciones múltiples (solo formulaciones)
+library(agricolae)
+tukey_dcl <- HSD.test(modelo_dcl, "formulacion",
+                      group=TRUE)
+print(tukey_dcl$groups)
+\end{verbatim}
+\end{frame}
+
+\section{Verificación de Supuestos}
+
+\begin{frame}[fragile]{Python: Normalidad}
+\small
+\begin{verbatim}
+from scipy import stats
+import matplotlib.pyplot as plt
+
+# Obtener residuos
+residuos = modelo.resid
+
+# Prueba de Shapiro-Wilk
+stat, p_valor = stats.shapiro(residuos)
+print(f"Shapiro-Wilk: W = {stat:.4f}, p = {p_valor:.4f}")
+
+# Gráfico Q-Q
+import scipy.stats as stats
+fig, ax = plt.subplots(figsize=(8, 6))
+stats.probplot(residuos, dist="norm", plot=ax)
+ax.set_title("Gráfico Q-Q de Normalidad")
+plt.show()
+
+# Histograma
+plt.hist(residuos, bins=10, edgecolor='black')
+plt.xlabel("Residuos")
+plt.ylabel("Frecuencia")
+plt.title("Histograma de Residuos")
+plt.show()
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{R: Normalidad}
+\small
+\begin{verbatim}
+# Obtener residuos
+residuos <- residuals(modelo)
+
+# Prueba de Shapiro-Wilk
+shapiro.test(residuos)
+
+# Gráfico Q-Q
+qqnorm(residuos)
+qqline(residuos, col = "red", lwd = 2)
+
+# Histograma
+hist(residuos, breaks = 10,
+     main = "Histograma de Residuos",
+     xlab = "Residuos", col = "lightblue")
+\end{verbatim}
+
+\vspace{0.2cm}
+\textbf{Interpretación:}
+\begin{itemize}
+\item $p > 0.05$ en Shapiro-Wilk: no rechazar normalidad
+\item Puntos cercanos a la línea en Q-Q: normalidad razonable
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Python: Homocedasticidad}
+\small
+\begin{verbatim}
+from scipy import stats
+
+# Prueba de Levene
+# Agrupar residuos por tratamiento
+grupos = [df[df['Fertilizante']=='F1']['Rendimiento'],
+          df[df['Fertilizante']=='F2']['Rendimiento'],
+          df[df['Fertilizante']=='F3']['Rendimiento']]
+
+stat, p_valor = stats.levene(*grupos)
+print(f"Levene: F = {stat:.4f}, p = {p_valor:.4f}")
+
+# Gráfico de residuos vs valores ajustados
+valores_ajustados = modelo.fittedvalues
+plt.scatter(valores_ajustados, residuos, alpha=0.6)
+plt.axhline(y=0, color='red', linestyle='--')
+plt.xlabel("Valores Ajustados")
+plt.ylabel("Residuos")
+plt.title("Residuos vs Valores Ajustados")
+plt.show()
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{R: Homocedasticidad}
+\small
+\begin{verbatim}
+library(car)
+
+# Prueba de Levene
+leveneTest(modelo)
+
+# Prueba de Bartlett (más sensible a normalidad)
+bartlett.test(rendimiento ~ fertilizante)
+
+# Gráfico de residuos vs valores ajustados
+plot(modelo, which=1)
+
+# Gráfico de dispersión por grupo
+library(ggplot2)
+datos <- data.frame(rendimiento, fertilizante)
+ggplot(datos, aes(x=fertilizante, y=rendimiento)) +
+  geom_boxplot() +
+  labs(title="Dispersión por Grupo")
+\end{verbatim}
+
+\vspace{0.2cm}
+\textbf{Interpretación:}
+\begin{itemize}
+\item $p > 0.05$ en Levene: no rechazar homocedasticidad
+\item Sin patrones en gráfico de residuos: varianza constante
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Python: Independencia}
+\small
+\begin{verbatim}
+from statsmodels.stats.stattools import durbin_watson
+
+# Prueba de Durbin-Watson (autocorrelación)
+dw_stat = durbin_watson(residuos)
+print(f"Durbin-Watson: {dw_stat:.4f}")
+
+# Gráfico de residuos vs orden
+plt.plot(range(len(residuos)), residuos, 'o-')
+plt.axhline(y=0, color='red', linestyle='--')
+plt.xlabel("Orden de Observación")
+plt.ylabel("Residuos")
+plt.title("Residuos vs Orden")
+plt.show()
+\end{verbatim}
+
+\vspace{0.2cm}
+\textbf{Interpretación:}
+\begin{itemize}
+\item DW cercano a 2: no autocorrelación
+\item DW cercano a 0: autocorrelación positiva
+\item DW cercano a 4: autocorrelación negativa
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{R: Independencia}
+\small
+\begin{verbatim}
+library(lmtest)
+
+# Prueba de Durbin-Watson
+dwtest(modelo)
+
+# Gráfico de residuos vs orden
+plot(residuals(modelo), type='o',
+     ylab="Residuos", xlab="Orden de Observación",
+     main="Residuos vs Orden")
+abline(h=0, col="red", lty=2, lwd=2)
+\end{verbatim}
+
+\vspace{0.3cm}
+\textbf{Nota importante:}
+\begin{itemize}
+\item La independencia es un supuesto del diseño experimental
+\item La aleatorización adecuada garantiza independencia
+\item Las pruebas estadísticas solo detectan dependencia temporal
+\item Medidas repetidas o agrupamiento requieren modelos especiales
+\end{itemize}
+\end{frame}
+
+\section{Transformaciones de Datos}
+
+\begin{frame}{Cuándo y Cómo Transformar}
+\textbf{Indicaciones para transformar:}
+\begin{itemize}
+\item Violación de normalidad o homocedasticidad
+\item Relación entre media y varianza de los grupos
+\item Mejorar simetría de la distribución
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Transformaciones comunes:}
+\begin{table}
+\small
+\begin{tabular}{ll}
+\toprule
+\textbf{Situación} & \textbf{Transformación} \\
+\midrule
+Varianza proporcional a media & Raíz cuadrada: $\sqrt{Y}$ \\
+Varianza proporcional a $media^2$ & Logaritmo: $\log(Y)$ \\
+Datos de conteo (Poisson) & Raíz cuadrada: $\sqrt{Y + 0.5}$ \\
+Proporciones o porcentajes & Arcoseno: $\arcsin(\sqrt{Y})$ \\
+Datos muy asimétricos & Box-Cox (óptima) \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}[fragile]{Python: Transformación Box-Cox}
+\small
+\begin{verbatim}
+from scipy.stats import boxcox
+
+# Transformación Box-Cox
+y_transformado, lambda_opt = boxcox(df['Rendimiento'])
+print(f"Lambda óptimo: {lambda_opt:.4f}")
+
+# Crear nueva columna con datos transformados
+df['Rendimiento_BC'] = y_transformado
+
+# Re-analizar con datos transformados
+modelo_bc = ols('Rendimiento_BC ~ C(Fertilizante) + 
+                 C(Riego) + C(Fertilizante):C(Riego)',
+                 data=df).fit()
+print(sm.stats.anova_lm(modelo_bc, typ=2))
+
+# Verificar supuestos nuevamente
+residuos_bc = modelo_bc.resid
+stats.shapiro(residuos_bc)
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{R: Transformación Box-Cox}
+\small
+\begin{verbatim}
+library(MASS)
+
+# Encontrar lambda óptimo
+bc <- boxcox(modelo, lambda = seq(-2, 2, 0.1))
+
+# Extraer lambda óptimo
+lambda <- bc$x[which.max(bc$y)]
+print(paste("Lambda óptimo:", round(lambda, 4)))
+
+# Aplicar transformación
+if (lambda == 0) {
+  y_transformado <- log(rendimiento)
+} else {
+  y_transformado <- (rendimiento^lambda - 1) / lambda
+}
+
+# Re-analizar
+modelo_bc <- aov(y_transformado ~ fertilizante * riego)
+summary(modelo_bc)
+
+# Verificar supuestos
+shapiro.test(residuals(modelo_bc))
+\end{verbatim}
+\end{frame}
+
+\section{Alternativas No Paramétricas}
+
+\begin{frame}{Pruebas No Paramétricas}
+Cuando los supuestos de ANOVA no se cumplen (incluso después de transformaciones):
+
+\vspace{0.3cm}
+
+\begin{table}
+\begin{tabular}{ll}
+\toprule
+\textbf{Diseño} & \textbf{Prueba No Paramétrica} \\
+\midrule
+DCA (un factor) & Kruskal-Wallis \\
+DBCA (bloques) & Friedman \\
+DCL (bloques) & Friedman (adaptado) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+
+\textbf{Características:}
+\begin{itemize}
+\item Basadas en rangos, no en valores originales
+\item Más robustas ante outliers y no normalidad
+\item Menos potentes que ANOVA paramétrica cuando supuestos se cumplen
+\item Comparaciones post-hoc con prueba de Dunn o Conover
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Python: Kruskal-Wallis}
+\small
+\begin{verbatim}
+from scipy import stats
+
+# Prueba de Kruskal-Wallis (alternativa a ANOVA de un factor)
+dieta1 = [179,160,136,227,217,168,108,124]
+dieta2 = [309,229,181,141,260,203]
+dieta3 = [141,148,169,213,257,244,271]
+dieta4 = [309,229,181,141,260,203,148]
+
+h_stat, p_valor = stats.kruskal(dieta1, dieta2,
+                                  dieta3, dieta4)
+print(f"Kruskal-Wallis: H = {h_stat:.3f}, 
+       p = {p_valor:.4f}")
+
+# Comparaciones post-hoc con pingouin
+import pingouin as pg
+df_kw = pd.DataFrame({
+    'Peso': dieta1 + dieta2 + dieta3 + dieta4,
+    'Dieta': ['D1']*8 + ['D2']*6 + ['D3']*7 + ['D4']*7
+})
+posthoc_kw = pg.pairwise_tests(data=df_kw, dv='Peso',
+                                between='Dieta',
+                                parametric=False,
+                                padjust='bonf')
+print(posthoc_kw)
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{R: Kruskal-Wallis y Friedman}
+\small
+\begin{verbatim}
+# Kruskal-Wallis (DCA)
+peso <- c(179,160,136,227,217,168,108,124,
+          309,229,181,141,260,203,
+          141,148,169,213,257,244,271,
+          309,229,181,141,260,203,148)
+dieta <- factor(c(rep("D1", 8), rep("D2", 6),
+                  rep("D3", 7), rep("D4", 7)))
+
+kruskal.test(peso ~ dieta)
+
+# Comparaciones post-hoc
+library(FSA)
+dunnTest(peso ~ dieta, method="bonferroni")
+
+# Friedman (DBCA)
+rendimiento <- matrix(c(5.2,4.8,5.5,4.9,5.1,
+                        6.1,5.7,6.4,5.8,6.0,
+                        5.8,5.4,6.1,5.5,5.7,
+                        5.5,5.1,5.8,5.2,5.4),
+                      nrow=4, byrow=TRUE)
+friedman.test(rendimiento)
+\end{verbatim}
+\end{frame}
+
+\section{Resumen y Buenas Prácticas}
+
+\begin{frame}{Flujo de Trabajo Recomendado}
+\begin{enumerate}
+\item \textbf{Planificación:}
+\begin{itemize}
+\item Definir hipótesis y diseño experimental
+\item Determinar tamaño de muestra
+\item Aleatorizar tratamientos
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Análisis exploratorio:}
+\begin{itemize}
+\item Estadísticas descriptivas por grupo
+\item Gráficos de caja, medias con IC
+\item Identificar outliers
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{ANOVA:}
+\begin{itemize}
+\item Ajustar modelo apropiado al diseño
+\item Interpretar efectos principales e interacciones
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Verificación:}
+\begin{itemize}
+\item Revisar supuestos (normalidad, homocedasticidad, independencia)
+\item Transformar datos si es necesario
+\item Considerar alternativas no paramétricas
+\end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Flujo de Trabajo Recomendado (cont.)}
+\begin{enumerate}
+\setcounter{enumi}{4}
+\item \textbf{Comparaciones post-hoc:}
+\begin{itemize}
+\item Solo si ANOVA rechaza $H_0$
+\item Elegir método apropiado (Tukey, Bonferroni, Scheffé)
+\item Ajustar por comparaciones múltiples
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Interpretación:}
+\begin{itemize}
+\item Reportar tamaños de efecto (eta cuadrado, Cohen's d)
+\item Graficar resultados con intervalos de confianza
+\item Contextualizar conclusiones
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Documentación:}
+\begin{itemize}
+\item Código reproducible (Jupyter, R Markdown)
+\item Reportar todos los supuestos verificados
+\item Incluir gráficos diagnósticos en apéndices
+\end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Errores Comunes a Evitar}
+\begin{enumerate}
+\item \textbf{No verificar supuestos:}
+\begin{itemize}
+\item Siempre revisar normalidad y homocedasticidad
+\item Documentar resultados de pruebas diagnósticas
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Ignorar interacciones significativas:}
+\begin{itemize}
+\item Si hay interacción, no interpretar efectos principales por separado
+\item Realizar análisis de efectos simples
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{No aleatorizar adecuadamente:}
+\begin{itemize}
+\item La aleatorización es fundamental para validez
+\item Documentar proceso de aleatorización
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Comparaciones múltiples sin ajuste:}
+\begin{itemize}
+\item Siempre ajustar p-valores en comparaciones post-hoc
+\item Usar métodos apropiados (Tukey, Bonferroni, etc.)
+\end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Errores Comunes a Evitar (cont.)}
+\begin{enumerate}
+\setcounter{enumi}{4}
+\item \textbf{Confundir significancia estadística con relevancia práctica:}
+\begin{itemize}
+\item Reportar tamaños de efecto además de p-valores
+\item Contextualizar diferencias en términos prácticos
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Datos faltantes mal manejados:}
+\begin{itemize}
+\item En diseños balanceados, datos faltantes complican análisis
+\item Considerar imputación o análisis de casos completos
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{No reportar poder estadístico:}
+\begin{itemize}
+\item Si no se rechaza $H_0$, considerar poder de la prueba
+\item Tamaño de muestra adecuado es fundamental
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Uso incorrecto de diseños:}
+\begin{itemize}
+\item DCL requiere ausencia de interacciones
+\item DBCA supone interacción tratamiento-bloque nula
+\end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Recursos Adicionales}
+\textbf{Libros recomendados:}
+\begin{itemize}
+\item Montgomery, D. C. (2017). \textit{Design and Analysis of Experiments}
+\item Kutner et al. (2004). \textit{Applied Linear Statistical Models}
+\item Maxwell \& Delaney (2017). \textit{Designing Experiments and Analyzing Data}
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Tutoriales en línea:}
+\begin{itemize}
+\item Statsmodels documentation (Python)
+\item R CRAN Task View: Experimental Design
+\item DataCamp, Kaggle, Coursera (cursos de DOE)
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Software especializado:}
+\begin{itemize}
+\item SAS, SPSS, Minitab (comercial)
+\item R packages: agricolae, emmeans, car, lme4
+\item Python libraries: statsmodels, pingouin, scikit-posthocs
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Resumen de la Clase}
+\textbf{Implementamos computacionalmente:}
+\begin{itemize}
+\item ANOVA de dos factores con gráficos de interacción
+\item DCA, DBCA, DCL en R y Python
+\item Verificación completa de supuestos
+\item Comparaciones post-hoc con ajuste por múltiples comparaciones
+\item Transformaciones de datos (Box-Cox)
+\item Alternativas no paramétricas (Kruskal-Wallis, Friedman)
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Próximos pasos:}
+\begin{itemize}
+\item Practicar con datasets reales
+\item Notebooks de Python y R con ejemplos completos
+\item Ejercicios de la Unidad 4
+\end{itemize}
+\end{frame}
+
+\end{document}

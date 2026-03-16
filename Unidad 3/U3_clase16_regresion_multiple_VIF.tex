@@ -1,0 +1,297 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{whale}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{pythonstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=pythonstyle}
+
+\title{Diagnóstico del Modelo}
+\subtitle{Verificación de Supuestos}
+\author{Métodos de Análisis de Datos 1}
+\institute{Universidad Nacional del Sur}
+\date{Unidad 3 - Clase 16}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Contenidos}
+\tableofcontents
+\end{frame}
+
+\section{Introducción}
+
+\begin{frame}{¿Por qué diagnosticar?}
+Ajustar un modelo es fácil, validarlo es crucial.
+
+\vspace{0.5cm}
+\textbf{Supuestos (L.I.H.N.):}
+\begin{enumerate}
+    \item \textbf{L}inealidad: $E(Y|X) = \beta_0 + \beta_1 X$
+    \item \textbf{I}ndependencia: observaciones independientes
+    \item \textbf{H}omocedasticidad: varianza constante
+    \item \textbf{N}ormalidad: $\epsilon \sim N(0, \sigma^2)$
+\end{enumerate}
+
+\vspace{0.5cm}
+\textbf{Si se violan:}
+\begin{itemize}
+    \item Predicciones sesgadas
+    \item Errores estándar incorrectos
+    \item Tests e intervalos inválidos
+\end{itemize}
+\end{frame}
+
+\section{Gráficos de Residuos}
+
+\begin{frame}{Los residuos}
+\begin{block}{Residuo ordinario}
+\[
+e_i = Y_i - \hat{Y}_i
+\]
+\end{block}
+
+\begin{block}{Residuo estandarizado}
+\[
+r_i = \frac{e_i}{s\sqrt{1 - h_i}}
+\]
+\end{block}
+
+donde $h_i$ es el leverage y $s = \sqrt{\text{SCR}/(n-2)}$
+
+\vspace{0.3cm}
+Los residuos estandarizados tienen media 0 y varianza $\approx 1$
+\end{frame}
+
+\begin{frame}{Gráfico 1: Residuos vs Ajustados}
+\textbf{Detecta:} No linealidad y heterocedasticidad
+
+\vspace{0.3cm}
+\textbf{Lo ideal:} Patrón aleatorio sin estructura
+
+\vspace{0.3cm}
+\textbf{Problemas:}
+\begin{itemize}
+    \item Patrón curvo $\Rightarrow$ relación no lineal
+    \item Forma de embudo $\Rightarrow$ heterocedasticidad
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Soluciones:}
+\begin{itemize}
+    \item Transformaciones (log, raíz cuadrada)
+    \item Regresión polinomial
+    \item Errores estándar robustos
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Gráfico 2: Q-Q Plot}
+\textbf{Detecta:} Violación de normalidad
+
+\vspace{0.3cm}
+\textbf{Lo ideal:} Puntos sobre la diagonal
+
+\vspace{0.3cm}
+\textbf{Desviaciones:}
+\begin{itemize}
+    \item Colas pesadas: puntos se alejan en extremos
+    \item Asimetría: curvatura sistemática
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Nota:} La normalidad es menos crítica con $n$ grande (Teorema Central del Límite)
+\end{frame}
+
+\begin{frame}{Gráfico 3: Scale-Location}
+\textbf{Detecta:} Heterocedasticidad de forma más clara
+
+\vspace{0.3cm}
+Grafica $\sqrt{|r_i|}$ vs valores ajustados
+
+\vspace{0.3cm}
+\textbf{Lo ideal:} Banda horizontal con dispersión uniforme
+
+\vspace{0.3cm}
+\textbf{Problema:} Tendencia ascendente/descendente $\Rightarrow$ varianza no constante
+\end{frame}
+
+\begin{frame}{Gráfico 4: Residuos vs Leverage}
+\textbf{Detecta:} Observaciones influyentes
+
+\vspace{0.3cm}
+\textbf{Conceptos:}
+\begin{itemize}
+    \item \textbf{Leverage} $h_i$: qué tan lejos está $X_i$ de $\bar{X}$
+    \[
+    h_i = \frac{1}{n} + \frac{(X_i - \bar{X})^2}{S_{XX}}
+    \]
+    \item \textbf{Distancia de Cook} $D_i$: influencia total
+    \[
+    D_i = \frac{r_i^2}{p+1} \cdot \frac{h_i}{1-h_i}
+    \]
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Regla:} $D_i > 1$ $\Rightarrow$ observación muy influyente
+\end{frame}
+
+\section{Tests Formales}
+
+\begin{frame}{Test de normalidad}
+\textbf{Shapiro-Wilk:}
+\[
+H_0: \text{residuos normales} \quad \text{vs} \quad H_1: \text{no normales}
+\]
+
+\vspace{0.5cm}
+\textbf{Nota:} Con $n$ grande, muy sensible. Siempre complementar con Q-Q plot.
+\end{frame}
+
+\begin{frame}{Test de homocedasticidad}
+\textbf{Breusch-Pagan:}
+\[
+H_0: \text{Var}(\epsilon) = \sigma^2 \quad \text{vs} \quad H_1: \text{varianza no constante}
+\]
+
+\vspace{0.5cm}
+\textbf{Test de White:} Versión más robusta
+\end{frame}
+
+\begin{frame}{Test de independencia}
+\textbf{Durbin-Watson:} Para series temporales
+\[
+DW = \frac{\sum_{i=2}^{n}(e_i - e_{i-1})^2}{\sum_{i=1}^{n} e_i^2}
+\]
+
+\begin{itemize}
+    \item $DW \approx 2$: no autocorrelación
+    \item $DW < 2$: autocorrelación positiva
+    \item $DW > 2$: autocorrelación negativa
+\end{itemize}
+\end{frame}
+
+\section{Implementación}
+
+\begin{frame}[fragile]{Python: Gráficos}
+\begin{lstlisting}[language=Python]
+import matplotlib.pyplot as plt
+import scipy.stats as stats
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# 1. Residuos vs Ajustados
+axes[0,0].scatter(modelo.fittedvalues, modelo.resid)
+axes[0,0].axhline(0, color='red', linestyle='--')
+axes[0,0].set_title('Residuos vs Ajustados')
+
+# 2. Q-Q Plot
+stats.probplot(modelo.resid, dist="norm", 
+               plot=axes[0,1])
+
+# 3. Scale-Location
+axes[1,0].scatter(modelo.fittedvalues, 
+                  np.sqrt(np.abs(modelo.resid_pearson)))
+
+# 4. Residuos vs Leverage
+influence = modelo.get_influence()
+axes[1,1].scatter(influence.hat_matrix_diag, 
+                  modelo.resid_pearson)
+plt.show()
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Python: Tests}
+\begin{lstlisting}[language=Python]
+from scipy import stats
+from statsmodels.stats.diagnostic import het_breuschpagan
+from statsmodels.stats.stattools import durbin_watson
+
+# Shapiro-Wilk
+stat, p = stats.shapiro(modelo.resid)
+print(f"Shapiro-Wilk p-valor: {p:.4f}")
+
+# Breusch-Pagan
+bp = het_breuschpagan(modelo.resid, modelo.model.exog)
+print(f"Breusch-Pagan p-valor: {bp[1]:.4f}")
+
+# Durbin-Watson
+dw = durbin_watson(modelo.resid)
+print(f"Durbin-Watson: {dw:.4f}")
+
+# Cook's distance
+cooks = influence.cooks_distance[0]
+print(f"Obs influyentes: {np.where(cooks > 1)[0]}")
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{R: Todo en uno}
+\begin{lstlisting}[language=R]
+# Graficos automaticos
+par(mfrow = c(2, 2))
+plot(modelo)
+par(mfrow = c(1, 1))
+
+# Tests
+shapiro.test(modelo$residuals)
+
+library(lmtest)
+bptest(modelo)
+dwtest(modelo)
+
+# Cook's distance
+cooks <- cooks.distance(modelo)
+plot(cooks, type="h")
+abline(h=1, col="red", lty=2)
+\end{lstlisting}
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Resumen}
+\textbf{4 gráficos clave:}
+\begin{enumerate}
+    \item Residuos vs Ajustados (linealidad, homocedasticidad)
+    \item Q-Q Plot (normalidad)
+    \item Scale-Location (homocedasticidad)
+    \item Residuos vs Leverage (influencia)
+\end{enumerate}
+
+\vspace{0.3cm}
+\textbf{Tests:} Shapiro-Wilk, Breusch-Pagan, Durbin-Watson
+
+\vspace{0.3cm}
+\textbf{Medidas:} Leverage, Distancia de Cook
+
+\vspace{0.5cm}
+\textbf{Próxima clase:} Regresión lineal múltiple
+\end{frame}
+
+\end{document}

@@ -1,0 +1,214 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{whale}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+\title{Métodos de Análisis de Datos 1}
+\subtitle{Clase 9: Análisis de Distribuciones}
+\author{Depto.\ de Matemática -- UNS}
+\institute{Universidad Nacional del Sur}
+\date{1er Cuatrimestre 2026}
+
+\AtBeginSection[]{
+  \begin{frame}{Contenidos}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenidos}
+  \tableofcontents
+\end{frame}
+
+%=============================================================
+\section{Histogramas}
+%=============================================================
+
+\begin{frame}{Histograma: definición y construcción}
+  \begin{block}{¿Qué es?}
+    Representación gráfica de la distribución de frecuencias de una variable continua, mediante rectángulos adyacentes.
+  \end{block}
+  \bigskip
+  \textbf{Construcción:}
+  \begin{enumerate}
+    \item Determinar el número de clases: regla de Sturges $k = 1 + 3.322\log_{10}(n)$.
+    \item Calcular amplitud $h = (x_{\max}-x_{\min})/k$.
+    \item Dibujar rectángulos donde el \textbf{área} es proporcional a la frecuencia relativa.
+  \end{enumerate}
+  \bigskip
+  \begin{alertblock}{Área vs.\ altura}
+    El eje vertical debe ser \textbf{densidad} ($f_i/h$) cuando las clases tienen diferente amplitud, no frecuencia.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Formas típicas de histogramas}
+  \begin{itemize}
+    \item \textbf{Simétrico / campana}: datos centrados, colas equilibradas. Sugiere distribución Normal.
+    \item \textbf{Sesgado a la derecha}: cola larga hacia valores altos. Ej.: ingresos, tiempos de falla.
+    \item \textbf{Sesgado a la izquierda}: cola larga hacia valores bajos. Ej.: notas en examen fácil.
+    \item \textbf{Bimodal}: dos picos — posible mezcla de subpoblaciones.
+    \item \textbf{Uniforme}: todas las clases con frecuencia similar.
+  \end{itemize}
+  \bigskip
+  \begin{exampleblock}{Interpretación}
+    La forma del histograma orienta sobre qué distribución teórica podría ajustarse a los datos.
+  \end{exampleblock}
+\end{frame}
+
+%=============================================================
+\section{Boxplot}
+%=============================================================
+
+\begin{frame}{Diagrama de caja y bigotes (Boxplot)}
+  \begin{block}{Componentes del boxplot}
+    \begin{itemize}
+      \item \textbf{Caja}: desde $Q_1$ hasta $Q_3$ (contiene el 50\% central).
+      \item \textbf{Línea central}: mediana $Q_2$.
+      \item \textbf{Bigote inferior}: hasta $Q_1 - 1.5 \cdot \text{RIC}$ (o el mínimo si no hay outliers).
+      \item \textbf{Bigote superior}: hasta $Q_3 + 1.5 \cdot \text{RIC}$ (o el máximo si no hay outliers).
+      \item \textbf{Puntos aislados}: observaciones fuera de los bigotes $\Rightarrow$ posibles outliers.
+    \end{itemize}
+  \end{block}
+  \bigskip
+  \begin{alertblock}{Ventajas}
+    Muestra simultáneamente: posición central, dispersión, asimetría y outliers.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Lectura e interpretación del boxplot}
+  \textbf{Asimetría:}
+  \begin{itemize}
+    \item Si la mediana está centrada en la caja: distribución aproximadamente simétrica.
+    \item Si la mediana está cercana a $Q_1$: sesgo positivo (cola derecha).
+    \item Si la mediana está cercana a $Q_3$: sesgo negativo (cola izquierda).
+  \end{itemize}
+  \bigskip
+  \textbf{Comparación de grupos:}
+  \begin{itemize}
+    \item Los boxplots son especialmente útiles para comparar la distribución de una variable cuantitativa entre varios grupos (variable cualitativa en el eje $x$).
+  \end{itemize}
+\end{frame}
+
+%=============================================================
+\section{Q-Q Plot}
+%=============================================================
+
+\begin{frame}{Gráfico cuantil-cuantil (Q-Q plot)}
+  \begin{block}{Definición}
+    Compara los cuantiles empíricos de los datos contra los cuantiles teóricos de una distribución de referencia (generalmente la Normal).
+  \end{block}
+  \bigskip
+  \textbf{Construcción:}
+  \begin{enumerate}
+    \item Ordenar los datos: $x_{(1)} \le x_{(2)} \le \cdots \le x_{(n)}$.
+    \item Calcular probabilidades empíricas: $p_i = (i - 0.5)/n$ (o variantes).
+    \item Obtener cuantiles teóricos: $z_i = \Phi^{-1}(p_i)$.
+    \item Graficar $(z_i, x_{(i)})$.
+  \end{enumerate}
+  \bigskip
+  \begin{alertblock}{Interpretación}
+    Si los puntos siguen la recta diagonal $\Rightarrow$ los datos son compatibles con la distribución teórica.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Patrones en el Q-Q plot Normal}
+  \begin{itemize}
+    \item \textbf{Línea recta}: normalidad aceptable.
+    \item \textbf{Curvatura hacia arriba}: sesgo positivo (cola derecha más pesada).
+    \item \textbf{Curvatura hacia abajo}: sesgo negativo.
+    \item \textbf{Forma de ``S''}: curtosis distinta a la Normal (colas más livianas o más pesadas).
+    \item \textbf{Puntos alejados en los extremos}: outliers o colas pesadas.
+  \end{itemize}
+  \bigskip
+  \begin{exampleblock}{Complemento}
+    El Q-Q plot es una herramienta visual; para contrastar formalmente la normalidad se usan tests como Shapiro-Wilk o Kolmogorov-Smirnov.
+  \end{exampleblock}
+\end{frame}
+
+%=============================================================
+\section{Pruebas de normalidad}
+%=============================================================
+
+\begin{frame}{Test de Shapiro-Wilk}
+  \begin{block}{Hipótesis}
+    $H_0$: los datos provienen de una distribución Normal. \quad $H_1$: no Normal.
+  \end{block}
+  \bigskip
+  \begin{itemize}
+    \item Estadístico: $W = \dfrac{\left(\sum_{i=1}^n a_i x_{(i)}\right)^2}{\sum_{i=1}^n (x_i - \bar{x})^2}$, donde $a_i$ son coeficientes tabulados.
+    \item $0 < W \le 1$. Cuanto más cerca de 1, más compatible con normalidad.
+    \item \textbf{Recomendado} para $n \le 50$ (alta potencia).
+  \end{itemize}
+  \bigskip
+  \begin{alertblock}{Regla de decisión}
+    Si el $p$-valor $< \alpha$ (ej.\ 0.05) se rechaza $H_0$ (no hay normalidad).
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Test de Kolmogorov-Smirnov}
+  \begin{block}{Estadístico}
+    \[
+      D = \sup_x |F_n(x) - F_0(x)|
+    \]
+    donde $F_n$ es la distribución empírica y $F_0$ la teórica.
+  \end{block}
+  \bigskip
+  \begin{itemize}
+    \item Versión de Lilliefors: cuando los parámetros de $F_0$ se estiman de los datos.
+    \item Aplicable a cualquier distribución continua, no solo la Normal.
+    \item Menor potencia que Shapiro-Wilk para detectar no-normalidad con muestras pequeñas.
+  \end{itemize}
+  \bigskip
+  \begin{exampleblock}{Recomendación práctica}
+    Usar Shapiro-Wilk para $n$ pequeño; Kolmogorov-Smirnov (Lilliefors) para $n$ grande.
+  \end{exampleblock}
+\end{frame}
+
+%=============================================================
+\section{Ajuste de distribuciones}
+%=============================================================
+
+\begin{frame}{Proceso de ajuste de una distribución teórica}
+  \begin{enumerate}
+    \item \textbf{Exploración visual}: histograma, boxplot, Q-Q plot.
+    \item \textbf{Elección de candidatos}: según la forma y dominio de la variable.
+    \item \textbf{Estimación de parámetros}: método de máxima verosimilitud (MV) o momentos.
+    \item \textbf{Bondad de ajuste}: test $\chi^2$, Kolmogorov-Smirnov, AIC/BIC.
+    \item \textbf{Selección final}: criterio estadístico + interpretabilidad.
+  \end{enumerate}
+  \bigskip
+  \begin{block}{Distribuciones comunes en ciencias de la salud}
+    Normal, Log-Normal, Exponencial, Gamma, Beta, Weibull, Binomial, Poisson.
+  \end{block}
+\end{frame}
+
+%=============================================================
+\section{Resumen}
+%=============================================================
+
+\begin{frame}{Resumen de la clase}
+  \begin{block}{Herramientas vistas}
+    \begin{itemize}
+      \item \textbf{Histograma}: forma de la distribución, clases, densidad.
+      \item \textbf{Boxplot}: $Q_1$, $Q_2$, $Q_3$, RIC, outliers.
+      \item \textbf{Q-Q plot}: comparación con distribución teórica.
+      \item \textbf{Tests}: Shapiro-Wilk, Kolmogorov-Smirnov.
+    \end{itemize}
+  \end{block}
+  \bigskip
+  \begin{block}{Próxima clase}
+    Clase 10: Detección de outliers — criterios formales e informales, impacto en el análisis y estrategias de tratamiento.
+  \end{block}
+\end{frame}
+
+\end{document}

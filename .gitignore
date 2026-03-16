@@ -1,0 +1,26 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+*.pkl
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Outputs temporales
+*.log
+*.aux
+*.out
+*.nav
+*.snm
+*.toc

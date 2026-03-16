@@ -1,0 +1,720 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[es-ES]{babel}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Tema
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Colores personalizados
+\definecolor{unsazul}{RGB}{30, 60, 120}
+\definecolor{unsverde}{RGB}{0, 100, 0}
+\definecolor{unsrojo}{RGB}{200, 100, 100}
+
+\setbeamercolor{structure}{fg=unsazul}
+\setbeamercolor{palette primary}{bg=unsazul,fg=white}
+\setbeamercolor{palette secondary}{bg=unsazul!80,fg=white}
+\setbeamercolor{palette tertiary}{bg=unsazul!60,fg=white}
+
+% Configuración de listings
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{unsazul}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{unsverde},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+% Información del documento
+\title{Métodos de Análisis de Datos 1}
+\subtitle{Clase 4: Calidad de Datos}
+\author{Universidad Nacional del Sur}
+\date{}
+
+\begin{document}
+
+% Portada
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Contenidos
+\begin{frame}{Contenidos de hoy}
+\tableofcontents
+\end{frame}
+
+\section{Calidad de datos}
+
+\begin{frame}{¿Qué es la calidad de datos?}
+\begin{block}{Definición}
+Los datos de calidad son aquellos que son \textbf{aptos para su uso previsto} en operaciones, toma de decisiones y planificación.
+\end{block}
+
+\pause
+
+\begin{block}{Dimensiones de la calidad}
+\begin{enumerate}
+    \item \textbf{Completitud:} ¿Hay valores faltantes?
+    \item \textbf{Consistencia:} ¿Los datos son coherentes entre sí?
+    \item \textbf{Precisión:} ¿Los datos son correctos?
+    \item \textbf{Actualidad:} ¿Los datos están actualizados?
+    \item \textbf{Validez:} ¿Los datos cumplen reglas de negocio?
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}{La realidad de los datos}
+\begin{alertblock}{Dato importante}
+En la práctica, \textbf{la mayoría de los datos están sucios}
+\end{alertblock}
+
+\begin{itemize}
+    \item 60-80\% del tiempo de un proyecto se gasta en limpieza de datos
+    \item Los datos crudos casi nunca están listos para análisis
+    \item La calidad de los datos determina la calidad del análisis
+\end{itemize}
+
+\pause
+
+\vspace{1em}
+\begin{exampleblock}{Regla de oro}
+\textbf{Garbage in, garbage out}
+
+Si los datos de entrada son malos, los resultados también lo serán
+\end{exampleblock}
+\end{frame}
+
+\section{Valores faltantes}
+
+\begin{frame}{Valores faltantes: El problema más común}
+\begin{block}{¿Qué son?}
+Valores que deberían estar presentes pero no lo están
+\end{block}
+
+\begin{block}{Representaciones comunes}
+\begin{itemize}
+    \item Python: \texttt{NaN}, \texttt{None}
+    \item R: \texttt{NA}, \texttt{NaN}, \texttt{NULL}
+    \item CSV: celdas vacías, \texttt{NA}, \texttt{?}, \texttt{-999}
+\end{itemize}
+\end{block}
+
+\pause
+
+\begin{alertblock}{¿Por qué faltan?}
+\begin{itemize}
+    \item Error en la recolección
+    \item Sensor/dispositivo falló
+    \item Usuario no respondió
+    \item No aplica (ej: salario de un desempleado)
+    \item Datos perdidos en transferencia
+\end{itemize}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Tipos de valores faltantes}
+\begin{block}{MCAR: Missing Completely At Random}
+La ausencia \textbf{no tiene relación} con ninguna variable
+
+\textit{Ejemplo:} Un sensor falla aleatoriamente
+\end{block}
+
+\pause
+
+\begin{block}{MAR: Missing At Random}
+La ausencia está relacionada con \textbf{variables observadas}
+
+\textit{Ejemplo:} Personas jóvenes no responden pregunta sobre ingresos (relacionado con edad, no con ingresos)
+\end{block}
+
+\pause
+
+\begin{block}{MNAR: Missing Not At Random}
+La ausencia está relacionada con el \textbf{valor faltante mismo}
+
+\textit{Ejemplo:} Personas con ingresos altos no responden pregunta sobre ingresos
+\end{block}
+
+\vspace{0.5em}
+\small{El tipo de missingness determina qué estrategia usar}
+\end{frame}
+
+\begin{frame}[fragile]{Detección de valores faltantes}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Contar NAs por columna
+df.isnull().sum()
+
+# Porcentaje
+(df.isnull().sum() / len(df)) * 100
+
+# Visualizar patrón
+import missingno as msno
+msno.matrix(df)
+msno.heatmap(df)
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Contar NAs
+colSums(is.na(df))
+
+# Porcentaje
+colMeans(is.na(df)) * 100
+
+# Visualizar
+library(naniar)
+vis_miss(df)
+gg_miss_var(df)
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Estrategias para valores faltantes}
+\begin{block}{1. Eliminación}
+Borrar filas o columnas con valores faltantes
+\end{block}
+
+\begin{block}{2. Imputación simple}
+Reemplazar con media, mediana, moda o constante
+\end{block}
+
+\begin{block}{3. Imputación avanzada}
+Usar algoritmos para predecir valores faltantes (KNN, MICE, regresión)
+\end{block}
+
+\vspace{1em}
+\begin{alertblock}{¿Cuál elegir?}
+Depende de:
+\begin{itemize}
+    \item Porcentaje de valores faltantes
+    \item Tipo de missingness (MCAR, MAR, MNAR)
+    \item Importancia de la variable
+    \item Contexto del problema
+\end{itemize}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Estrategia 1: Eliminación}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Ventajas:}
+\begin{itemize}
+    \item Simple
+    \item Rápido
+    \item No introduce sesgo si es MCAR
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Desventajas:}
+\begin{itemize}
+    \item Pérdida de información
+    \item Reduce tamaño del dataset
+    \item Sesgos si no es MCAR
+\end{itemize}
+\end{columns}
+
+\vspace{1em}
+
+\begin{alertblock}{Regla general}
+Solo eliminar si:
+\begin{itemize}
+    \item Menos del 5\% de valores faltantes
+    \item Los datos son MCAR
+    \item El dataset es suficientemente grande
+\end{itemize}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]{Eliminación: Código}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Eliminar filas con cualquier NA
+df_clean = df.dropna()
+
+# Eliminar filas donde 
+# columnas específicas tienen NA
+df_clean = df.dropna(
+    subset=['col1', 'col2']
+)
+
+# Eliminar columnas 
+# con >50% de NAs
+umbral = len(df) * 0.5
+df_clean = df.dropna(
+    thresh=umbral, 
+    axis=1
+)
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Eliminar filas con NA
+df_clean <- na.omit(df)
+
+# Columnas específicas
+df_clean <- df %>%
+  filter(
+    !is.na(col1), 
+    !is.na(col2)
+  )
+
+# Eliminar columnas 
+# con >50% NAs
+umbral <- nrow(df) * 0.5
+df_clean <- df %>%
+  select(where(
+    ~ sum(is.na(.)) < umbral
+  ))
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Estrategia 2: Imputación simple}
+\begin{block}{Opciones}
+\begin{itemize}
+    \item \textbf{Media:} Para variables numéricas, distribución simétrica
+    \item \textbf{Mediana:} Para variables numéricas con outliers
+    \item \textbf{Moda:} Para variables categóricas
+    \item \textbf{Constante:} 0, "desconocido", etc.
+\end{itemize}
+\end{block}
+
+\pause
+
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Ventajas:}
+\begin{itemize}
+    \item Simple y rápido
+    \item No reduce tamaño
+    \item Funciona razonablemente bien
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Desventajas:}
+\begin{itemize}
+    \item Subestima varianza
+    \item No considera relaciones
+    \item Puede introducir sesgo
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Imputación simple: Código}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+from sklearn.impute import SimpleImputer
+
+# Media
+imputer = SimpleImputer(
+    strategy='mean'
+)
+df[['col1', 'col2']] = imputer.fit_transform(
+    df[['col1', 'col2']]
+)
+
+# Moda (más frecuente)
+imputer = SimpleImputer(
+    strategy='most_frequent'
+)
+
+# Constante
+df['col'].fillna(0, inplace=True)
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+library(tidyverse)
+
+# Media
+df <- df %>%
+  mutate(col1 = ifelse(
+    is.na(col1), 
+    mean(col1, na.rm = TRUE), 
+    col1
+  ))
+
+# Mediana (todas numéricas)
+df <- df %>%
+  mutate(across(
+    where(is.numeric), 
+    ~replace_na(., median(., na.rm = TRUE))
+  ))
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Estrategia 3: Imputación avanzada}
+\begin{block}{Métodos}
+\begin{itemize}
+    \item \textbf{KNN:} Imputa usando valores de observaciones similares
+    \item \textbf{Regresión:} Predice valores faltantes usando otras variables
+    \item \textbf{MICE:} Multiple Imputation by Chained Equations
+    \item \textbf{Interpolación:} Para series temporales
+\end{itemize}
+\end{block}
+
+\pause
+
+\begin{alertblock}{¿Cuándo usar?}
+\begin{itemize}
+    \item Cuando hay relaciones fuertes entre variables
+    \item Dataset mediano/grande
+    \item Valores faltantes MAR
+    \item Análisis requiere alta precisión
+\end{itemize}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]{KNN Imputation}
+\begin{block}{Idea}
+Usar los K vecinos más cercanos para estimar el valor faltante
+\end{block}
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+from sklearn.impute import KNNImputer
+
+# Imputar con 5 vecinos
+imputer = KNNImputer(n_neighbors=5)
+df_imputed = pd.DataFrame(
+    imputer.fit_transform(df),
+    columns=df.columns
+)
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+library(mice)
+
+# MICE (más sofisticado que KNN simple)
+imputed <- mice(df, m = 5, method = 'pmm', seed = 42)
+df_complete <- complete(imputed, 1)
+\end{lstlisting}
+\end{frame}
+
+\section{Duplicados}
+
+\begin{frame}{Duplicados: Registros repetidos}
+\begin{block}{¿Qué son duplicados?}
+Filas que aparecen más de una vez en el dataset
+\end{block}
+
+\begin{block}{¿Por qué ocurren?}
+\begin{itemize}
+    \item Error en la recolección (doble entrada)
+    \item Múltiples fuentes sin deduplicación
+    \item Problemas en joins/merges
+    \item Errores de sistema
+\end{itemize}
+\end{block}
+
+\pause
+
+\begin{alertblock}{Impacto}
+\begin{itemize}
+    \item Sesgan estadísticas (media, totales)
+    \item Inflan el tamaño del dataset
+    \item Problemas en modelos de ML
+    \item Resultados incorrectos
+\end{itemize}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]{Detección de duplicados}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Todas las columnas
+duplicados = df.duplicated()
+print(f"Total: {duplicados.sum()}")
+
+# Columnas específicas
+duplicados = df.duplicated(
+    subset=['id', 'fecha']
+)
+
+# Ver duplicados
+df[duplicados]
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Detectar duplicados
+duplicados <- duplicated(df)
+cat("Total:", sum(duplicados))
+
+# Columnas específicas
+duplicados <- df %>%
+  duplicated(by = c('id', 'fecha'))
+
+# Ver duplicados
+df[duplicados, ]
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Eliminación de duplicados}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Eliminar (mantiene primero)
+df_clean = df.drop_duplicates()
+
+# Por columnas específicas
+df_clean = df.drop_duplicates(
+    subset=['id', 'fecha']
+)
+
+# Mantener último
+df_clean = df.drop_duplicates(
+    keep='last'
+)
+
+# Ver cuáles se eliminan
+df_clean = df.drop_duplicates(
+    keep=False
+)  # Elimina todos
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Eliminar duplicados
+df_clean <- distinct(df)
+
+# Columnas específicas
+df_clean <- df %>%
+  distinct(id, fecha, 
+           .keep_all = TRUE)
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\section{Inconsistencias}
+
+\begin{frame}{Inconsistencias: Datos que no tienen sentido}
+\begin{block}{Tipos de inconsistencias}
+\begin{enumerate}
+    \item \textbf{Valores fuera de rango:} Edad = -5, temperatura = 500°C
+    \item \textbf{Formatos incorrectos:} Fecha "32/13/2024"
+    \item \textbf{Inconsistencias entre variables:} Fecha nacimiento > Fecha graduación
+    \item \textbf{Errores tipográficos:} "Bahia Blanca", "B. Blanca", "Bahía blanca"
+    \item \textbf{Valores imposibles:} Porcentaje > 100\%, probabilidad < 0
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Detección de inconsistencias}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Valores fuera de rango
+print("Edades negativas:", 
+      (df['edad'] < 0).sum())
+print("Edades >120:", 
+      (df['edad'] > 120).sum())
+
+# Rangos
+print(f"Min: {df['edad'].min()}")
+print(f"Max: {df['edad'].max()}")
+
+# Valores únicos
+print(df['ciudad'].value_counts())
+
+# Entre columnas
+inconsist = df[
+    df['fecha_nac'] > df['fecha_reg']
+]
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Fuera de rango
+cat("Negativas:", 
+    sum(df$edad < 0, na.rm = TRUE))
+
+# Rangos
+cat("Min:", min(df$edad, na.rm = TRUE))
+cat("Max:", max(df$edad, na.rm = TRUE))
+
+# Valores únicos
+table(df$ciudad)
+
+# Entre columnas
+inconsist <- df %>%
+  filter(fecha_nac > fecha_reg)
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Corrección: Estandarización de texto}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Lowercase y trim
+df['ciudad'] = df['ciudad'].str.lower().str.strip()
+
+# Reemplazar variaciones
+df['ciudad'] = df['ciudad'].replace({
+    'b. blanca': 'bahia blanca',
+    'bblanca': 'bahia blanca'
+})
+
+# Regex para reemplazar
+df['ciudad'] = df['ciudad'].str.replace(
+    r'bahia\s+blanca', 
+    'bahia blanca',
+    regex=True
+)
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Lowercase y trim
+df <- df %>%
+  mutate(ciudad = str_to_lower(
+    str_trim(ciudad)
+  ))
+
+# Reemplazar
+df <- df %>%
+  mutate(ciudad = recode(ciudad,
+    'b. blanca' = 'bahia blanca',
+    'bblanca' = 'bahia blanca'
+  ))
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Corrección: Valores fuera de rango}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Reemplazar con NA
+df.loc[df['edad'] < 0, 'edad'] = np.nan
+df.loc[df['edad'] > 120, 'edad'] = np.nan
+
+# Clip (limitar valores)
+df['edad'] = df['edad'].clip(
+    lower=0, 
+    upper=120
+)
+
+# Filtrar filas válidas
+df_clean = df[
+    (df['edad'] >= 0) & 
+    (df['edad'] <= 120)
+]
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Reemplazar con NA
+df <- df %>%
+  mutate(edad = ifelse(
+    edad < 0 | edad > 120, 
+    NA, 
+    edad
+  ))
+
+# Con pmin/pmax
+df <- df %>%
+  mutate(edad = pmin(
+    pmax(edad, 0), 
+    120
+  ))
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Pipeline de limpieza de datos}
+\begin{enumerate}
+    \item \textbf{Cargar datos}
+    \item \textbf{Exploración inicial:} dimensiones, tipos, primeras filas
+    \item \textbf{Detectar valores faltantes:} porcentaje, patrón
+    \item \textbf{Decidir estrategia:} eliminar o imputar
+    \item \textbf{Detectar duplicados:} por todas las columnas o subset
+    \item \textbf{Eliminar duplicados}
+    \item \textbf{Detectar inconsistencias:} rangos, formatos, relaciones
+    \item \textbf{Corregir inconsistencias:} estandarizar, clip, reemplazar
+    \item \textbf{Verificación final:} re-explorar datos limpios
+    \item \textbf{Documentar:} qué se hizo y por qué
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Resumen de la clase}
+\begin{itemize}
+    \item La \textbf{calidad de datos} tiene múltiples dimensiones
+    \item Los \textbf{valores faltantes} son el problema más común
+    \item Tipos de missingness: \textbf{MCAR, MAR, MNAR}
+    \item Estrategias: \textbf{eliminación} (simple) o \textbf{imputación} (simple/avanzada)
+    \item Los \textbf{duplicados} sesgan resultados y deben eliminarse
+    \item Las \textbf{inconsistencias} requieren análisis cuidadoso
+    \item La \textbf{estandarización} de texto es crucial
+    \item \textbf{Documentar} todas las decisiones de limpieza
+\end{itemize}
+
+\vspace{1em}
+
+\begin{block}{Próxima clase}
+\textbf{Transformación de datos:} tipos, variables derivadas, codificación de categóricas
+\end{block}
+\end{frame}
+
+\begin{frame}{Tarea}
+\begin{enumerate}
+    \item Tomar el dataset de la clase anterior
+    \item Realizar análisis de calidad:
+    \begin{itemize}
+        \item ¿Hay valores faltantes? ¿Cuántos? ¿En qué columnas?
+        \item ¿Hay duplicados?
+        \item ¿Hay valores fuera de rango?
+        \item ¿Hay inconsistencias en texto?
+    \end{itemize}
+    \item Aplicar estrategias de limpieza apropiadas
+    \item Documentar en el notebook:
+    \begin{itemize}
+        \item Qué problemas encontraste
+        \item Qué estrategias usaste
+        \item Por qué elegiste esas estrategias
+        \item Comparar antes vs después
+    \end{itemize}
+    \item Subir a GitHub
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[standout]
+\Huge ¿Preguntas?
+\end{frame}
+
+\end{document}

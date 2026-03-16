@@ -1,0 +1,822 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-minimal]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+
+\definecolor{unsblue}{RGB}{30,60,120}
+\setbeamercolor{structure}{fg=unsblue}
+\setbeamercolor{palette primary}{bg=unsblue,fg=white}
+\setbeamercolor{palette secondary}{bg=unsblue!80,fg=white}
+\setbeamercolor{palette tertiary}{bg=unsblue!60,fg=white}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+\title[MAD1 - Clase 22]{Métodos de Análisis de Datos 1}
+\subtitle{Clase 22: ANOVA de Dos Factores y Diseños Experimentales}
+\author{Prof. José}
+\institute{Departamento de Matemática \\ Universidad Nacional del Sur}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Contenidos de la Clase}
+\tableofcontents
+\end{frame}
+
+\section{ANOVA de Dos Factores}
+
+\begin{frame}{Motivación}
+\begin{itemize}
+\item Hasta ahora: un solo factor de variación (ANOVA de un factor)
+\item En la práctica: múltiples factores pueden afectar la respuesta simultáneamente
+\item Ejemplos:
+\begin{itemize}
+\item Rendimiento de cultivos: tipo de fertilizante Y cantidad de agua
+\item Resistencia de materiales: temperatura Y presión
+\item Efectividad de tratamiento: dosis Y edad del paciente
+\end{itemize}
+\item ANOVA de dos factores permite:
+\begin{itemize}
+\item Estudiar efecto de cada factor por separado
+\item Detectar interacciones entre factores
+\item Mayor eficiencia experimental
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Modelo de ANOVA de Dos Factores}
+\begin{block}{Modelo con interacción}
+$$Y_{ijk} = \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij} + \varepsilon_{ijk}$$
+\end{block}
+
+Donde:
+\begin{itemize}
+\item $Y_{ijk}$: observación $k$ del factor A nivel $i$, factor B nivel $j$
+\item $\mu$: media global
+\item $\alpha_i$: efecto del factor A en el nivel $i$ ($i=1,\ldots,a$)
+\item $\beta_j$: efecto del factor B en el nivel $j$ ($j=1,\ldots,b$)
+\item $(\alpha\beta)_{ij}$: efecto de interacción entre A y B
+\item $\varepsilon_{ijk}$: error aleatorio, $\varepsilon_{ijk} \sim N(0,\sigma^2)$
+\item $k=1,\ldots,n$ réplicas en cada combinación $(i,j)$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Restricciones del Modelo}
+Para que el modelo sea identificable, se imponen restricciones:
+
+$$\sum_{i=1}^{a} \alpha_i = 0, \quad \sum_{j=1}^{b} \beta_j = 0$$
+
+$$\sum_{i=1}^{a} (\alpha\beta)_{ij} = 0 \text{ para todo } j, \quad \sum_{j=1}^{b} (\alpha\beta)_{ij} = 0 \text{ para todo } i$$
+
+\vspace{0.3cm}
+Esto asegura que los efectos sean desviaciones respecto a la media global.
+\end{frame}
+
+\begin{frame}{Concepto de Interacción}
+\begin{block}{¿Qué es la interacción?}
+La interacción ocurre cuando el efecto de un factor depende del nivel del otro factor.
+\end{block}
+
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Sin interacción:}
+\begin{itemize}
+\item Efectos aditivos
+\item Líneas paralelas en gráfico
+\item $(\alpha\beta)_{ij} = 0$ para todo $i,j$
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\textbf{Con interacción:}
+\begin{itemize}
+\item Efectos no aditivos
+\item Líneas no paralelas
+\item $(\alpha\beta)_{ij} \neq 0$ para algún $i,j$
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.3cm}
+Si hay interacción significativa, no tiene sentido interpretar los efectos principales por separado.
+\end{frame}
+
+\begin{frame}{Tabla ANOVA de Dos Factores}
+\small
+\begin{table}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Fuente} & \textbf{SC} & \textbf{gl} & \textbf{CM} & \textbf{F} & \textbf{p-valor} \\
+\midrule
+Factor A & $SC_A$ & $a-1$ & $CM_A = \frac{SC_A}{a-1}$ & $F_A = \frac{CM_A}{CM_E}$ & $P(F > F_A)$ \\[0.3cm]
+Factor B & $SC_B$ & $b-1$ & $CM_B = \frac{SC_B}{b-1}$ & $F_B = \frac{CM_B}{CM_E}$ & $P(F > F_B)$ \\[0.3cm]
+Interacción AB & $SC_{AB}$ & $(a-1)(b-1)$ & $CM_{AB} = \frac{SC_{AB}}{(a-1)(b-1)}$ & $F_{AB} = \frac{CM_{AB}}{CM_E}$ & $P(F > F_{AB})$ \\[0.3cm]
+Error & $SC_E$ & $ab(n-1)$ & $CM_E = \frac{SC_E}{ab(n-1)}$ & & \\[0.3cm]
+\midrule
+Total & $SC_T$ & $abn-1$ & & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{Cálculo de Sumas de Cuadrados}
+\begin{align*}
+SC_T &= \sum_{i=1}^{a}\sum_{j=1}^{b}\sum_{k=1}^{n} (Y_{ijk} - \bar{Y}_{\cdot\cdot\cdot})^2 \\[0.3cm]
+SC_A &= bn\sum_{i=1}^{a} (\bar{Y}_{i\cdot\cdot} - \bar{Y}_{\cdot\cdot\cdot})^2 \\[0.3cm]
+SC_B &= an\sum_{j=1}^{b} (\bar{Y}_{\cdot j\cdot} - \bar{Y}_{\cdot\cdot\cdot})^2 \\[0.3cm]
+SC_{AB} &= n\sum_{i=1}^{a}\sum_{j=1}^{b} (\bar{Y}_{ij\cdot} - \bar{Y}_{i\cdot\cdot} - \bar{Y}_{\cdot j\cdot} + \bar{Y}_{\cdot\cdot\cdot})^2 \\[0.3cm]
+SC_E &= SC_T - SC_A - SC_B - SC_{AB}
+\end{align*}
+\end{frame}
+
+\begin{frame}{Hipótesis y Pruebas}
+\textbf{Tres pruebas independientes:}
+
+\begin{enumerate}
+\item \textbf{Interacción:} $H_0: (\alpha\beta)_{ij} = 0$ para todo $i,j$
+\begin{itemize}
+\item Estadístico: $F_{AB} = \frac{CM_{AB}}{CM_E} \sim F_{(a-1)(b-1), ab(n-1)}$
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Efecto principal de A:} $H_0: \alpha_1 = \alpha_2 = \cdots = \alpha_a = 0$
+\begin{itemize}
+\item Estadístico: $F_A = \frac{CM_A}{CM_E} \sim F_{a-1, ab(n-1)}$
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Efecto principal de B:} $H_0: \beta_1 = \beta_2 = \cdots = \beta_b = 0$
+\begin{itemize}
+\item Estadístico: $F_B = \frac{CM_B}{CM_E} \sim F_{b-1, ab(n-1)}$
+\end{itemize}
+\end{enumerate}
+
+\vspace{0.2cm}
+\textbf{Importante:} Si la interacción es significativa, interpretar con cuidado los efectos principales.
+\end{frame}
+
+\begin{frame}{Ejemplo: Rendimiento de Cultivos}
+\small
+Un agrónomo estudia el rendimiento (kg/ha) según dos factores:
+\begin{itemize}
+\item Factor A (Fertilizante): 3 tipos (F1, F2, F3)
+\item Factor B (Riego): 2 niveles (Bajo, Alto)
+\item 4 réplicas por combinación (total: 24 observaciones)
+\end{itemize}
+
+\begin{table}
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Riego} & \textbf{F1} & \textbf{F2} & \textbf{F3} \\
+\midrule
+Bajo & 45, 47, 46, 48 & 52, 54, 53, 55 & 48, 50, 49, 51 \\
+Alto & 55, 57, 56, 58 & 58, 60, 59, 61 & 62, 64, 63, 65 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+¿Hay efecto del fertilizante? ¿Del riego? ¿Interacción entre ambos?
+\end{frame}
+
+\begin{frame}{Ejemplo: Medias Marginales}
+\begin{table}
+\centering
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Riego} & \textbf{F1} & \textbf{F2} & \textbf{F3} & \textbf{Media} \\
+\midrule
+Bajo & 46.5 & 53.5 & 49.5 & 49.83 \\
+Alto & 56.5 & 59.5 & 63.5 & 59.83 \\
+\midrule
+\textbf{Media} & 51.5 & 56.5 & 56.5 & 54.83 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+Observaciones preliminares:
+\begin{itemize}
+\item Riego alto produce mayor rendimiento (59.83 vs 49.83)
+\item F2 y F3 parecen mejores que F1
+\item ¿Hay interacción? Necesitamos el gráfico y la prueba formal
+\end{itemize}
+\end{frame}
+
+\section{Diseños Experimentales Clásicos}
+
+\begin{frame}{¿Por qué Diseñar Experimentos?}
+\begin{block}{Diseño experimental}
+Conjunto de técnicas para planificar experimentos de manera que los datos obtenidos permitan conclusiones válidas y objetivas.
+\end{block}
+
+\vspace{0.3cm}
+\textbf{Objetivos:}
+\begin{itemize}
+\item Maximizar información obtenida con recursos limitados
+\item Controlar variabilidad no deseada
+\item Garantizar validez de las conclusiones
+\item Permitir estimación del error experimental
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Principios básicos:}
+\begin{enumerate}
+\item Réplica: repetir observaciones para estimar error
+\item Aleatorización: asignar tratamientos al azar
+\item Control local: bloquear fuentes de variación conocidas
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Clasificación de Diseños}
+\begin{enumerate}
+\item \textbf{Diseño Completamente Aleatorizado (DCA):}
+\begin{itemize}
+\item Asignación completamente al azar
+\item Unidades experimentales homogéneas
+\item Más simple, menos eficiente si hay heterogeneidad
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Diseño en Bloques Completos Aleatorizados (DBCA):}
+\begin{itemize}
+\item Agrupa unidades en bloques homogéneos
+\item Aleatoria dentro de cada bloque
+\item Controla variación entre bloques
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Diseño en Cuadrado Latino (DCL):}
+\begin{itemize}
+\item Controla dos fuentes de variación simultáneamente
+\item Estructura de filas y columnas
+\item Muy eficiente pero restrictivo
+\end{itemize}
+\end{enumerate}
+\end{frame}
+
+\subsection{Diseño Completamente Aleatorizado (DCA)}
+
+\begin{frame}{DCA: Características}
+\textbf{Estructura:}
+\begin{itemize}
+\item $t$ tratamientos
+\item $n_i$ réplicas del tratamiento $i$ ($i=1,\ldots,t$)
+\item Total: $N = \sum_{i=1}^{t} n_i$ unidades experimentales
+\item Asignación completamente al azar
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Modelo:}
+$$Y_{ij} = \mu + \tau_i + \varepsilon_{ij}$$
+
+Donde:
+\begin{itemize}
+\item $Y_{ij}$: observación $j$ del tratamiento $i$
+\item $\tau_i$: efecto del tratamiento $i$
+\item $\varepsilon_{ij} \sim N(0,\sigma^2)$ independientes
+\end{itemize}
+\end{frame}
+
+\begin{frame}{DCA: Tabla ANOVA}
+\begin{table}
+\centering
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Fuente} & \textbf{SC} & \textbf{gl} & \textbf{CM} & \textbf{F} & \textbf{p-valor} \\
+\midrule
+Tratamientos & $SC_{Trat}$ & $t-1$ & $CM_{Trat}$ & $F = \frac{CM_{Trat}}{CM_E}$ & $P(F > F_{obs})$ \\[0.2cm]
+Error & $SC_E$ & $N-t$ & $CM_E$ & & \\[0.2cm]
+\midrule
+Total & $SC_T$ & $N-1$ & & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+Donde:
+\begin{align*}
+SC_{Trat} &= \sum_{i=1}^{t} n_i(\bar{Y}_{i\cdot} - \bar{Y}_{\cdot\cdot})^2 \\
+SC_E &= \sum_{i=1}^{t}\sum_{j=1}^{n_i} (Y_{ij} - \bar{Y}_{i\cdot})^2 \\
+SC_T &= \sum_{i=1}^{t}\sum_{j=1}^{n_i} (Y_{ij} - \bar{Y}_{\cdot\cdot})^2
+\end{align*}
+\end{frame}
+
+\begin{frame}{DCA: Ventajas y Desventajas}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Ventajas:}
+\begin{itemize}
+\item Muy flexible
+\item Permite diferente número de réplicas por tratamiento
+\item Análisis simple
+\item Máximos grados de libertad para el error
+\item Fácil manejo de datos faltantes
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\textbf{Desventajas:}
+\begin{itemize}
+\item Requiere unidades experimentales homogéneas
+\item Ineficiente si hay fuentes de variación conocidas
+\item Mayor variabilidad del error
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.4cm}
+\textbf{Cuándo usar:}
+\begin{itemize}
+\item Material experimental homogéneo
+\item Pocas unidades experimentales
+\item Condiciones controladas (laboratorio)
+\end{itemize}
+\end{frame}
+
+\subsection{Diseño en Bloques Completos Aleatorizados (DBCA)}
+
+\begin{frame}{DBCA: Motivación}
+\textbf{Problema del DCA:}
+\begin{itemize}
+\item Si las unidades experimentales son heterogéneas, aumenta la variabilidad del error
+\item Reduce potencia de las pruebas
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Solución del DBCA:}
+\begin{itemize}
+\item Agrupar unidades similares en bloques
+\item Cada bloque contiene todos los tratamientos (una vez cada uno)
+\item Aleatorización dentro de cada bloque
+\item Eliminar variabilidad entre bloques del error
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Ejemplos de bloques:}
+\begin{itemize}
+\item Lotes de terreno con características similares
+\item Días de experimentación
+\item Lotes de materia prima
+\item Pares de sujetos emparejados
+\end{itemize}
+\end{frame}
+
+\begin{frame}{DBCA: Estructura}
+\textbf{Componentes:}
+\begin{itemize}
+\item $t$ tratamientos
+\item $b$ bloques
+\item Una observación por combinación tratamiento-bloque
+\item Total: $N = tb$ observaciones
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Modelo:}
+$$Y_{ij} = \mu + \tau_i + \beta_j + \varepsilon_{ij}$$
+
+Donde:
+\begin{itemize}
+\item $Y_{ij}$: observación del tratamiento $i$ en el bloque $j$
+\item $\mu$: media global
+\item $\tau_i$: efecto del tratamiento $i$ ($i=1,\ldots,t$)
+\item $\beta_j$: efecto del bloque $j$ ($j=1,\ldots,b$)
+\item $\varepsilon_{ij} \sim N(0,\sigma^2)$ independientes
+\end{itemize}
+\end{frame}
+
+\begin{frame}{DBCA: Tabla ANOVA}
+\begin{table}
+\centering
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Fuente} & \textbf{SC} & \textbf{gl} & \textbf{CM} & \textbf{F} & \textbf{p-valor} \\
+\midrule
+Tratamientos & $SC_{Trat}$ & $t-1$ & $CM_{Trat}$ & $F_{Trat} = \frac{CM_{Trat}}{CM_E}$ & $P(F > F_{Trat})$ \\[0.2cm]
+Bloques & $SC_{Bloq}$ & $b-1$ & $CM_{Bloq}$ & $F_{Bloq} = \frac{CM_{Bloq}}{CM_E}$ & $P(F > F_{Bloq})$ \\[0.2cm]
+Error & $SC_E$ & $(t-1)(b-1)$ & $CM_E$ & & \\[0.2cm]
+\midrule
+Total & $SC_T$ & $tb-1$ & & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+Donde:
+\begin{align*}
+SC_{Trat} &= b\sum_{i=1}^{t} (\bar{Y}_{i\cdot} - \bar{Y}_{\cdot\cdot})^2, \quad
+SC_{Bloq} = t\sum_{j=1}^{b} (\bar{Y}_{\cdot j} - \bar{Y}_{\cdot\cdot})^2 \\
+SC_E &= SC_T - SC_{Trat} - SC_{Bloq}
+\end{align*}
+\end{frame}
+
+\begin{frame}{DBCA: Hipótesis}
+\textbf{Prueba principal (tratamientos):}
+$$H_0: \tau_1 = \tau_2 = \cdots = \tau_t = 0$$
+$$H_1: \text{Al menos un } \tau_i \neq 0$$
+
+Estadístico: $F_{Trat} = \frac{CM_{Trat}}{CM_E} \sim F_{t-1, (t-1)(b-1)}$ bajo $H_0$
+
+\vspace{0.3cm}
+\textbf{Prueba secundaria (bloques):}
+$$H_0: \beta_1 = \beta_2 = \cdots = \beta_b = 0$$
+
+Estadístico: $F_{Bloq} = \frac{CM_{Bloq}}{CM_E} \sim F_{b-1, (t-1)(b-1)}$ bajo $H_0$
+
+\vspace{0.3cm}
+\textbf{Nota:} La prueba de bloques indica si el bloqueo fue efectivo, pero no es el objetivo principal del análisis.
+\end{frame}
+
+\begin{frame}{DBCA: Ventajas y Desventajas}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Ventajas:}
+\begin{itemize}
+\item Controla variación conocida
+\item Mayor precisión (menor $CM_E$)
+\item Mayor potencia estadística
+\item Diseño muy utilizado en la práctica
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\textbf{Desventajas:}
+\begin{itemize}
+\item Requiere $b \geq t$ para tener grados de libertad del error
+\item Menos flexible que DCA
+\item Supone ausencia de interacción tratamiento-bloque
+\item Datos faltantes complican análisis
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.4cm}
+\textbf{Cuándo usar:}
+\begin{itemize}
+\item Material experimental heterogéneo pero agrupable
+\item Fuentes de variación conocidas y controlables
+\item Experimentos de campo, ensayos clínicos
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ejemplo DBCA: Rendimiento de Variedades}
+Un investigador compara 4 variedades de trigo en 5 lotes de terreno (bloques). Rendimiento en toneladas/ha:
+
+\vspace{0.2cm}
+\small
+\begin{table}
+\centering
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Variedad} & \textbf{Lote 1} & \textbf{Lote 2} & \textbf{Lote 3} & \textbf{Lote 4} & \textbf{Lote 5} \\
+\midrule
+V1 & 5.2 & 4.8 & 5.5 & 4.9 & 5.1 \\
+V2 & 6.1 & 5.7 & 6.4 & 5.8 & 6.0 \\
+V3 & 5.8 & 5.4 & 6.1 & 5.5 & 5.7 \\
+V4 & 5.5 & 5.1 & 5.8 & 5.2 & 5.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+\normalsize
+¿Hay diferencias significativas entre variedades?
+\end{frame}
+
+\subsection{Diseño en Cuadrado Latino (DCL)}
+
+\begin{frame}{Cuadrado Latino: Concepto}
+\textbf{Objetivo:} Controlar dos fuentes de variación simultáneamente
+
+\vspace{0.3cm}
+\textbf{Estructura:}
+\begin{itemize}
+\item $t$ tratamientos, $t$ filas, $t$ columnas
+\item Cada tratamiento aparece exactamente una vez en cada fila
+\item Cada tratamiento aparece exactamente una vez en cada columna
+\item Total: $t^2$ unidades experimentales
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Ejemplo con 4 tratamientos (A, B, C, D):}
+\begin{table}
+\centering
+\begin{tabular}{c|cccc}
+& Col 1 & Col 2 & Col 3 & Col 4 \\
+\hline
+Fila 1 & A & B & C & D \\
+Fila 2 & B & C & D & A \\
+Fila 3 & C & D & A & B \\
+Fila 4 & D & A & B & C \\
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{DCL: Modelo y Supuestos}
+\textbf{Modelo:}
+$$Y_{ijk} = \mu + \tau_i + \rho_j + \gamma_k + \varepsilon_{ijk}$$
+
+Donde:
+\begin{itemize}
+\item $Y_{ijk}$: observación del tratamiento $i$, fila $j$, columna $k$
+\item $\mu$: media global
+\item $\tau_i$: efecto del tratamiento $i$
+\item $\rho_j$: efecto de la fila $j$
+\item $\gamma_k$: efecto de la columna $k$
+\item $\varepsilon_{ijk} \sim N(0,\sigma^2)$ independientes
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Supuesto crítico:} No hay interacción entre tratamientos, filas y columnas.
+\end{frame}
+
+\begin{frame}{DCL: Tabla ANOVA}
+\begin{table}
+\centering
+\small
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Fuente} & \textbf{SC} & \textbf{gl} & \textbf{CM} & \textbf{F} & \textbf{p-valor} \\
+\midrule
+Tratamientos & $SC_{Trat}$ & $t-1$ & $CM_{Trat}$ & $F_{Trat} = \frac{CM_{Trat}}{CM_E}$ & $P(F > F_{Trat})$ \\[0.2cm]
+Filas & $SC_{Filas}$ & $t-1$ & $CM_{Filas}$ & $F_{Filas} = \frac{CM_{Filas}}{CM_E}$ & $P(F > F_{Filas})$ \\[0.2cm]
+Columnas & $SC_{Cols}$ & $t-1$ & $CM_{Cols}$ & $F_{Cols} = \frac{CM_{Cols}}{CM_E}$ & $P(F > F_{Cols})$ \\[0.2cm]
+Error & $SC_E$ & $(t-1)(t-2)$ & $CM_E$ & & \\[0.2cm]
+\midrule
+Total & $SC_T$ & $t^2-1$ & & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+Donde:
+$$SC_E = SC_T - SC_{Trat} - SC_{Filas} - SC_{Cols}$$
+\end{frame}
+
+\begin{frame}{DCL: Ventajas y Desventajas}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Ventajas:}
+\begin{itemize}
+\item Controla dos fuentes de variación
+\item Muy eficiente cuando hay dos gradientes
+\item Reduce mucho el error experimental
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\textbf{Desventajas:}
+\begin{itemize}
+\item Muy restrictivo: $t = $ filas $=$ columnas
+\item Pocos grados de libertad para error
+\item Supone ausencia de interacciones
+\item Datos faltantes son problemáticos
+\item Difícil de implementar con muchos tratamientos
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.4cm}
+\textbf{Cuándo usar:}
+\begin{itemize}
+\item Dos fuentes de variación conocidas y ortogonales
+\item Número pequeño de tratamientos (3-10)
+\item Ejemplo: ensayos agrícolas con gradiente norte-sur y este-oeste
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ejemplo DCL: Tiempo de Secado}
+Se estudia el tiempo de secado (minutos) de una pintura según 4 formulaciones. Se controla:
+\begin{itemize}
+\item Operador (4 operadores)
+\item Día de la semana (4 días)
+\end{itemize}
+
+\vspace{0.2cm}
+\small
+\begin{table}
+\centering
+\begin{tabular}{lcccc}
+\toprule
+& \textbf{Lunes} & \textbf{Martes} & \textbf{Miércoles} & \textbf{Jueves} \\
+\midrule
+Op. 1 & A: 73 & B: 74 & C: 71 & D: 75 \\
+Op. 2 & B: 73 & C: 75 & D: 72 & A: 74 \\
+Op. 3 & C: 75 & D: 73 & A: 76 & B: 74 \\
+Op. 4 & D: 72 & A: 75 & B: 73 & C: 71 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+\normalsize
+¿Hay diferencias entre formulaciones? ¿Hay efecto de operador o día?
+\end{frame}
+
+\section{Comparación de Diseños}
+
+\begin{frame}{Eficiencia Relativa}
+\textbf{¿Cuál diseño es mejor?}
+
+La eficiencia relativa compara la precisión de dos diseños:
+
+$$\text{Eficiencia Relativa} = \frac{CM_E(\text{Diseño 1})}{CM_E(\text{Diseño 2})} \times \frac{gl_E(\text{Diseño 2}) + 1}{gl_E(\text{Diseño 1}) + 1} \times 100\%$$
+
+\vspace{0.3cm}
+\textbf{Interpretación:}
+\begin{itemize}
+\item ER > 100\%: Diseño 2 es más eficiente que Diseño 1
+\item ER = 100\%: Ambos diseños igualmente eficientes
+\item ER < 100\%: Diseño 1 es más eficiente que Diseño 2
+\end{itemize}
+
+\vspace{0.3cm}
+Ejemplo: Si DBCA tiene ER = 130\% respecto a DCA, se necesitarían 30\% más observaciones en DCA para lograr la misma precisión.
+\end{frame}
+
+\begin{frame}{Guía para Elegir un Diseño}
+\begin{enumerate}
+\item \textbf{Material experimental homogéneo, pocos tratamientos:}
+\begin{itemize}
+\item Usar DCA
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Material heterogéneo, una fuente de variación identificable:}
+\begin{itemize}
+\item Usar DBCA
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Dos fuentes de variación identificables y ortogonales:}
+\begin{itemize}
+\item Usar DCL (si $t$ es pequeño, típicamente $t \leq 10$)
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Múltiples factores de interés:}
+\begin{itemize}
+\item Usar diseños factoriales (ANOVA de dos o más factores)
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Recursos muy limitados:}
+\begin{itemize}
+\item Considerar diseños factoriales fraccionados
+\end{itemize}
+\end{enumerate}
+\end{frame}
+
+\section{Verificación de Supuestos}
+
+\begin{frame}{Supuestos del Modelo}
+Todos los diseños ANOVA requieren:
+
+\begin{enumerate}
+\item \textbf{Normalidad:} Los errores $\varepsilon_{ij}$ siguen distribución normal
+\item \textbf{Homocedasticidad:} Varianza constante $\sigma^2$ para todos los grupos
+\item \textbf{Independencia:} Las observaciones son independientes entre sí
+\end{enumerate}
+
+\vspace{0.3cm}
+\textbf{Consecuencias de violaciones:}
+\begin{itemize}
+\item Normalidad: Afecta poco con muestras grandes (TLC)
+\item Homocedasticidad: Puede invalidar pruebas F
+\item Independencia: Problema serio, invalida todo el análisis
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Verificación de Normalidad}
+\textbf{Métodos gráficos:}
+\begin{itemize}
+\item Gráfico Q-Q de residuos
+\item Histograma de residuos
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Pruebas formales:}
+\begin{itemize}
+\item Shapiro-Wilk (recomendada para $n < 50$)
+\item Kolmogorov-Smirnov
+\item Anderson-Darling
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Soluciones si se rechaza normalidad:}
+\begin{itemize}
+\item Transformación de datos (logaritmo, raíz cuadrada, Box-Cox)
+\item Pruebas no paramétricas (Kruskal-Wallis, Friedman)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Verificación de Homocedasticidad}
+\textbf{Métodos gráficos:}
+\begin{itemize}
+\item Gráfico de residuos vs valores ajustados
+\item Gráfico de dispersión por grupo
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Pruebas formales:}
+\begin{itemize}
+\item Levene (robusta ante desviaciones de normalidad)
+\item Bartlett (más potente si hay normalidad)
+\item Fligner-Killeen (alternativa robusta)
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Regla práctica:} Si $\frac{s_{max}^2}{s_{min}^2} < 3$, la homocedasticidad es razonable.
+
+\vspace{0.3cm}
+\textbf{Soluciones:}
+\begin{itemize}
+\item Transformación de datos
+\item ANOVA de Welch (permite varianzas desiguales)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Verificación de Independencia}
+\textbf{Causas comunes de dependencia:}
+\begin{itemize}
+\item Medidas repetidas en el mismo sujeto
+\item Observaciones en el tiempo (autocorrelación)
+\item Agrupamiento espacial
+\item Estructura jerárquica de datos
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Detección:}
+\begin{itemize}
+\item Gráfico de residuos vs orden de recolección
+\item Prueba de Durbin-Watson (autocorrelación)
+\item Análisis del diseño experimental
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Soluciones:}
+\begin{itemize}
+\item Modelos de medidas repetidas
+\item Modelos mixtos o jerárquicos
+\item Rediseñar el experimento
+\end{itemize}
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Resumen de la Clase}
+\textbf{ANOVA de dos factores:}
+\begin{itemize}
+\item Permite estudiar efectos de dos factores simultáneamente
+\item Detecta interacciones entre factores
+\item Tres pruebas: Factor A, Factor B, Interacción AB
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Diseños experimentales:}
+\begin{itemize}
+\item \textbf{DCA:} Simple, flexible, requiere homogeneidad
+\item \textbf{DBCA:} Controla una fuente de variación, muy usado
+\item \textbf{DCL:} Controla dos fuentes, muy restrictivo
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Verificación de supuestos:}
+\begin{itemize}
+\item Normalidad, homocedasticidad, independencia
+\item Métodos gráficos y pruebas formales
+\item Transformaciones y alternativas no paramétricas
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Próxima Clase}
+\textbf{Clase 23: Implementación Computacional}
+
+\vspace{0.3cm}
+Veremos:
+\begin{itemize}
+\item ANOVA de dos factores en R y Python
+\item Implementación de DCA, DBCA y DCL
+\item Verificación de supuestos
+\item Gráficos de interacción
+\item Comparaciones múltiples post-hoc
+\item Casos de estudio completos
+\end{itemize}
+\end{frame}
+
+\end{document}

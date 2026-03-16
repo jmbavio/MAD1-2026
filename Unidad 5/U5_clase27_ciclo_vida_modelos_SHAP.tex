@@ -1,0 +1,883 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+
+\definecolor{unsblue}{RGB}{30,60,120}
+\setbeamercolor{structure}{fg=unsblue}
+\setbeamercolor{palette primary}{bg=unsblue,fg=white}
+\setbeamercolor{palette secondary}{bg=unsblue!80,fg=white}
+\setbeamercolor{palette tertiary}{bg=unsblue!60,fg=white}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+\title[MAD1 - Clase 27]{Métodos de Análisis de Datos 1}
+\subtitle{Clase 27: Modelos en Producción e Interpretabilidad}
+\author{Prof. José}
+\institute{Departamento de Matemática \\ Universidad Nacional del Sur}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Contenidos de la Clase}
+\tableofcontents
+\end{frame}
+
+\section{Introducción}
+
+\begin{frame}{¿Por qué esta unidad?}
+Hasta ahora aprendimos a:
+\begin{itemize}
+\item Obtener y limpiar datos
+\item Explorar y visualizar
+\item Construir y evaluar modelos
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Pero falta:}
+\begin{itemize}
+\item ¿Cómo llevamos modelos a producción?
+\item ¿Cómo explicamos sus decisiones?
+\item ¿Cómo comunicamos resultados?
+\item ¿Qué responsabilidades éticas tenemos?
+\end{itemize}
+
+\vspace{0.3cm}
+
+Estos aspectos son \textbf{fundamentales} para el éxito profesional en ciencia de datos.
+\end{frame}
+
+\section{Ciclo de Vida de Modelos}
+
+\begin{frame}{Fases del Ciclo de Vida}
+\begin{enumerate}
+\item \textbf{Desarrollo:} exploración, experimentación, validación
+\item \textbf{Deployment:} poner el modelo en producción
+\item \textbf{Monitoreo:} supervisar rendimiento y detectar problemas
+\item \textbf{Reentrenamiento:} actualizar con nuevos datos
+\end{enumerate}
+
+\vspace{0.3cm}
+
+\begin{block}{Realidad}
+El desarrollo del modelo es solo el 20\% del trabajo. El 80\% restante es deployment, mantenimiento y monitoreo.
+\end{block}
+\end{frame}
+
+\begin{frame}{1. Desarrollo e Investigación}
+\textbf{Actividades:}
+\begin{itemize}
+\item Análisis exploratorio de datos (EDA)
+\item Ingeniería de features
+\item Experimentación con algoritmos
+\item Validación rigurosa
+\item Análisis de errores
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Herramientas:}
+\begin{itemize}
+\item Jupyter notebooks, VS Code
+\item scikit-learn, statsmodels
+\item pandas, matplotlib, seaborn
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Output:} Modelo entrenado que cumple requisitos de performance y negocio
+\end{frame}
+
+\begin{frame}{2. Deployment (Puesta en Producción)}
+\textbf{Objetivo:} Hacer el modelo accesible para usuarios o sistemas
+
+\vspace{0.3cm}
+
+\textbf{Pasos típicos:}
+\begin{enumerate}
+\item \textbf{Serialización:} guardar modelo entrenado
+\item \textbf{API REST:} exponer modelo vía endpoints HTTP
+\item \textbf{Containerización:} empaquetar con Docker
+\item \textbf{Integración:} conectar con bases de datos, pipelines
+\item \textbf{Deploy:} subir a servidor/cloud (AWS, Azure, GCP)
+\end{enumerate}
+
+\vspace{0.3cm}
+
+\begin{exampleblock}{Ejemplo de flujo}
+Notebook → Serializar → Flask/FastAPI → Docker → AWS/Azure
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{3. Monitoreo}
+\textbf{¿Qué monitorear?}
+
+\vspace{0.2cm}
+
+\textbf{Performance del modelo:}
+\begin{itemize}
+\item Accuracy, precision, recall, AUC
+\item Distribución de predicciones
+\item Comparar predicciones vs valores reales
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Calidad de datos:}
+\begin{itemize}
+\item Distribución de features de entrada
+\item Valores faltantes, outliers
+\item Data drift (cambios en $P(X)$)
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Aspectos técnicos:}
+\begin{itemize}
+\item Latencia (tiempo de respuesta)
+\item Tasa de errores
+\item Disponibilidad del servicio
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Data Drift vs Concept Drift}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Data Drift}
+
+Cambio en la distribución de las entradas: $P(X)$
+
+\vspace{0.2cm}
+
+\textbf{Ejemplos:}
+\begin{itemize}
+\item Perfiles de clientes cambian post-pandemia
+\item Variables demográficas evolucionan
+\item Estacionalidad en ventas
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Detección:}
+\begin{itemize}
+\item Test Kolmogorov-Smirnov
+\item Comparar estadísticos (media, varianza)
+\item Histogramas comparativos
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{Concept Drift}
+
+Cambio en la relación: $P(Y|X)$
+
+\vspace{0.2cm}
+
+\textbf{Ejemplos:}
+\begin{itemize}
+\item Regulaciones cambian
+\item Estafadores adaptan métodos
+\item Preferencias de usuarios evolucionan
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Detección:}
+\begin{itemize}
+\item Monitorear accuracy en producción
+\item Comparar predicciones vs reales
+\item Alertas cuando cae performance
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{4. Reentrenamiento}
+\textbf{¿Cuándo reentrenar?}
+
+\begin{itemize}
+\item \textbf{Programado:} automático cada cierto tiempo (diario, semanal, mensual)
+\item \textbf{Disparado:} cuando métricas caen bajo umbral
+\item \textbf{Manual:} cuando hay cambios importantes conocidos
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Buenas prácticas:}
+\begin{itemize}
+\item \textbf{Versionado:} mantener registro de todas las versiones
+\item \textbf{A/B testing:} comparar nuevo vs antiguo antes de reemplazar
+\item \textbf{Rollback:} poder volver a versión anterior si falla
+\item \textbf{Documentación:} registrar cambios, datos usados, métricas
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Herramientas:} MLflow, DVC, Neptune.ai, Weights \& Biases
+\end{frame}
+
+\begin{frame}{Consideraciones de Deployment}
+\textbf{Escalabilidad:}
+\begin{itemize}
+\item Latencia: tiempo de respuesta (usualmente $<$ 100ms)
+\item Throughput: predicciones por segundo
+\item Batch vs real-time
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Mantenibilidad:}
+\begin{itemize}
+\item Documentación completa
+\item Tests unitarios
+\item Logging de predicciones y errores
+\item Reproducibilidad (código, datos, modelo)
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Trade-offs:}
+\begin{itemize}
+\item Modelos complejos: más precisos pero más lentos
+\item Simplicidad vs performance
+\item Costo computacional vs mejora marginal
+\end{itemize}
+\end{frame}
+
+\section{Serialización de Modelos}
+
+\begin{frame}{¿Qué es Serialización?}
+\begin{block}{Definición}
+Convertir un objeto Python (modelo entrenado) en un formato que puede guardarse en disco y recargarse posteriormente.
+\end{block}
+
+\vspace{0.3cm}
+
+\textbf{¿Por qué serializar?}
+\begin{itemize}
+\item No reentrenar cada vez que se usa el modelo
+\item Compartir modelos entre equipos
+\item Versionado y control de cambios
+\item Deployment en producción
+\item Backup y recuperación
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{pickle: Formato Estándar}
+\textbf{Nativo de Python, simple de usar}
+
+\vspace{0.2cm}
+
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Ventajas:}
+\begin{itemize}
+\item No requiere librerías extra
+\item Serializa casi cualquier objeto
+\item API simple
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{Desventajas:}
+\begin{itemize}
+\item Solo Python
+\item Vulnerabilidades de seguridad
+\item Incompatibilidades entre versiones
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.3cm}
+
+\textbf{Uso básico:}
+\begin{verbatim}
+import pickle
+
+# Guardar
+with open('modelo.pkl', 'wb') as f:
+    pickle.dump(modelo, f)
+
+# Cargar
+with open('modelo.pkl', 'rb') as f:
+    modelo = pickle.load(f)
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{joblib: Optimizado para ML}
+\textbf{Mejor para modelos grandes con arrays NumPy}
+
+\vspace{0.2cm}
+
+\textbf{Ventajas:}
+\begin{itemize}
+\item Más eficiente que pickle
+\item Compresión automática
+\item API compatible con pickle
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Uso:}
+\begin{verbatim}
+from joblib import dump, load
+
+# Guardar
+dump(modelo, 'modelo.joblib')
+
+# Cargar
+modelo = load('modelo.joblib')
+\end{verbatim}
+
+\vspace{0.2cm}
+
+\begin{block}{Recomendación}
+joblib es la opción preferida para modelos de scikit-learn.
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{ONNX: Formato Interoperable}
+\textbf{Open Neural Network Exchange}
+
+\vspace{0.2cm}
+
+\textbf{Ventajas:}
+\begin{itemize}
+\item Portable entre frameworks (PyTorch, TensorFlow, scikit-learn)
+\item Portable entre lenguajes (Python, C++, Java, JavaScript)
+\item Optimizado para inferencia rápida
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Uso con scikit-learn:}
+\begin{verbatim}
+from skl2onnx import convert_sklearn
+from skl2onnx.common.data_types import FloatTensorType
+
+initial_type = [('input', FloatTensorType([None, n_features]))]
+onx = convert_sklearn(modelo, initial_types=initial_type)
+
+with open("modelo.onnx", "wb") as f:
+    f.write(onx.SerializeToString())
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Buenas Prácticas de Serialización}
+\textbf{1. Guardar todo el pipeline:}
+\begin{verbatim}
+from sklearn.pipeline import Pipeline
+
+pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', RandomForestClassifier())
+])
+pipeline.fit(X_train, y_train)
+dump(pipeline, 'pipeline.joblib')
+\end{verbatim}
+
+\vspace{0.3cm}
+
+\textbf{2. Incluir metadata:}
+\begin{itemize}
+\item Versión del modelo
+\item Fecha de entrenamiento
+\item Métricas de performance
+\item Features utilizadas
+\item Versiones de librerías
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Ejemplo Completo de Serialización}
+\small
+\begin{verbatim}
+from sklearn.pipeline import Pipeline
+from joblib import dump
+import json
+from datetime import datetime
+
+# Pipeline completo
+pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('classifier', RandomForestClassifier(n_estimators=100))
+])
+pipeline.fit(X_train, y_train)
+
+# Guardar pipeline
+dump(pipeline, 'pipeline_v1.0.0.joblib')
+
+# Guardar metadata
+metadata = {
+    'version': '1.0.0',
+    'timestamp': datetime.now().isoformat(),
+    'accuracy': pipeline.score(X_test, y_test),
+    'features': list(X_train.columns)
+}
+with open('pipeline_v1.0.0_metadata.json', 'w') as f:
+    json.dump(metadata, f, indent=2)
+\end{verbatim}
+\end{frame}
+
+\section{Interpretabilidad de Modelos}
+
+\begin{frame}{¿Por qué Interpretabilidad?}
+\textbf{Razones importantes:}
+
+\begin{enumerate}
+\item \textbf{Confianza:} usuarios confían más en modelos explicables
+\item \textbf{Debugging:} identificar errores y sesgos
+\item \textbf{Cumplimiento:} regulaciones (finanzas, salud) requieren explicaciones
+\item \textbf{Mejora:} entender qué aprende el modelo ayuda a mejorarlo
+\item \textbf{Aceptación:} stakeholders adoptan más fácilmente modelos comprensibles
+\end{enumerate}
+
+\vspace{0.3cm}
+
+\begin{alertblock}{Pregunta clave}
+¿Puedo explicar a un cliente por qué el modelo tomó esta decisión?
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Modelos Interpretables vs Caja Negra}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Inherentemente Interpretables:}
+
+\vspace{0.2cm}
+
+\textbf{Regresión Lineal/Logística:}
+\begin{itemize}
+\item Coeficientes claros
+\item Dirección y magnitud del efecto
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Árboles de Decisión:}
+\begin{itemize}
+\item Reglas if-then visuales
+\item Fácil explicar a no técnicos
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{Caja Negra:}
+
+\vspace{0.2cm}
+
+\textbf{Random Forest, Boosting:}
+\begin{itemize}
+\item Múltiples árboles combinados
+\item No hay regla simple
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{Redes Neuronales:}
+\begin{itemize}
+\item Millones de parámetros
+\item Transformaciones complejas
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{SVM con kernels:}
+\begin{itemize}
+\item Espacios de alta dimensión
+\item No directamente interpretables
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Trade-off Interpretabilidad vs Performance}
+\textbf{Estrategia recomendada:}
+\begin{enumerate}
+\item Comenzar con modelos simples (baseline)
+\item Si performance insuficiente, probar modelos complejos
+\item Usar técnicas de interpretabilidad (SHAP, LIME)
+\item Documentar trade-offs claramente
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{SHAP: Valores de Shapley}
+\textbf{SHapley Additive exPlanations}
+
+\vspace{0.3cm}
+
+\begin{block}{Idea Principal}
+Para cada predicción, SHAP calcula la contribución de cada feature:
+$$f(x) = \phi_0 + \sum_{i=1}^{p} \phi_i$$
+
+donde:
+\begin{itemize}
+\item $f(x)$: predicción para instancia $x$
+\item $\phi_0$: valor base (predicción promedio)
+\item $\phi_i$: contribución de feature $i$ (valor SHAP)
+\end{itemize}
+\end{block}
+
+\vspace{0.3cm}
+
+\textbf{Interpretación:}
+\begin{itemize}
+\item Valor positivo: empuja predicción hacia arriba
+\item Valor negativo: empuja predicción hacia abajo
+\item Magnitud: importancia de la contribución
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Propiedades Deseables de SHAP}
+\textbf{¿Por qué SHAP es mejor que otros métodos?}
+
+\vspace{0.3cm}
+
+\begin{enumerate}
+\item \textbf{Local accuracy:} 
+\begin{itemize}
+\item La suma de contribuciones reproduce exactamente la predicción
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Missingness:}
+\begin{itemize}
+\item Features ausentes tienen contribución cero
+\end{itemize}
+
+\vspace{0.2cm}
+
+\item \textbf{Consistency:}
+\begin{itemize}
+\item Si un modelo cambia para depender más de una feature, su contribución SHAP aumenta
+\end{itemize}
+\end{enumerate}
+
+\vspace{0.3cm}
+
+\textbf{Basado en teoría de juegos:} valores de Shapley garantizan reparto justo del pago total entre jugadores.
+\end{frame}
+
+\begin{frame}{Gráficos SHAP}
+\textbf{1. Force Plot:}
+\begin{itemize}
+\item Visualiza contribuciones a una predicción individual
+\item Muestra cómo cada feature empuja hacia arriba/abajo
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{2. Summary Plot:}
+\begin{itemize}
+\item Distribución de SHAP values para todo el dataset
+\item Features ordenadas por importancia
+\item Color indica valor alto/bajo de la feature
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{3. Dependence Plot:}
+\begin{itemize}
+\item Relación entre valor de feature y su SHAP value
+\item Detecta interacciones
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{4. Waterfall Plot:}
+\begin{itemize}
+\item Descomposición aditiva paso a paso
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{SHAP en Python}
+\small
+\begin{verbatim}
+import shap
+from sklearn.ensemble import RandomForestClassifier
+
+# Entrenar modelo
+modelo = RandomForestClassifier()
+modelo.fit(X_train, y_train)
+
+# Crear explainer
+explainer = shap.TreeExplainer(modelo)
+
+# Calcular SHAP values
+shap_values = explainer.shap_values(X_test)
+
+# Summary plot (importancia global)
+shap.summary_plot(shap_values[1], X_test)
+
+# Force plot (predicción individual)
+shap.force_plot(explainer.expected_value[1], 
+                shap_values[1][0], 
+                X_test.iloc[0])
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{LIME: Explicaciones Locales}
+\textbf{Local Interpretable Model-agnostic Explanations}
+
+\vspace{0.3cm}
+
+\textbf{Idea:} Aproximar localmente el modelo complejo con uno simple
+
+\vspace{0.3cm}
+
+\textbf{Procedimiento:}
+\begin{enumerate}
+\item Generar perturbaciones del punto a explicar
+\item Obtener predicciones del modelo original
+\item Entrenar modelo simple (regresión lineal) en las perturbaciones
+\item El modelo simple aproxima localmente el comportamiento
+\end{enumerate}
+
+\vspace{0.3cm}
+
+\textbf{Analogía:} Aproximar función compleja con recta tangente en un punto
+\end{frame}
+
+\begin{frame}{LIME: Ventajas y Desventajas}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Ventajas:}
+\begin{itemize}
+\item Model-agnostic
+\item Explicaciones locales
+\item Interpretable (usa modelos lineales)
+\item Funciona con cualquier tipo de datos
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{Desventajas:}
+\begin{itemize}
+\item Inestabilidad
+\item Dependencia de hiperparámetros
+\item No garantiza consistencia global
+\item Puede ser engañoso
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.4cm}
+
+\begin{block}{Cuándo usar LIME}
+Explicar predicciones individuales específicas (por ejemplo, por qué se rechazó un préstamo a este cliente particular).
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{LIME en Python}
+\small
+\begin{verbatim}
+import lime
+import lime.lime_tabular
+
+# Crear explainer
+explainer = lime.lime_tabular.LimeTabularExplainer(
+    X_train.values,
+    feature_names=X_train.columns,
+    class_names=['Clase 0', 'Clase 1'],
+    mode='classification'
+)
+
+# Explicar una instancia
+i = 0  # índice de la instancia a explicar
+exp = explainer.explain_instance(
+    X_test.values[i], 
+    modelo.predict_proba,
+    num_features=10
+)
+
+# Visualizar
+exp.show_in_notebook()
+exp.as_pyplot_figure()
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Partial Dependence Plots (PDP)}
+\textbf{Muestran el efecto marginal de una feature sobre la predicción}
+
+\vspace{0.3cm}
+
+\textbf{Cálculo:}
+$$PD_{X_j}(x_j) = \frac{1}{n}\sum_{i=1}^{n}f(x_j, x_{-j}^{(i)})$$
+
+Fijamos $X_j$ en un valor, promediamos predicciones sobre todas las demás features.
+
+\vspace{0.3cm}
+
+\textbf{Interpretación:}
+\begin{itemize}
+\item Eje X: valores de la feature
+\item Eje Y: predicción promedio
+\item Pendiente positiva: relación positiva
+\item Curva plana: no afecta la predicción
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Limitación:} Asume independencia entre features (raramente cierto)
+\end{frame}
+
+\begin{frame}[fragile]{PDP en Python}
+\begin{verbatim}
+from sklearn.inspection import PartialDependenceDisplay
+
+# PDP para una feature
+fig, ax = plt.subplots(figsize=(10, 6))
+PartialDependenceDisplay.from_estimator(
+    modelo, X_train, 
+    features=['edad'],
+    ax=ax
+)
+
+# PDP para múltiples features + interacción
+fig, ax = plt.subplots(figsize=(12, 4))
+PartialDependenceDisplay.from_estimator(
+    modelo, X_train, 
+    features=['edad', 'ingreso', ('edad', 'ingreso')],
+    ax=ax
+)
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Feature Importance}
+\textbf{Mide importancia relativa de cada feature}
+
+\vspace{0.3cm}
+
+\textbf{Importancia en Árboles (Gini/Entropy):}
+\begin{itemize}
+\item Incorporada en scikit-learn
+\item Rápida de calcular
+\item Sesgada hacia features con alta cardinalidad
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Permutation Importance:}
+\begin{itemize}
+\item Mide aumento en error al permutar una feature
+\item Model-agnostic
+\item No sesgada por cardinalidad
+\item Más lenta de calcular
+\item Puede confundir con features correlacionadas
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Recomendación:} Usar permutation importance como verificación de feature importance estándar.
+\end{frame}
+
+\begin{frame}[fragile]{Feature Importance en Python}
+\small
+\begin{verbatim}
+# Importancia estándar (árboles)
+importances = modelo.feature_importances_
+indices = np.argsort(importances)[::-1]
+
+plt.bar(range(len(importances)), importances[indices])
+plt.xticks(range(len(importances)), 
+           X_train.columns[indices], rotation=90)
+
+# Permutation importance
+from sklearn.inspection import permutation_importance
+
+perm_importance = permutation_importance(
+    modelo, X_test, y_test,
+    n_repeats=10, random_state=42
+)
+
+sorted_idx = perm_importance.importances_mean.argsort()[::-1]
+plt.boxplot(perm_importance.importances[sorted_idx].T,
+            labels=X_test.columns[sorted_idx], vert=False)
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Comparación de Métodos}
+\small
+\begin{table}
+\begin{tabular}{llll}
+\toprule
+\textbf{Método} & \textbf{Scope} & \textbf{Model-agnostic?} & \textbf{Mejor para} \\
+\midrule
+SHAP & Local/Global & Sí & Explicaciones completas \\
+LIME & Local & Sí & Casos individuales \\
+PDP & Global & Sí & Efecto de una feature \\
+Feature Imp. & Global & Depende & Ranking de features \\
+Perm. Imp. & Global & Sí & Importancia real \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+
+\textbf{Recomendación práctica:}
+\begin{enumerate}
+\item Feature importance: identificar features relevantes
+\item PDP: entender relaciones
+\item SHAP: explicaciones completas y robustas
+\item LIME: cuando necesites explicar un caso específico a no técnicos
+\end{enumerate}
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Resumen de la Clase}
+\textbf{Ciclo de vida de modelos:}
+\begin{itemize}
+\item Desarrollo → Deployment → Monitoreo → Reentrenamiento
+\item Data drift vs concept drift
+\item Versionado y A/B testing
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Serialización:}
+\begin{itemize}
+\item pickle (estándar), joblib (recomendado para ML), ONNX (interoperable)
+\item Guardar pipeline completo + metadata
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Interpretabilidad:}
+\begin{itemize}
+\item Trade-off con performance
+\item SHAP: explicaciones basadas en valores de Shapley
+\item LIME: aproximaciones locales
+\item PDP: efectos marginales
+\item Feature importance: ranking de variables
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Próxima Clase}
+\textbf{Clase 28: Comunicación y Ética}
+
+\vspace{0.3cm}
+
+Veremos:
+\begin{itemize}
+\item Comunicación efectiva de resultados
+\item Reportes reproducibles: Jupyter, R Markdown
+\item Visualizaciones para diferentes audiencias
+\item Ética en análisis de datos: sesgos, fairness, privacidad
+\item Responsabilidad en uso de modelos predictivos
+\end{itemize}
+\end{frame}
+
+\end{document}

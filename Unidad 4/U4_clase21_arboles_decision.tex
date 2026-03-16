@@ -1,0 +1,707 @@
+\documentclass[10pt,aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+
+% Paquetes
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Configuración de listings
+\lstset{
+    basicstyle=\ttfamily\tiny,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    frame=single
+}
+
+% Información del documento
+\title[ANOVA I]{Unidad 4: ANOVA y Diseño de Experimentos}
+\subtitle{Clase 1: Introducción a ANOVA de un Factor}
+\author{Métodos de Análisis de Datos 1}
+\institute{Departamento de Matemática \\ Universidad Nacional del Sur}
+\date{Primer Semestre 2026}
+
+\begin{document}
+
+% Portada
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Tabla de contenidos
+\begin{frame}{Contenido}
+\tableofcontents
+\end{frame}
+
+\section{Introducción al ANOVA}
+
+\begin{frame}{¿Qué es ANOVA?}
+\textbf{ANOVA = Analysis of Variance (Análisis de Varianza)}
+
+\vspace{0.5cm}
+
+\begin{block}{Definición}
+Técnica estadística para comparar las medias de \alert{tres o más grupos} simultáneamente.
+\end{block}
+
+\vspace{0.3cm}
+
+\textbf{¿Por qué no usar múltiples pruebas t?}
+\begin{itemize}
+    \item Con $k$ grupos: $\binom{k}{2} = \frac{k(k-1)}{2}$ comparaciones
+    \item Para 4 grupos: 6 comparaciones
+    \item El error tipo I se acumula: $\alpha_{\text{total}} = 1 - (1-\alpha)^m$
+    \item Con $\alpha = 0.05$ y 6 comparaciones: $\alpha_{\text{total}} \approx 0.26$
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{ANOVA controla el error tipo I familiar}
+\end{frame}
+
+\begin{frame}{Principio Básico de ANOVA}
+ANOVA descompone la variabilidad total en dos componentes:
+
+\vspace{0.5cm}
+
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{Variabilidad Entre Grupos}
+\begin{itemize}
+    \item Explicada por el factor
+    \item Diferencias entre medias grupales
+    \item ¿Es mayor que el ruido?
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Variabilidad Dentro de Grupos}
+\begin{itemize}
+    \item No explicada (error)
+    \item Variabilidad natural
+    \item Ruido del sistema
+\end{itemize}
+\end{columns}
+
+\vspace{0.5cm}
+
+\begin{alertblock}{Idea Central}
+Si la variabilidad entre grupos es \alert{significativamente mayor} que la variabilidad dentro de grupos, hay evidencia de que al menos una media difiere.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Ejemplo Motivador}
+\textbf{Problema:} ¿Cuál método de enseñanza es más efectivo?
+
+\vspace{0.3cm}
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+Estudiante & Método A & Método B & Método C \\
+\midrule
+1 & 78 & 88 & 75 \\
+2 & 82 & 90 & 78 \\
+3 & 79 & 85 & 73 \\
+4 & 85 & 92 & 80 \\
+5 & 80 & 87 & 76 \\
+\midrule
+Media & 80.8 & 88.4 & 76.4 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+
+\textbf{Pregunta:} ¿Son estas diferencias estadísticamente significativas o podrían deberse al azar?
+
+\vspace{0.2cm}
+\alert{ANOVA responde esta pregunta considerando tanto las diferencias entre medias como la variabilidad dentro de cada grupo.}
+\end{frame}
+
+\begin{frame}{Aplicaciones de ANOVA}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{Ciencias de la Salud}
+\begin{itemize}
+    \item Comparar tratamientos médicos
+    \item Estudios de dosis-respuesta
+    \item Efectividad de intervenciones
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Psicología}
+\begin{itemize}
+    \item Diferencias entre grupos de edad
+    \item Efectos de terapias
+    \item Estudios de cognición
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Agronomía}
+\begin{itemize}
+    \item Efecto de fertilizantes
+    \item Variedades de cultivos
+    \item Condiciones ambientales
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Manufactura}
+\begin{itemize}
+    \item Control de calidad
+    \item Comparación de máquinas
+    \item Optimización de procesos
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\section{Modelo ANOVA de un Factor}
+
+\begin{frame}{Notación y Estructura de Datos}
+\textbf{Configuración:}
+\begin{itemize}
+    \item $k$ grupos (niveles del factor)
+    \item $n_i$ observaciones en el grupo $i$
+    \item $N = \sum_{i=1}^{k} n_i$ observaciones totales
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Datos:}
+\begin{center}
+\begin{tabular}{cccc}
+\toprule
+Grupo 1 & Grupo 2 & $\cdots$ & Grupo $k$ \\
+\midrule
+$Y_{11}$ & $Y_{21}$ & $\cdots$ & $Y_{k1}$ \\
+$Y_{12}$ & $Y_{22}$ & $\cdots$ & $Y_{k2}$ \\
+$\vdots$ & $\vdots$ & $\ddots$ & $\vdots$ \\
+$Y_{1n_1}$ & $Y_{2n_2}$ & $\cdots$ & $Y_{kn_k}$ \\
+\midrule
+$\bar{Y}_1$ & $\bar{Y}_2$ & $\cdots$ & $\bar{Y}_k$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+donde $Y_{ij}$ es la $j$-ésima observación del grupo $i$.
+\end{frame}
+
+\begin{frame}{Modelo Estadístico}
+\begin{block}{Modelo de Efectos}
+\begin{equation*}
+Y_{ij} = \mu + \tau_i + \varepsilon_{ij}
+\end{equation*}
+\end{block}
+
+donde:
+\begin{itemize}
+    \item $Y_{ij}$: observación $j$ del grupo $i$
+    \item $\mu$: \alert{media global} (efecto común a todos)
+    \item $\tau_i$: \alert{efecto del tratamiento $i$} (desviación de la media global)
+    \item $\varepsilon_{ij}$: \alert{error aleatorio} $\sim N(0, \sigma^2)$
+\end{itemize}
+
+\vspace{0.3cm}
+
+\begin{block}{Modelo de Medias}
+\begin{equation*}
+Y_{ij} = \mu_i + \varepsilon_{ij}
+\end{equation*}
+donde $\mu_i = \mu + \tau_i$ es la media del grupo $i$.
+\end{block}
+\end{frame}
+
+\begin{frame}{Restricción del Modelo}
+Para que el modelo sea identificable, se impone una restricción:
+
+\vspace{0.3cm}
+
+\begin{block}{Restricción de suma cero}
+\begin{equation*}
+\sum_{i=1}^{k} \tau_i = 0
+\end{equation*}
+\end{block}
+
+\vspace{0.3cm}
+
+\textbf{Interpretación:}
+\begin{itemize}
+    \item Los efectos de tratamiento suman cero
+    \item $\tau_i > 0$: el grupo $i$ está por encima de la media global
+    \item $\tau_i < 0$: el grupo $i$ está por debajo de la media global
+    \item Si $\tau_i = 0$ para todo $i$: no hay efecto de tratamiento
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Hipótesis Estadísticas}
+\begin{block}{En términos de medias}
+\begin{align*}
+H_0 &: \mu_1 = \mu_2 = \cdots = \mu_k \\
+H_1 &: \text{Al menos una media difiere}
+\end{align*}
+\end{block}
+
+\vspace{0.3cm}
+
+\begin{block}{En términos de efectos}
+\begin{align*}
+H_0 &: \tau_1 = \tau_2 = \cdots = \tau_k = 0 \\
+H_1 &: \text{Al menos un } \tau_i \neq 0
+\end{align*}
+\end{block}
+
+\vspace{0.3cm}
+
+\textbf{Nota:} $H_1$ no especifica \alert{cuáles} medias difieren, solo que hay \alert{al menos una} diferencia.
+\end{frame}
+
+\section{Descomposición de Variabilidad}
+
+\begin{frame}{Concepto de Descomposición}
+La variabilidad total de los datos se puede descomponer en dos componentes:
+
+\vspace{0.5cm}
+
+\begin{equation*}
+\text{Variabilidad Total} = \text{Variabilidad Entre Grupos} + \text{Variabilidad Dentro de Grupos}
+\end{equation*}
+
+\vspace{0.5cm}
+
+\textbf{Descomposición:}
+\begin{itemize}
+    \item \alert{Variabilidad Total (SST)} se divide en:
+    \begin{itemize}
+        \item \textcolor{blue}{Entre Grupos (SSB)} - variabilidad explicada
+        \item \textcolor{red}{Dentro de Grupos (SSW)} - variabilidad no explicada (error)
+    \end{itemize}
+\end{itemize}
+
+\vspace{0.3cm}
+
+Matemáticamente: \alert{$\text{SST} = \text{SSB} + \text{SSW}$}
+\end{frame}
+
+\begin{frame}{Suma de Cuadrados Total (SST)}
+\begin{block}{Definición}
+\begin{equation*}
+\text{SST} = \sum_{i=1}^{k} \sum_{j=1}^{n_i} (Y_{ij} - \bar{Y})^2
+\end{equation*}
+\end{block}
+
+donde $\bar{Y} = \frac{1}{N} \sum_{i=1}^{k} \sum_{j=1}^{n_i} Y_{ij}$ es la \alert{media global}.
+
+\vspace{0.5cm}
+
+\textbf{Interpretación:}
+\begin{itemize}
+    \item Mide la variabilidad total de todas las observaciones
+    \item Suma de desviaciones cuadradas respecto a la media global
+    \item No considera la estructura de grupos
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Grados de libertad:} $N - 1$
+\end{frame}
+
+\begin{frame}{Suma de Cuadrados Entre Grupos (SSB)}
+\begin{block}{Definición}
+\begin{equation*}
+\text{SSB} = \sum_{i=1}^{k} n_i (\bar{Y}_i - \bar{Y})^2
+\end{equation*}
+\end{block}
+
+donde $\bar{Y}_i = \frac{1}{n_i} \sum_{j=1}^{n_i} Y_{ij}$ es la media del grupo $i$.
+
+\vspace{0.5cm}
+
+\textbf{Interpretación:}
+\begin{itemize}
+    \item Mide la variabilidad \alert{explicada por el factor}
+    \item Diferencias entre las medias grupales y la media global
+    \item Ponderada por el tamaño de cada grupo ($n_i$)
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Grados de libertad:} $k - 1$
+\end{frame}
+
+\begin{frame}{Suma de Cuadrados Dentro de Grupos (SSW)}
+\begin{block}{Definición}
+\begin{equation*}
+\text{SSW} = \sum_{i=1}^{k} \sum_{j=1}^{n_i} (Y_{ij} - \bar{Y}_i)^2
+\end{equation*}
+\end{block}
+
+\vspace{0.5cm}
+
+\textbf{Interpretación:}
+\begin{itemize}
+    \item Mide la variabilidad \alert{no explicada} (error)
+    \item Suma de variabilidades dentro de cada grupo
+    \item Refleja la variabilidad natural/ruido del sistema
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Grados de libertad:} $N - k$
+
+\vspace{0.3cm}
+
+\textbf{También llamada:} SSE (Sum of Squares Error) o SSR (Sum of Squares Residual)
+\end{frame}
+
+\begin{frame}{Identidad Fundamental de ANOVA}
+\begin{alertblock}{Descomposición de la Variabilidad}
+\begin{equation*}
+\underbrace{\sum_{i=1}^{k} \sum_{j=1}^{n_i} (Y_{ij} - \bar{Y})^2}_{\text{SST}} = \underbrace{\sum_{i=1}^{k} n_i (\bar{Y}_i - \bar{Y})^2}_{\text{SSB}} + \underbrace{\sum_{i=1}^{k} \sum_{j=1}^{n_i} (Y_{ij} - \bar{Y}_i)^2}_{\text{SSW}}
+\end{equation*}
+\end{alertblock}
+
+\vspace{0.5cm}
+
+\textbf{Demostración (idea):}
+\begin{align*}
+Y_{ij} - \bar{Y} &= (Y_{ij} - \bar{Y}_i) + (\bar{Y}_i - \bar{Y}) \\
+&= \text{desviación dentro del grupo} + \text{desviación entre grupos}
+\end{align*}
+
+Al elevar al cuadrado y sumar, los términos cruzados se cancelan.
+\end{frame}
+
+\begin{frame}{Ejemplo Numérico: Datos}
+\textbf{Tres métodos de enseñanza:}
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+& Método A & Método B & Método C \\
+\midrule
+& 78 & 88 & 75 \\
+& 82 & 90 & 78 \\
+& 79 & 85 & 73 \\
+& 85 & 92 & 80 \\
+& 80 & 87 & 76 \\
+\midrule
+$\bar{Y}_i$ & 80.8 & 88.4 & 76.4 \\
+$n_i$ & 5 & 5 & 5 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+
+Media global: $\bar{Y} = \frac{80.8 + 88.4 + 76.4}{3} = 81.87$
+
+$N = 15$ observaciones totales
+\end{frame}
+
+\begin{frame}{Ejemplo Numérico: Cálculo SST}
+\begin{equation*}
+\text{SST} = \sum_{i=1}^{3} \sum_{j=1}^{5} (Y_{ij} - \bar{Y})^2
+\end{equation*}
+
+\vspace{0.3cm}
+
+\textbf{Grupo A:}
+\begin{align*}
+&(78-81.87)^2 + (82-81.87)^2 + (79-81.87)^2 \\
+&+ (85-81.87)^2 + (80-81.87)^2 = 38.93
+\end{align*}
+
+\textbf{Grupo B:}
+\begin{align*}
+&(88-81.87)^2 + (90-81.87)^2 + \cdots = 271.73
+\end{align*}
+
+\textbf{Grupo C:}
+\begin{align*}
+&(75-81.87)^2 + (78-81.87)^2 + \cdots = 177.73
+\end{align*}
+
+\vspace{0.2cm}
+\alert{$\text{SST} = 38.93 + 271.73 + 177.73 = 488.39$}
+\end{frame}
+
+\begin{frame}{Ejemplo Numérico: Cálculo SSB}
+\begin{equation*}
+\text{SSB} = \sum_{i=1}^{3} n_i (\bar{Y}_i - \bar{Y})^2
+\end{equation*}
+
+\vspace{0.5cm}
+
+\begin{align*}
+\text{SSB} &= 5(80.8 - 81.87)^2 + 5(88.4 - 81.87)^2 + 5(76.4 - 81.87)^2 \\
+&= 5(1.14) + 5(42.64) + 5(29.92) \\
+&= 5.70 + 213.20 + 149.60 \\
+&= \alert{368.50}
+\end{align*}
+
+\vspace{0.3cm}
+
+\textbf{Interpretación:} El factor "método de enseñanza" explica 368.50 unidades de variabilidad.
+\end{frame}
+
+\begin{frame}{Ejemplo Numérico: Cálculo SSW}
+\begin{equation*}
+\text{SSW} = \sum_{i=1}^{3} \sum_{j=1}^{5} (Y_{ij} - \bar{Y}_i)^2
+\end{equation*}
+
+\vspace{0.3cm}
+
+\textbf{Grupo A} ($\bar{Y}_A = 80.8$):
+\begin{align*}
+&(78-80.8)^2 + (82-80.8)^2 + (79-80.8)^2 \\
+&+ (85-80.8)^2 + (80-80.8)^2 = 29.20
+\end{align*}
+
+\textbf{Grupo B} ($\bar{Y}_B = 88.4$): 42.80
+
+\textbf{Grupo C} ($\bar{Y}_C = 76.4$): 47.20
+
+\vspace{0.3cm}
+\alert{$\text{SSW} = 29.20 + 42.80 + 47.20 = 119.20$}
+
+\vspace{0.3cm}
+\textbf{Verificación:} $\text{SSB} + \text{SSW} = 368.50 + 119.20 = 487.70 \approx 488.39$ $\checkmark$
+\end{frame}
+
+\section{Tabla ANOVA y Estadístico F}
+
+\begin{frame}{Cuadrados Medios}
+Las sumas de cuadrados se dividen por sus grados de libertad para obtener \alert{cuadrados medios}:
+
+\vspace{0.5cm}
+
+\begin{block}{Cuadrado Medio Entre Grupos (MSB)}
+\begin{equation*}
+\text{MSB} = \frac{\text{SSB}}{k-1}
+\end{equation*}
+Estima $\sigma^2 + n \cdot \text{Var}(\tau_i)$ bajo $H_1$
+\end{block}
+
+\vspace{0.3cm}
+
+\begin{block}{Cuadrado Medio Dentro de Grupos (MSW)}
+\begin{equation*}
+\text{MSW} = \frac{\text{SSW}}{N-k}
+\end{equation*}
+Estima $\sigma^2$ (varianza del error) bajo $H_0$ y $H_1$
+\end{block}
+\end{frame}
+
+\begin{frame}{Estadístico F}
+\begin{block}{Definición}
+\begin{equation*}
+F = \frac{\text{MSB}}{\text{MSW}} = \frac{\text{SSB}/(k-1)}{\text{SSW}/(N-k)}
+\end{equation*}
+\end{block}
+
+\vspace{0.3cm}
+
+\textbf{Distribución bajo $H_0$:}
+\begin{equation*}
+F \sim F_{k-1, N-k}
+\end{equation*}
+
+\vspace{0.3cm}
+
+\textbf{Interpretación:}
+\begin{itemize}
+    \item Compara variabilidad entre grupos vs. variabilidad dentro de grupos
+    \item Si $F$ es grande: mucha variabilidad entre grupos relativa al error
+    \item Si $H_0$ es cierta: $F \approx 1$ (ambos cuadrados medios estiman $\sigma^2$)
+    \item Si $H_1$ es cierta: $F > 1$ (MSB sobreestima $\sigma^2$)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Tabla ANOVA Completa}
+\begin{center}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Fuente & \begin{tabular}{c} Suma de \\ Cuadrados \end{tabular} & GL & \begin{tabular}{c} Cuadrados \\ Medios \end{tabular} & $F$ \\
+\midrule
+Entre grupos & SSB & $k-1$ & $\frac{\text{SSB}}{k-1}$ & $\frac{\text{MSB}}{\text{MSW}}$ \\
+Dentro de grupos & SSW & $N-k$ & $\frac{\text{SSW}}{N-k}$ & \\
+Total & SST & $N-1$ & & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+
+\textbf{Grados de libertad:}
+\begin{itemize}
+    \item Total: $N - 1$ (una restricción: estimar $\bar{Y}$)
+    \item Entre grupos: $k - 1$ (estimar $k$ medias con restricción $\sum \tau_i = 0$)
+    \item Dentro de grupos: $N - k$ (estimar variabilidad en cada grupo)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ejemplo Numérico: Tabla ANOVA}
+Con los datos anteriores:
+
+\vspace{0.3cm}
+
+\begin{center}
+\begin{tabular}{lccccc}
+\toprule
+Fuente & SS & GL & MS & $F$ & p-valor \\
+\midrule
+Entre grupos & 368.50 & 2 & 184.25 & 18.52 & $<0.001$ \\
+Dentro de grupos & 119.20 & 12 & 9.93 & & \\
+Total & 487.70 & 14 & & & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+
+\textbf{Cálculos:}
+\begin{itemize}
+    \item $\text{MSB} = 368.50 / 2 = 184.25$
+    \item $\text{MSW} = 119.20 / 12 = 9.93$
+    \item $F = 184.25 / 9.93 = 18.52$
+    \item Valor crítico $F_{2,12,0.05} = 3.89$
+    \item $18.52 > 3.89$ $\Rightarrow$ \alert{Rechazamos $H_0$}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Regla de Decisión}
+\begin{block}{Prueba de Hipótesis}
+\begin{itemize}
+    \item \textbf{Rechazar $H_0$ si:} $F > F_{k-1, N-k, \alpha}$
+    \item \textbf{O equivalentemente:} p-valor $< \alpha$
+\end{itemize}
+\end{block}
+
+\vspace{0.5cm}
+
+\textbf{Interpretación de resultados:}
+
+\begin{itemize}
+    \item \textbf{Si rechazamos $H_0$:} Hay evidencia estadística de que al menos una media difiere. Proceder con comparaciones post-hoc.
+    
+    \item \textbf{Si no rechazamos $H_0$:} No hay evidencia suficiente de diferencias entre las medias. Los datos son consistentes con $\mu_1 = \mu_2 = \cdots = \mu_k$.
+\end{itemize}
+\end{frame}
+
+\section{Interpretación Geométrica}
+
+\begin{frame}{Visualización de la Descomposición}
+\begin{center}
+\end{center}
+
+\textbf{Desviación total} = \textcolor{blue}{Desviación entre grupos} + \textcolor{red}{Desviación dentro de grupos}
+
+\vspace{0.3cm}
+
+\begin{equation*}
+(Y_{ij} - \bar{Y}) = \textcolor{blue}{(\bar{Y}_i - \bar{Y})} + \textcolor{red}{(Y_{ij} - \bar{Y}_i)}
+\end{equation*}
+\end{frame}
+
+\begin{frame}{Casos Extremos}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{$H_0$ es cierta}
+\begin{center}
+\end{center}
+\begin{itemize}
+    \item Medias grupales similares
+    \item SSB pequeño
+    \item $F \approx 1$
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{$H_1$ es cierta}
+\begin{center}
+\end{center}
+\begin{itemize}
+    \item Medias grupales muy distintas
+    \item SSB grande
+    \item $F \gg 1$
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Distribución F}
+\begin{center}
+\end{center}
+
+\textbf{Características:}
+\begin{itemize}
+    \item Siempre positiva ($F \geq 0$)
+    \item Asimétrica (sesgada a la derecha)
+    \item Forma depende de los grados de libertad $(k-1, N-k)$
+    \item Área a la derecha del valor crítico = $\alpha$
+\end{itemize}
+\end{frame}
+
+\section{Conclusiones}
+
+\begin{frame}{Resumen de la Clase}
+\begin{enumerate}
+    \item \textbf{ANOVA} permite comparar medias de $k \geq 3$ grupos controlando el error tipo I
+    
+    \item El \textbf{modelo} descompone cada observación en: media global + efecto de tratamiento + error
+    
+    \item La \textbf{variabilidad total} se descompone en: variabilidad entre grupos + variabilidad dentro de grupos
+    
+    \item El \textbf{estadístico F} compara estas variabilidades: $F = \text{MSB} / \text{MSW}$
+    
+    \item La \textbf{tabla ANOVA} organiza todos los cálculos para tomar una decisión
+    
+    \item Si rechazamos $H_0$, sabemos que hay diferencias pero \alert{no cuáles grupos difieren}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Próxima Clase}
+\textbf{Temas a cubrir:}
+
+\begin{itemize}
+    \item \textbf{Supuestos de ANOVA:} normalidad, homocedasticidad, independencia
+    \item \textbf{Verificación de supuestos:} pruebas y gráficos diagnósticos
+    \item \textbf{Comparaciones múltiples post-hoc:} Tukey, Bonferroni, Scheffé
+    \item \textbf{Tamaño del efecto:} $\eta^2$ (eta cuadrado)
+    \item \textbf{Potencia estadística} del ANOVA
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Lectura recomendada:} Secciones 2-3 del PDF de teoría de la Unidad 4
+\end{frame}
+
+\begin{frame}
+\begin{center}
+{\Huge ¿Preguntas?}
+
+\vspace{1cm}
+
+\Large Unidad 4 - Clase 1 \\
+ANOVA de un Factor
+
+\vspace{0.5cm}
+
+\normalsize
+Métodos de Análisis de Datos 1 \\
+UNS - 2026
+\end{center}
+\end{frame}
+
+\end{document}

@@ -1,0 +1,218 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{whale}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+\title{Métodos de Análisis de Datos 1}
+\subtitle{Clase 10: Detección de Outliers}
+\author{Depto.\ de Matemática -- UNS}
+\institute{Universidad Nacional del Sur}
+\date{1er Cuatrimestre 2026}
+
+\AtBeginSection[]{
+  \begin{frame}{Contenidos}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenidos}
+  \tableofcontents
+\end{frame}
+
+%=============================================================
+\section{¿Qué es un outlier?}
+%=============================================================
+
+\begin{frame}{Definición y tipos}
+  \begin{block}{Outlier (valor atípico)}
+    Observación que se aleja considerablemente del patrón general de los datos. No necesariamente es un error.
+  \end{block}
+  \bigskip
+  \textbf{Tipos según su origen:}
+  \begin{itemize}
+    \item \textbf{Error de medición o registro}: ingreso incorrecto, falla del instrumento.
+    \item \textbf{Error de procedimiento}: condición experimental anómala.
+    \item \textbf{Outlier genuino}: observación real, inusual pero válida. Puede ser la más interesante del conjunto.
+  \end{itemize}
+  \bigskip
+  \begin{alertblock}{Pregunta clave}
+    ¿El valor atípico aporta información o contamina el análisis?
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Impacto de los outliers}
+  Los outliers pueden afectar fuertemente:
+  \begin{itemize}
+    \item La \textbf{media} y la \textbf{varianza} (medidas no robustas).
+    \item Los coeficientes de \textbf{regresión}.
+    \item Los resultados de \textbf{tests estadísticos} que asumen normalidad.
+    \item Las \textbf{correlaciones} entre variables.
+  \end{itemize}
+  \bigskip
+  \begin{block}{Medidas robustas (poco afectadas por outliers)}
+    Mediana, RIC (Rango Intercuartílico), correlación de Spearman.
+  \end{block}
+\end{frame}
+
+%=============================================================
+\section{Métodos visuales}
+%=============================================================
+
+\begin{frame}{Detección visual: boxplot}
+  \begin{block}{Criterio del boxplot (Tukey, 1977)}
+    \begin{itemize}
+      \item \textbf{Outlier leve}: $x < Q_1 - 1.5\,\text{RIC}$ \quad o \quad $x > Q_3 + 1.5\,\text{RIC}$.
+      \item \textbf{Outlier extremo}: $x < Q_1 - 3\,\text{RIC}$ \quad o \quad $x > Q_3 + 3\,\text{RIC}$.
+    \end{itemize}
+  \end{block}
+  \bigskip
+  \begin{itemize}
+    \item Es la herramienta visual más ampliamente usada.
+    \item \textbf{Robusta}: los límites se basan en $Q_1$, $Q_3$ y RIC, no en la media.
+    \item Fácil de interpretar y de implementar en Python/R.
+  \end{itemize}
+  \bigskip
+  \begin{exampleblock}{Nota}
+    Para distribuciones muy asimétricas, el criterio IQR puede señalar como outliers valores que son parte natural de la distribución. Usar con criterio.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Detección visual: histograma y scatter plot}
+  \textbf{Histograma:}
+  \begin{itemize}
+    \item Barras aisladas en los extremos indican posibles outliers.
+    \item Útil para distribuciones unimodales claramente simétricas.
+  \end{itemize}
+  \bigskip
+  \textbf{Gráfico de dispersión (scatter plot):}
+  \begin{itemize}
+    \item Para una variable: graficar $x_i$ vs.\ índice $i$ (scatter unidimensional).
+    \item Para dos variables: puntos aislados del ``nube'' principal.
+    \item El Q-Q plot también puede revelar outliers en las colas.
+  \end{itemize}
+\end{frame}
+
+%=============================================================
+\section{Métodos estadísticos}
+%=============================================================
+
+\begin{frame}{Método de la puntuación Z (Z-score)}
+  \begin{block}{Z-score}
+    \[
+      z_i = \frac{x_i - \bar{x}}{s}
+    \]
+  \end{block}
+  \begin{itemize}
+    \item Regla habitual: $|z_i| > 3$ indica posible outlier (bajo normalidad, probabilidad $\approx 0.27\%$).
+    \item \textbf{Problema}: $\bar{x}$ y $s$ son no robustos — los outliers inflan $s$, enmascarándose a sí mismos (efecto de enmascaramiento).
+  \end{itemize}
+  \bigskip
+  \begin{alertblock}{Versión robusta: Z modificado (Iglewicz \& Hoaglin)}
+    \[
+      M_i = \frac{0.6745\,(x_i - \tilde{x})}{MAD}, \quad MAD = \text{mediana}(|x_i - \tilde{x}|)
+    \]
+    Umbral recomendado: $|M_i| > 3.5$.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Método de Grubbs}
+  \begin{block}{Test de Grubbs (o ESD — Extreme Studentized Deviate)}
+    Contrasta si el valor más extremo es un outlier:
+    \[
+      G = \frac{\max_i |x_i - \bar{x}|}{s}
+    \]
+    Se compara con valores críticos tabulados para $n$ y $\alpha$.
+  \end{block}
+  \bigskip
+  \begin{itemize}
+    \item $H_0$: no hay outliers en el conjunto. \quad $H_1$: hay al menos uno.
+    \item Se aplica \textbf{iterativamente}: se elimina el outlier detectado y se repite.
+    \item Asume distribución Normal.
+    \item \textbf{Extensión}: test de Grubbs generalizado (GESD) para detectar $k$ outliers simultáneamente.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Test de Dixon}
+  \begin{block}{Estadístico de Dixon (para muestras pequeñas, $n \le 25$)}
+    Para el valor máximo sospechoso:
+    \[
+      Q_{10} = \frac{x_{(n)} - x_{(n-1)}}{x_{(n)} - x_{(1)}}
+    \]
+    Se compara con valores críticos tabulados.
+  \end{block}
+  \bigskip
+  \begin{itemize}
+    \item Existen variantes según el tamaño muestral ($Q_{11}$, $Q_{22}$, etc.).
+    \item Solo detecta un outlier a la vez (en el máximo o en el mínimo).
+    \item Útil en laboratorio clínico y control de calidad con pocos datos.
+  \end{itemize}
+\end{frame}
+
+%=============================================================
+\section{Tratamiento de outliers}
+%=============================================================
+
+\begin{frame}{¿Qué hacer con los outliers?}
+  \begin{block}{Opciones}
+    \begin{enumerate}
+      \item \textbf{Corregir}: si es un error de registro verificable.
+      \item \textbf{Eliminar}: si es un error irreparable. Documentar y justificar.
+      \item \textbf{Conservar}: si es un dato genuino. Usar métodos robustos.
+      \item \textbf{Análisis de sensibilidad}: realizar el análisis con y sin el outlier, reportar diferencias.
+    \end{enumerate}
+  \end{block}
+  \bigskip
+  \begin{alertblock}{Nunca eliminar por conveniencia}
+    Eliminar un outlier genuino para mejorar el ajuste estadístico es una práctica inadmisible. Siempre se debe documentar la decisión.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Métodos robustos como alternativa}
+  En lugar de eliminar outliers, se pueden usar estimadores robustos:
+  \bigskip
+  \begin{center}
+    \begin{tabular}{ll}
+      \toprule
+      \textbf{No robusto} & \textbf{Alternativa robusta} \\
+      \midrule
+      Media & Mediana, media truncada \\
+      Varianza / DE & MAD, RIC \\
+      Regresión MCO & Regresión LAD, regresión de Huber \\
+      Correlación de Pearson & Correlación de Spearman \\
+      Test $t$ & Test de Wilcoxon \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+\end{frame}
+
+%=============================================================
+\section{Resumen}
+%=============================================================
+
+\begin{frame}{Resumen de la clase}
+  \begin{block}{Conceptos clave}
+    \begin{itemize}
+      \item Outlier: error, anomalía o dato genuino inusual.
+      \item \textbf{Detección visual}: boxplot (criterio IQR), histograma.
+      \item \textbf{Métodos estadísticos}: Z-score, Z modificado (MAD), Grubbs, Dixon.
+      \item \textbf{Tratamiento}: corregir, eliminar (justificado) o usar métodos robustos.
+    \end{itemize}
+  \end{block}
+  \bigskip
+  \begin{block}{Próxima clase}
+    Clase 11: Análisis bivariado — relaciones entre dos variables, tablas de contingencia, correlaciones y gráficos de dispersión.
+  \end{block}
+\end{frame}
+
+\end{document}

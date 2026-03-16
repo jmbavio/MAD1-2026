@@ -1,0 +1,896 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+
+\definecolor{unsblue}{RGB}{30,60,120}
+\setbeamercolor{structure}{fg=unsblue}
+\setbeamercolor{palette primary}{bg=unsblue,fg=white}
+\setbeamercolor{palette secondary}{bg=unsblue!80,fg=white}
+\setbeamercolor{palette tertiary}{bg=unsblue!60,fg=white}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+\title[MAD1 - Clase 28]{Métodos de Análisis de Datos 1}
+\subtitle{Clase 28: Comunicación de Resultados y Ética}
+\author{Prof. José}
+\institute{Departamento de Matemática \\ Universidad Nacional del Sur}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Contenidos de la Clase}
+\tableofcontents
+\end{frame}
+
+\section{Introducción}
+
+\begin{frame}{¿Por qué Comunicación y Ética?}
+\textbf{El mejor análisis es inútil si:}
+\begin{itemize}
+\item No podemos explicarlo claramente
+\item La audiencia no lo entiende
+\item No genera confianza
+\item Causa daño no intencional
+\end{itemize}
+
+\vspace{0.3cm}
+
+\begin{block}{Realidad profesional}
+Como científicos de datos, pasamos tanto tiempo comunicando y justificando nuestro trabajo como haciendo análisis técnico.
+\end{block}
+
+\vspace{0.3cm}
+
+\textbf{Esta clase cubre:}
+\begin{itemize}
+\item Principios de comunicación efectiva
+\item Reportes reproducibles (Jupyter, R Markdown)
+\item Ética: sesgos, fairness, privacidad, responsabilidad
+\end{itemize}
+\end{frame}
+
+\section{Comunicación de Resultados}
+
+\begin{frame}{Principio 1: Conocer a la Audiencia}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Audiencia Técnica}\\
+(científicos de datos, ingenieros)
+
+\begin{itemize}
+\item Detalles técnicos bienvenidos
+\item Hiperparámetros, métricas específicas
+\item Gráficos diagnósticos
+\item Metodología rigurosa
+\item Reproducibilidad
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{Audiencia de Negocio}\\
+(gerentes, ejecutivos)
+
+\begin{itemize}
+\item Enfoque en impacto y ROI
+\item Decisiones accionables
+\item Lenguaje simple
+\item Visualizaciones intuitivas
+\item Resultados clave
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.4cm}
+
+\begin{alertblock}{Error común}
+Presentar detalles técnicos a audiencia no técnica (o viceversa)
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Principio 2: Estructura Clara}
+\textbf{Estructura de reporte típica:}
+
+\begin{enumerate}
+\item \textbf{Resumen ejecutivo} (1 página): problema, metodología, resultados, recomendaciones
+\item \textbf{Introducción:} contexto, objetivos, preguntas
+\item \textbf{Datos:} fuentes, tamaño, calidad, limitaciones
+\item \textbf{Metodología:} exploración, features, modelos, validación
+\item \textbf{Resultados:} métricas, comparaciones, hallazgos
+\item \textbf{Conclusiones:} interpretación, implicaciones
+\item \textbf{Limitaciones:} supuestos, sesgos, incertidumbre
+\item \textbf{Próximos pasos:} mejoras, investigación futura
+\item \textbf{Apéndices:} detalles técnicos, código, tablas
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Principio 3: Visualizaciones Efectivas}
+\textbf{Reglas de oro:}
+
+\begin{enumerate}
+\item \textbf{Un gráfico, un mensaje}
+\begin{itemize}
+\item No sobrecargar con información
+\end{itemize}
+
+\item \textbf{Claridad total}
+\begin{itemize}
+\item Ejes etiquetados, leyendas, títulos descriptivos
+\end{itemize}
+
+\item \textbf{Honestidad}
+\begin{itemize}
+\item No distorsionar (escalas apropiadas, barras desde cero)
+\end{itemize}
+
+\item \textbf{Accesibilidad}
+\begin{itemize}
+\item Colores para daltónicos, fuente legible
+\end{itemize}
+
+\item \textbf{Consistencia}
+\begin{itemize}
+\item Mismo estilo en todo el reporte
+\end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Elegir el Gráfico Apropiado}
+\begin{table}
+\small
+\begin{tabular}{ll}
+\toprule
+\textbf{Objetivo} & \textbf{Gráfico} \\
+\midrule
+Comparar categorías & Barras, columnas \\
+Evolución temporal & Líneas \\
+Distribución & Histogramas, boxplots, violines \\
+Relación entre dos variables & Scatter plots \\
+Proporciones & Pie charts (con moderación), treemaps \\
+Múltiples variables & Heatmaps, parallel coordinates \\
+Composición & Áreas apiladas, treemaps \\
+Ranking & Barras horizontales ordenadas \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+
+\begin{alertblock}{Evitar}
+Gráficos 3D innecesarios, efectos visuales que distorsionan, demasiados colores
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Principio 4: Narrar una Historia}
+\textbf{Los datos por sí solos no son convincentes}
+
+\vspace{0.3cm}
+
+\textbf{Estructura narrativa:}
+\begin{enumerate}
+\item \textbf{Contexto:} ¿por qué es importante?
+\item \textbf{Problema:} ¿qué pregunta respondemos?
+\item \textbf{Viaje:} ¿qué descubrimos en el camino?
+\item \textbf{Clímax:} hallazgo principal
+\item \textbf{Resolución:} ¿qué hacemos con esta información?
+\end{enumerate}
+
+\vspace{0.3cm}
+
+\textbf{Técnicas narrativas:}
+\begin{itemize}
+\item Comenzar con ejemplo concreto o anécdota
+\item Usar analogías para conceptos complejos
+\item Anticipar y responder objeciones
+\item Terminar con llamado a la acción claro
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Reportar Incertidumbre}
+\textbf{Todo modelo tiene incertidumbre}
+
+\vspace{0.3cm}
+
+\textbf{Comunicarla honestamente:}
+\begin{itemize}
+\item Intervalos de confianza, no solo puntos
+\item Errores de predicción contextualizados (RMSE, MAE)
+\item Limitaciones de los datos (sesgos, faltantes)
+\item Supuestos del modelo y su razonabilidad
+\end{itemize}
+
+\vspace{0.3cm}
+
+\begin{exampleblock}{Ejemplo de buena práctica}
+``El modelo predice una tasa de churn del 15\% con IC 95\%: [12\%, 18\%]. Esta estimación asume comportamiento futuro similar al histórico. Cambios en el mercado o productos podrían afectarla.''
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Lenguaje Claro y Preciso}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Evitar:}
+\begin{itemize}
+\item Jerga innecesaria
+\item Siglas no definidas
+\item Lenguaje vago
+\item ``El modelo funciona bien''
+\item Causalidad cuando solo hay correlación
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{Preferir:}
+\begin{itemize}
+\item Términos simples
+\item Definir en primera mención
+\item Cuantificación precisa
+\item ``85\% de accuracy''
+\item ``X está asociado con Y''
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.4cm}
+
+\begin{alertblock}{Regla de oro}
+Si tu abuela no lo entiende, necesita simplificarse (excepto para audiencia técnica especializada).
+\end{alertblock}
+\end{frame}
+
+\section{Reportes Reproducibles}
+
+\begin{frame}{¿Qué es Reproducibilidad?}
+\begin{block}{Definición}
+Un análisis es reproducible si otra persona puede ejecutarlo y obtener los mismos resultados.
+\end{block}
+
+\vspace{0.3cm}
+
+\textbf{¿Por qué es importante?}
+\begin{itemize}
+\item \textbf{Verificación:} detectar errores
+\item \textbf{Confianza:} transparencia genera credibilidad
+\item \textbf{Colaboración:} otros pueden extender tu trabajo
+\item \textbf{Ciencia:} resultados deben ser verificables
+\item \textbf{Auditoría:} cumplimiento regulatorio
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Componentes de reproducibilidad:}
+\begin{itemize}
+\item Código versionado (Git)
+\item Datos documentados
+\item Dependencias especificadas (requirements.txt, renv)
+\item Instrucciones claras
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Jupyter Notebooks}
+\textbf{Combina código, visualizaciones y narrativa}
+
+\vspace{0.3cm}
+
+\textbf{Ventajas:}
+\begin{itemize}
+\item Interactividad: ejecutar celda por celda
+\item Integración: código + texto + ecuaciones + imágenes
+\item Compartible: formato JSON, versionable con Git
+\item Exportable: HTML, PDF, presentaciones
+\item Popular en industria y academia
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Desventajas:}
+\begin{itemize}
+\item Puede desordenarse fácilmente
+\item Outputs grandes dificultan versionado
+\item Tentación de código no ordenado
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Jupyter: Buenas Prácticas}
+\begin{enumerate}
+\item \textbf{Orden lógico:} celdas ejecutables secuencialmente de arriba a abajo
+
+\item \textbf{Restart \& Run All:} verificar que funciona desde cero
+
+\item \textbf{Markdown generoso:} explicar qué hace cada sección
+
+\item \textbf{Imports al inicio:} todas las librerías arriba
+
+\item \textbf{Configuración temprana:} seeds, parámetros, paths
+
+\item \textbf{Control de versiones:} commits frecuentes
+
+\item \textbf{Limpiar outputs:} antes de commitear (o usar nbstripout)
+
+\item \textbf{Gestión de dependencias:} requirements.txt o environment.yml
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Jupyter: Estructura Recomendada}
+\begin{enumerate}
+\item \textbf{Título y resumen}
+\item \textbf{Imports:} todas las librerías
+\item \textbf{Configuración:} seeds, parámetros
+\item \textbf{Carga de datos:} con verificaciones
+\item \textbf{Exploración:} EDA
+\item \textbf{Preprocesamiento:} limpieza, transformaciones
+\item \textbf{Modelado:} entrenamiento, validación
+\item \textbf{Evaluación:} métricas, gráficos
+\item \textbf{Conclusiones:} hallazgos principales
+\item \textbf{Próximos pasos:} mejoras futuras
+\end{enumerate}
+
+\vspace{0.3cm}
+
+\textbf{Exportar:}
+\begin{itemize}
+\item HTML: \texttt{jupyter nbconvert --to html notebook.ipynb}
+\item PDF: \texttt{jupyter nbconvert --to pdf notebook.ipynb}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{R Markdown}
+\textbf{Combina código R, narrativa y análisis}
+
+\vspace{0.3cm}
+
+\textbf{Estructura de archivo .Rmd:}
+
+\begin{enumerate}
+\item \textbf{Encabezado YAML:} metadatos
+\begin{verbatim}
+---
+title: "Análisis Q1 2026"
+author: "José Bavio"
+output: html_document
+---
+\end{verbatim}
+
+\item \textbf{Texto Markdown:} narrativa
+
+\item \textbf{Chunks de código R:} entre \texttt{```\{r\}} y \texttt{```}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{R Markdown: Opciones de Chunks}
+Controlan cómo se ejecuta y muestra el código:
+
+\vspace{0.2cm}
+
+\begin{itemize}
+\item \texttt{echo=FALSE}: no mostrar código, solo output
+\item \texttt{eval=FALSE}: mostrar código pero no ejecutar
+\item \texttt{include=FALSE}: ejecutar pero no mostrar nada
+\item \texttt{message=FALSE, warning=FALSE}: suprimir mensajes
+\item \texttt{fig.width=8, fig.height=6}: tamaño de gráficos
+\item \texttt{cache=TRUE}: cachear resultados (útil si cálculos lentos)
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Ejemplo:}
+\begin{verbatim}
+```{r analisis-descriptivo, echo=FALSE, fig.width=10}
+summary(datos)
+ggplot(datos, aes(x=variable)) + geom_histogram()
+```
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{R Markdown: Formatos de Salida}
+\textbf{HTML (interactivo):}
+\begin{verbatim}
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+\end{verbatim}
+
+\textbf{PDF (vía LaTeX):}
+\begin{verbatim}
+output: pdf_document
+\end{verbatim}
+
+\textbf{Word:}
+\begin{verbatim}
+output: word_document
+\end{verbatim}
+
+\textbf{Presentaciones:}
+\begin{verbatim}
+output: ioslides_presentation
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{R Markdown: Reportes Parametrizados}
+\textbf{Crear reportes automatizados con parámetros variables}
+
+\vspace{0.2cm}
+
+\textbf{Definir parámetros:}
+\begin{verbatim}
+---
+title: "Reporte de Ventas"
+params:
+  region: "Norte"
+  año: 2026
+---
+\end{verbatim}
+
+\textbf{Usar en el reporte:}
+\begin{verbatim}
+## Ventas en `r params$region` - `r params$año`
+
+```{r}
+datos_filtrados <- datos %>%
+  filter(region == params$region, año == params$año)
+```
+\end{verbatim}
+
+\textbf{Renderizar con diferentes parámetros:}
+\begin{verbatim}
+rmarkdown::render("reporte.Rmd", 
+                  params = list(region="Sur", año=2025))
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Control de Versiones con Git}
+\textbf{Esencial para reproducibilidad}
+
+\vspace{0.3cm}
+
+\textbf{Beneficios:}
+\begin{itemize}
+\item Historial completo de cambios
+\item Colaboración simultánea
+\item Branching: experimentar sin romper nada
+\item Rollback: volver a versiones anteriores
+\item Transparencia y auditoría
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Workflow básico:}
+\begin{enumerate}
+\item \texttt{git init} (inicializar repo)
+\item \texttt{git add archivo.ipynb} (agregar cambios)
+\item \texttt{git commit -m "Mensaje descriptivo"}
+\item \texttt{git push origin main} (subir a remoto)
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{Gestión de Dependencias}
+\textbf{Documentar qué librerías y versiones se usaron}
+
+\vspace{0.3cm}
+
+\textbf{Python - requirements.txt:}
+\begin{verbatim}
+pandas==2.0.1
+numpy==1.24.3
+scikit-learn==1.2.2
+matplotlib==3.7.1
+\end{verbatim}
+
+Generar: \texttt{pip freeze > requirements.txt}
+
+Instalar: \texttt{pip install -r requirements.txt}
+
+\vspace{0.3cm}
+
+\textbf{R - renv:}
+\begin{verbatim}
+renv::init()      # Inicializar
+renv::snapshot()  # Guardar estado
+renv::restore()   # Reinstalar desde snapshot
+\end{verbatim}
+\end{frame}
+
+\section{Ética en Análisis de Datos}
+
+\begin{frame}{¿Por qué Ética?}
+\begin{block}{Poder conlleva responsabilidad}
+Los modelos de ML tienen poder para afectar vidas: contratación, créditos, justicia penal, salud.
+\end{block}
+
+\vspace{0.3cm}
+
+\textbf{Consecuencias de análisis no ético:}
+\begin{itemize}
+\item Discriminación sistemática contra grupos vulnerables
+\item Violación de privacidad
+\item Pérdida de confianza en sistemas algorítmicos
+\item Daño a reputación profesional y organizacional
+\item Consecuencias legales
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Como científicos de datos, somos responsables} de considerar el impacto ético de nuestro trabajo.
+\end{frame}
+
+\begin{frame}{Sesgo en Datos y Modelos}
+\textbf{Fuentes de sesgo:}
+
+\begin{enumerate}
+\item \textbf{Sesgo de selección:} datos no representativos
+\begin{itemize}
+\item Ejemplo: entrenar modelo de contratación con datos históricos sesgados
+\end{itemize}
+
+\item \textbf{Sesgo de medición:} errores sistemáticos en recolección
+\begin{itemize}
+\item Ejemplo: encuestas telefónicas excluyen a quienes no tienen teléfono
+\end{itemize}
+
+\item \textbf{Sesgo algorítmico:} el algoritmo amplifica sesgos
+\begin{itemize}
+\item Ejemplo: sistema de recomendación refuerza burbujas de filtro
+\end{itemize}
+
+\item \textbf{Sesgo de confirmación:} analistas buscan datos que confirmen creencias
+\begin{itemize}
+\item Ejemplo: cherry-picking resultados favorables
+\end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Caso de Estudio: COMPAS}
+\textbf{Correctional Offender Management Profiling for Alternative Sanctions}
+
+\vspace{0.3cm}
+
+\textbf{Sistema:} Evalúa riesgo de reincidencia en sistema judicial de EEUU
+
+\vspace{0.3cm}
+
+\textbf{Problema detectado:}
+\begin{itemize}
+\item Predecía falsamente alta reincidencia para acusados afroamericanos
+\item Falsos positivos: 45\% para afroamericanos vs 23\% para blancos
+\item Impacto: decisiones de libertad condicional y sentencias afectadas
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Lecciones:}
+\begin{itemize}
+\item Modelos pueden perpetuar y amplificar discriminación histórica
+\item Auditorías externas son necesarias
+\item Alto impacto requiere altos estándares de fairness
+\item Transparencia es crucial
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Mitigación de Sesgo}
+\textbf{Estrategias:}
+
+\begin{enumerate}
+\item \textbf{Auditoría de datos:}
+\begin{itemize}
+\item ¿Son representativos? ¿Hay subrepresentación?
+\item ¿Cómo se recolectaron?
+\end{itemize}
+
+\item \textbf{Análisis de equidad:}
+\begin{itemize}
+\item Evaluar performance por subgrupo (género, raza, edad)
+\item Métricas de fairness: disparate impact, equalized odds
+\end{itemize}
+
+\item \textbf{Técnicas de mitigación:}
+\begin{itemize}
+\item Pre-procesamiento: rebalancear datos
+\item In-processing: regularización de fairness
+\item Post-procesamiento: ajustar umbrales por grupo
+\end{itemize}
+
+\item \textbf{Diversidad en equipos:}
+\begin{itemize}
+\item Perspectivas diversas identifican sesgos
+\item Incluir stakeholders afectados
+\end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Fairness: Múltiples Definiciones}
+\textbf{No hay una definición única de fairness}
+
+\vspace{0.3cm}
+
+\textbf{1. Demographic Parity:}
+\begin{itemize}
+\item Misma proporción de resultados positivos para todos los grupos
+\item $P(\hat{Y}=1 | A=a) = P(\hat{Y}=1 | A=b)$
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{2. Equalized Odds:}
+\begin{itemize}
+\item Mismas tasas de VP y FP entre grupos
+\item $P(\hat{Y}=1 | Y=1, A=a) = P(\hat{Y}=1 | Y=1, A=b)$
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{3. Predictive Parity:}
+\begin{itemize}
+\item Mismo valor predictivo positivo
+\item $P(Y=1 | \hat{Y}=1, A=a) = P(Y=1 | \hat{Y}=1, A=b)$
+\end{itemize}
+
+\vspace{0.3cm}
+
+\begin{alertblock}{Imposibilidad}
+En general, no se pueden satisfacer múltiples definiciones simultáneamente. Debemos elegir según el contexto.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Privacidad y Protección de Datos}
+\textbf{Principios fundamentales:}
+
+\begin{enumerate}
+\item \textbf{Minimización:} recolectar solo lo necesario
+\item \textbf{Propósito específico:} usar datos solo para lo autorizado
+\item \textbf{Consentimiento informado:} las personas deben saber qué y cómo
+\item \textbf{Transparencia:} derecho a saber qué datos se tienen
+\item \textbf{Derecho al olvido:} poder eliminar datos personales
+\item \textbf{Seguridad:} proteger contra acceso no autorizado
+\end{enumerate}
+
+\vspace{0.3cm}
+
+\textbf{Regulaciones:}
+\begin{itemize}
+\item \textbf{GDPR (UE):} protección de datos, derecho a explicación
+\item \textbf{CCPA (California):} derechos de consumidores
+\item \textbf{Ley 25.326 (Argentina):} protección de datos personales
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Técnicas de Privacidad}
+\textbf{1. Anonimización:}
+\begin{itemize}
+\item Eliminar identificadores directos (nombre, DNI)
+\item Problema: reidentificación mediante quasi-identificadores
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{2. K-anonymity:}
+\begin{itemize}
+\item Cada registro indistinguible de al menos $k-1$ otros
+\item Generalización y supresión de atributos
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{3. Differential Privacy:}
+\begin{itemize}
+\item Agregar ruido aleatorio a resultados
+\item Garantía matemática de privacidad
+\item Trade-off privacidad vs utilidad
+\end{itemize}
+
+\vspace{0.2cm}
+
+\textbf{4. Federated Learning:}
+\begin{itemize}
+\item Entrenar sin centralizar datos
+\item Datos permanecen en dispositivos locales
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Responsabilidad en Uso de Modelos}
+\textbf{Decisiones Humanas vs Algorítmicas}
+
+\vspace{0.3cm}
+
+\textbf{Cuándo usar algoritmos:}
+\begin{itemize}
+\item Decisiones repetitivas, alto volumen
+\item Criterios objetivos claramente definidos
+\item Datos de alta calidad
+\item Consecuencias moderadas de errores
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Cuándo mantener humanos:}
+\begin{itemize}
+\item Alto impacto individual (salud, justicia)
+\item Contextos complejos que requieren juicio
+\item Situaciones novedosas
+\item Casos donde explicación y empatía importan
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Enfoque recomendado:} Human-in-the-loop (modelo recomienda, humano decide)
+\end{frame}
+
+\begin{frame}{Auditoría y Rendición de Cuentas}
+\textbf{Prácticas esenciales:}
+
+\begin{itemize}
+\item \textbf{Auditorías regulares:} revisar performance, sesgo, errores
+
+\item \textbf{Trazabilidad:} registrar decisiones y justificaciones
+
+\item \textbf{Responsables identificados:} quién responde por el sistema
+
+\item \textbf{Mecanismos de apelación:} personas pueden disputar decisiones
+
+\item \textbf{Evaluaciones de impacto:} antes del despliegue, evaluar riesgos
+
+\item \textbf{Documentación completa:} Model Cards, Datasheets for Datasets
+
+\item \textbf{Monitoreo continuo:} detectar degradación o sesgos emergentes
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Preguntas Éticas a Hacerse}
+\textbf{Antes de empezar un proyecto:}
+
+\begin{enumerate}
+\item ¿Tenemos derecho a estos datos? ¿Hubo consentimiento?
+\item ¿Para qué se usarán los resultados? ¿Podría usarse para daño?
+\item ¿Quién se beneficia y quién podría ser perjudicado?
+\item ¿Los datos son representativos? ¿Hay sesgos conocidos?
+\item ¿Qué tan confiables son las predicciones? ¿Margen de error?
+\item ¿Hay alternativas no algorítmicas? ¿Son preferibles?
+\item ¿Quién será responsable si algo sale mal?
+\item ¿Podemos explicar las decisiones? ¿A quién, cómo?
+\end{enumerate}
+
+\vspace{0.3cm}
+
+\begin{alertblock}{Señal de alerta}
+Si no puedes responder estas preguntas satisfactoriamente, reconsidera el proyecto.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Red Flags Éticas}
+\textbf{Señales de alerta que indican problemas:}
+
+\begin{itemize}
+\item Cliente solicita ``eliminar variables sensibles pero mantener performance''
+\item Objetivos vagos o cambiantes
+\item Presión para reportar solo resultados favorables
+\item Falta de transparencia sobre uso final
+\item Datos obtenidos de manera cuestionable
+\item Stakeholders afectados no consultados
+\item Consecuencias asimétricas (FP mucho peores que FN, o viceversa)
+\item Resistencia a auditorías externas
+\item Falta de mecanismos de apelación
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Si ves estas señales:} cuestiona, documenta, escala, o considera rechazar el proyecto.
+\end{frame}
+
+\begin{frame}{Código de Ética Profesional}
+\textbf{Principios a seguir como científicos de datos:}
+
+\begin{enumerate}
+\item \textbf{Integridad:} reportar hallazgos honestamente
+
+\item \textbf{Transparencia:} documentar limitaciones, supuestos
+
+\item \textbf{Responsabilidad:} considerar impacto de nuestro trabajo
+
+\item \textbf{Equidad:} esforzarse por sistemas justos
+
+\item \textbf{Privacidad:} proteger datos personales
+
+\item \textbf{Competencia:} reconocer límites de nuestra expertise
+
+\item \textbf{Beneficencia:} buscar que nuestro trabajo beneficie a la sociedad
+\end{enumerate}
+
+\vspace{0.3cm}
+
+\textbf{Referencia:} ACM Code of Ethics (Association for Computing Machinery)
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Resumen de la Clase}
+\textbf{Comunicación:}
+\begin{itemize}
+\item Conocer a la audiencia, estructura clara
+\item Visualizaciones efectivas y honestas
+\item Narrar una historia, reportar incertidumbre
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Reportes reproducibles:}
+\begin{itemize}
+\item Jupyter notebooks: interactivo, integrado
+\item R Markdown: automatizable, múltiples formatos
+\item Control de versiones (Git), gestión de dependencias
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Ética:}
+\begin{itemize}
+\item Reconocer y mitigar sesgos
+\item Múltiples definiciones de fairness
+\item Proteger privacidad (anonimización, differential privacy)
+\item Responsabilidad: auditorías, transparencia, rendición de cuentas
+\item Preguntas críticas antes de cada proyecto
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Cierre del Curso}
+\textbf{Recorrido completo del ciclo de análisis de datos:}
+
+\begin{enumerate}
+\item \textbf{U0:} Introducción, entorno, reproducibilidad
+\item \textbf{U1:} Obtención y preparación de datos
+\item \textbf{U2:} Exploración y visualización
+\item \textbf{U3:} Modelado estadístico (regresión, regularización)
+\item \textbf{U4:} Machine learning supervisado (clasificación)
+\item \textbf{U5:} Producción, interpretabilidad, comunicación, ética
+\end{enumerate}
+
+\vspace{0.3cm}
+
+\textbf{Próximos pasos:}
+\begin{itemize}
+\item Proyecto integrador final
+\item Aplicar todo lo aprendido
+\item Construir portfolio profesional
+\item Seguir aprendiendo (¡esto nunca termina!)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Mensaje Final}
+\begin{center}
+\Large
+\textbf{La ciencia de datos es poder.}
+
+\vspace{0.5cm}
+
+\textbf{Usemos ese poder sabiamente.}
+
+\vspace{1cm}
+
+\normalsize
+Como científicos de datos, tenemos la responsabilidad de:
+\begin{itemize}
+\item Crear modelos que funcionen en el mundo real
+\item Explicar nuestros hallazgos clara y honestamente
+\item Documentar para reproducibilidad y auditoría
+\item Considerar el impacto en las personas
+\item Abogar por el uso ético de datos y algoritmos
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{¡Éxitos en su carrera profesional!}
+\end{center}
+\end{frame}
+
+\end{document}

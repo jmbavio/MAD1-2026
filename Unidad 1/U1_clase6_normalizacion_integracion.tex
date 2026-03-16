@@ -1,0 +1,604 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[es-ES]{babel}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath}
+
+% Tema
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Colores personalizados
+\definecolor{unsazul}{RGB}{30, 60, 120}
+\definecolor{unsverde}{RGB}{0, 100, 0}
+
+\setbeamercolor{structure}{fg=unsazul}
+\setbeamercolor{palette primary}{bg=unsazul,fg=white}
+\setbeamercolor{palette secondary}{bg=unsazul!80,fg=white}
+\setbeamercolor{palette tertiary}{bg=unsazul!60,fg=white}
+
+% Configuración de listings
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{unsazul}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{unsverde},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+% Información del documento
+\title{Métodos de Análisis de Datos 1}
+\subtitle{Clase 6: Normalización e Integración}
+\author{Universidad Nacional del Sur}
+\date{}
+
+\begin{document}
+
+% Portada
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Contenidos
+\begin{frame}{Contenidos de hoy}
+\tableofcontents
+\end{frame}
+
+\section{Normalización y Estandarización}
+
+\begin{frame}{El problema de las escalas}
+\begin{exampleblock}{Ejemplo}
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Edad} & \textbf{Ingreso} \\
+\hline
+25 & 50000 \\
+30 & 65000 \\
+45 & 80000 \\
+\hline
+\end{tabular}
+\end{center}
+
+El ingreso tiene valores mucho mayores que la edad
+\end{exampleblock}
+
+\pause
+
+\begin{alertblock}{Problemas}
+\begin{itemize}
+    \item Algoritmos sensibles a escala (KNN, SVM, redes neuronales)
+    \item Variables con mayor rango dominan el modelo
+    \item Convergencia lenta en algoritmos de optimización
+    \item Interpretación difícil de coeficientes
+\end{itemize}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Solución: Escalar las variables}
+\begin{block}{¿Qué es escalar?}
+Transformar variables a rangos comparables
+\end{block}
+
+\begin{block}{Dos técnicas principales}
+\begin{enumerate}
+    \item \textbf{Normalización (Min-Max):} Escalar a rango [0, 1]
+    \item \textbf{Estandarización (Z-score):} Transformar a media 0 y desviación estándar 1
+\end{enumerate}
+\end{block}
+
+\pause
+
+\begin{alertblock}{¿Cuándo escalar?}
+\begin{itemize}
+    \item ✓ KNN, SVM, redes neuronales
+    \item ✓ Algoritmos de clustering (K-means)
+    \item ✓ Regresión regularizada (Ridge, LASSO)
+    \item ✗ Árboles de decisión, Random Forest
+\end{itemize}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Min-Max Scaling (Normalización)}
+\begin{block}{Fórmula}
+$$X_{norm} = \frac{X - X_{min}}{X_{max} - X_{min}}$$
+
+Transforma valores al rango [0, 1]
+\end{block}
+
+\begin{exampleblock}{Ejemplo}
+Variable: [10, 20, 30, 40, 50]
+
+\begin{align*}
+X_{norm}(10) &= \frac{10 - 10}{50 - 10} = 0.00 \\
+X_{norm}(30) &= \frac{30 - 10}{50 - 10} = 0.50 \\
+X_{norm}(50) &= \frac{50 - 10}{50 - 10} = 1.00
+\end{align*}
+
+Resultado: [0.00, 0.25, 0.50, 0.75, 1.00]
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{Min-Max: Código}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+from sklearn.preprocessing import MinMaxScaler
+
+# Normalizar
+scaler = MinMaxScaler()
+df[['edad', 'ingreso']] = scaler.fit_transform(
+    df[['edad', 'ingreso']]
+)
+
+# Rango personalizado [-1, 1]
+scaler = MinMaxScaler(
+    feature_range=(-1, 1)
+)
+df[['edad', 'ingreso']] = scaler.fit_transform(
+    df[['edad', 'ingreso']]
+)
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Manual
+normalizar <- function(x) {
+  (x - min(x, na.rm = TRUE)) / 
+  (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+
+df <- df %>%
+  mutate(across(
+    c(edad, ingreso), 
+    normalizar
+  ))
+
+# Con caret
+library(caret)
+preproc <- preProcess(
+  df[, c('edad', 'ingreso')], 
+  method = "range"
+)
+df[, c('edad', 'ingreso')] <- predict(preproc, df)
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Standardization (Z-score)}
+\begin{block}{Fórmula}
+$$X_{std} = \frac{X - \mu}{\sigma}$$
+
+Transforma a media 0 y desviación estándar 1
+\end{block}
+
+\begin{exampleblock}{Ejemplo}
+Variable: [10, 20, 30, 40, 50]\\
+Media ($\mu$) = 30, Desv. Est. ($\sigma$) = 14.14
+
+\begin{align*}
+X_{std}(10) &= \frac{10 - 30}{14.14} = -1.41 \\
+X_{std}(30) &= \frac{30 - 30}{14.14} = 0.00 \\
+X_{std}(50) &= \frac{50 - 30}{14.14} = 1.41
+\end{align*}
+
+Resultado: [-1.41, -0.71, 0.00, 0.71, 1.41]
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{Standardization: Código}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+df[['edad', 'ingreso']] = scaler.fit_transform(
+    df[['edad', 'ingreso']]
+)
+
+# Verificar
+print(df['edad'].mean())  # ~0
+print(df['edad'].std())   # ~1
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Estandarizar
+df <- df %>%
+  mutate(across(
+    c(edad, ingreso), 
+    scale
+  ))
+
+# Con caret
+preproc <- preProcess(
+  df[, c('edad', 'ingreso')], 
+  method = c("center", "scale")
+)
+df[, c('edad', 'ingreso')] <- predict(preproc, df)
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}{¿Min-Max o Standardization?}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Min-Max:}
+\begin{itemize}
+    \item ✓ Rango específico necesario
+    \item ✓ Redes neuronales
+    \item ✓ Algoritmos de imágenes
+    \item ✓ No hay outliers extremos
+    \item ✗ Sensible a outliers
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Standardization:}
+\begin{itemize}
+    \item ✓ Distribución aproximadamente normal
+    \item ✓ Regresión logística, SVM
+    \item ✓ PCA, clustering
+    \item ✓ Más robusto a outliers
+    \item ✗ No acota valores
+\end{itemize}
+\end{columns}
+
+\vspace{1em}
+
+\begin{exampleblock}{Regla práctica}
+\textbf{¿En duda?} → Usar Standardization
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Importante: fit vs transform}
+\begin{alertblock}{Error común: Data leakage}
+Nunca usar estadísticas del conjunto de test para escalar
+\end{alertblock}
+
+\begin{block}{Flujo correcto}
+\begin{enumerate}
+    \item Dividir en train/test
+    \item \texttt{fit()} con datos de train (calcular min/max o media/std)
+    \item \texttt{transform()} train con parámetros calculados
+    \item \texttt{transform()} test con los MISMOS parámetros
+\end{enumerate}
+\end{block}
+
+\pause
+
+\begin{exampleblock}{Código correcto}
+\texttt{scaler.fit(X\_train)}\\
+\texttt{X\_train\_scaled = scaler.transform(X\_train)}\\
+\texttt{X\_test\_scaled = scaler.transform(X\_test)}
+\end{exampleblock}
+\end{frame}
+
+\section{Discretización}
+
+\begin{frame}{Discretización (Binning)}
+\begin{block}{¿Qué es?}
+Convertir variables continuas en categóricas dividiendo en intervalos
+\end{block}
+
+\begin{exampleblock}{Ejemplo}
+Edad continua → Grupos de edad
+
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Edad} & \textbf{Grupo} \\
+\hline
+15 & menor \\
+25 & joven \\
+35 & adulto \\
+55 & maduro \\
+75 & mayor \\
+\hline
+\end{tabular}
+\end{center}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{¿Por qué discretizar?}
+\begin{block}{Ventajas}
+\begin{itemize}
+    \item Captura relaciones no lineales
+    \item Más robusto a outliers
+    \item Facilita interpretación
+    \item Útil para análisis exploratorio
+    \item Algunos modelos lo requieren
+\end{itemize}
+\end{block}
+
+\pause
+
+\begin{alertblock}{Desventajas}
+\begin{itemize}
+    \item Pérdida de información
+    \item Introduce discontinuidades artificiales
+    \item Elección de bins es subjetiva
+    \item Puede empeorar performance
+\end{itemize}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]{Tipos de discretización}
+\begin{block}{1. Bins de igual ancho}
+Dividir el rango en intervalos iguales
+\end{block}
+
+\begin{lstlisting}[language=Python]
+# Python
+df['edad_grupo'] = pd.cut(
+    df['edad'],
+    bins=5,  # 5 intervalos iguales
+    labels=['muy_joven', 'joven', 'adulto', 'mayor', 'muy_mayor']
+)
+\end{lstlisting}
+
+\begin{lstlisting}[language=R]
+# R
+df <- df %>%
+  mutate(edad_grupo = cut(
+    edad,
+    breaks = 5,
+    labels = c('muy_joven', 'joven', 'adulto', 'mayor', 'muy_mayor')
+  ))
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Bins con puntos específicos}
+\begin{lstlisting}[language=Python]
+# Python - Bins personalizados
+df['edad_grupo'] = pd.cut(
+    df['edad'],
+    bins=[0, 18, 30, 50, 65, 100],
+    labels=['menor', 'joven', 'adulto', 'maduro', 'mayor']
+)
+\end{lstlisting}
+
+\begin{lstlisting}[language=R]
+# R - Bins personalizados
+df <- df %>%
+  mutate(edad_grupo = cut(
+    edad,
+    breaks = c(0, 18, 30, 50, 65, 100),
+    labels = c('menor', 'joven', 'adulto', 'maduro', 'mayor')
+  ))
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Bins de igual frecuencia (Quantiles)}
+\begin{block}{Concepto}
+Cada bin contiene aproximadamente el mismo número de observaciones
+\end{block}
+
+\begin{lstlisting}[language=Python]
+# Python - Cuartiles
+df['ingreso_grupo'] = pd.qcut(
+    df['ingreso'],
+    q=4,  # 4 cuartiles
+    labels=['bajo', 'medio_bajo', 'medio_alto', 'alto']
+)
+\end{lstlisting}
+
+\begin{lstlisting}[language=R]
+# R - Cuartiles
+df <- df %>%
+  mutate(ingreso_grupo = cut(
+    ingreso,
+    breaks = quantile(ingreso, probs = seq(0, 1, 0.25), na.rm = TRUE),
+    labels = c('bajo', 'medio_bajo', 'medio_alto', 'alto'),
+    include.lowest = TRUE
+  ))
+\end{lstlisting}
+\end{frame}
+
+\section{Integración de datos}
+
+\begin{frame}{Combinar múltiples fuentes}
+\begin{block}{¿Por qué integrar datos?}
+\begin{itemize}
+    \item Datos dispersos en múltiples tablas/archivos
+    \item Enriquecer con información externa
+    \item Análisis requiere combinar fuentes
+\end{itemize}
+\end{block}
+
+\pause
+
+\begin{block}{Dos operaciones principales}
+\begin{enumerate}
+    \item \textbf{Joins:} Combinar por columnas comunes (como SQL)
+    \item \textbf{Concatenación:} Apilar tablas vertical u horizontalmente
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}{Tipos de Joins}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    % Inner join
+    \node at (0,3) {\textbf{Inner Join}};
+    \draw[fill=unsazul!30] (0,2) circle (0.8cm);
+    \draw[fill=unsverde!30] (1.2,2) circle (0.8cm);
+    \draw[fill=unsazul!50!unsverde!50] (0.6,2) circle (0.4cm);
+    
+    % Left join
+    \node at (4,3) {\textbf{Left Join}};
+    \draw[fill=unsazul!50] (4,2) circle (0.8cm);
+    \draw[fill=unsverde!30] (5.2,2) circle (0.8cm);
+    
+    % Right join
+    \node at (8,3) {\textbf{Right Join}};
+    \draw[fill=unsazul!30] (8,2) circle (0.8cm);
+    \draw[fill=unsverde!50] (9.2,2) circle (0.8cm);
+    
+    % Outer join
+    \node at (12,3) {\textbf{Outer Join}};
+    \draw[fill=unsazul!50] (12,2) circle (0.8cm);
+    \draw[fill=unsverde!50] (13.2,2) circle (0.8cm);
+\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+    \item \textbf{Inner:} Solo filas con match en ambas
+    \item \textbf{Left:} Todas de izquierda + matches de derecha
+    \item \textbf{Right:} Todas de derecha + matches de izquierda
+    \item \textbf{Outer:} Todas las filas de ambas
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Joins en Python}
+\begin{lstlisting}[language=Python]
+import pandas as pd
+
+# Inner join
+df_merged = pd.merge(df1, df2, on='id', how='inner')
+
+# Left join
+df_merged = pd.merge(df1, df2, on='id', how='left')
+
+# Join con nombres diferentes
+df_merged = pd.merge(
+    df1, df2,
+    left_on='cliente_id',
+    right_on='id',
+    how='left'
+)
+
+# Join con múltiples columnas
+df_merged = pd.merge(
+    df1, df2, 
+    on=['id', 'fecha'], 
+    how='inner'
+)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Joins en R}
+\begin{lstlisting}[language=R]
+library(dplyr)
+
+# Inner join
+df_merged <- inner_join(df1, df2, by = "id")
+
+# Left join
+df_merged <- left_join(df1, df2, by = "id")
+
+# Join con nombres diferentes
+df_merged <- left_join(
+  df1, df2,
+  by = c("cliente_id" = "id")
+)
+
+# Join con múltiples columnas
+df_merged <- inner_join(
+  df1, df2, 
+  by = c("id", "fecha")
+)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Concatenación}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Vertical (apilar filas)
+df_combined = pd.concat(
+    [df1, df2], 
+    axis=0,           # 0 = vertical
+    ignore_index=True # Resetear índice
+)
+
+# Horizontal (añadir columnas)
+df_combined = pd.concat(
+    [df1, df2], 
+    axis=1            # 1 = horizontal
+)
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+library(dplyr)
+
+# Vertical
+df_combined <- bind_rows(
+  df1, df2
+)
+
+# Horizontal
+df_combined <- bind_cols(
+  df1, df2
+)
+\end{lstlisting}
+\end{columns}
+
+\vspace{1em}
+
+\begin{alertblock}{Cuidado}
+Al concatenar horizontalmente, asegurar que las filas corresponden
+\end{alertblock}
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Resumen de la clase}
+\begin{itemize}
+    \item \textbf{Normalización (Min-Max):} Escalar a [0, 1], sensible a outliers
+    \item \textbf{Estandarización (Z-score):} Media 0, std 1, más robusto
+    \item Usar \texttt{fit()} solo con train, \texttt{transform()} con train y test
+    \item \textbf{Discretización:} Convertir continuas en categóricas
+    \item Bins: igual ancho, personalizados, igual frecuencia
+    \item \textbf{Joins:} Combinar tablas por columnas comunes
+    \item Tipos: inner, left, right, outer
+    \item \textbf{Concatenación:} Apilar vertical u horizontal
+\end{itemize}
+
+\vspace{1em}
+
+\begin{block}{Próxima clase}
+\textbf{APIs REST, web scraping y tidy data}
+\end{block}
+\end{frame}
+
+\begin{frame}{Tarea}
+\begin{enumerate}
+    \item Usar el dataset transformado de la clase anterior
+    \item Normalización/Estandarización:
+    \begin{itemize}
+        \item Aplicar Min-Max a variables numéricas
+        \item Aplicar Standardization a las mismas variables
+        \item Comparar distribuciones antes/después
+    \end{itemize}
+    \item Discretización:
+    \begin{itemize}
+        \item Elegir 2 variables continuas
+        \item Crear bins con diferentes estrategias
+        \item Visualizar resultados
+    \end{itemize}
+    \item Si tenés múltiples tablas, practicar joins
+    \item Documentar todo en el notebook
+    \item Subir a GitHub
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[standout]
+\Huge ¿Preguntas?
+\end{frame}
+
+\end{document}

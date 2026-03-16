@@ -1,0 +1,536 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{whale}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{pythonstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=pythonstyle}
+
+\title{Regresión Lineal Simple}
+\subtitle{Inferencia y Predicción}
+\author{Métodos de Análisis de Datos 1}
+\institute{Universidad Nacional del Sur}
+\date{Unidad 3 - Clase 15}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Contenidos}
+\tableofcontents
+\end{frame}
+
+%==============================================================================
+\section{Repaso Clase Anterior}
+%==============================================================================
+
+\begin{frame}{Repaso: Modelo y estimación}
+\textbf{Modelo de regresión lineal simple:}
+\[
+Y_i = \beta_0 + \beta_1 X_i + \epsilon_i, \quad \epsilon_i \sim N(0, \sigma^2)
+\]
+
+\vspace{0.3cm}
+\textbf{Estimadores por MCO:}
+\[
+\hat{\beta}_1 = \frac{S_{XY}}{S_{XX}}, \quad \hat{\beta}_0 = \bar{Y} - \hat{\beta}_1 \bar{X}
+\]
+
+\vspace{0.3cm}
+\textbf{Bondad de ajuste:}
+\[
+R^2 = 1 - \frac{\text{SCR}}{\text{SCT}}
+\]
+
+\vspace{0.5cm}
+\textbf{Hoy:} ¿Son significativos los coeficientes? ¿Cómo hacer predicciones con incertidumbre?
+\end{frame}
+
+%==============================================================================
+\section{Distribución de los Estimadores}
+%==============================================================================
+
+\begin{frame}{Propiedades de $\hat{\beta}_1$ y $\hat{\beta}_0$}
+Bajo los supuestos del modelo, los estimadores MCO siguen distribuciones normales:
+
+\begin{block}{Pendiente}
+\[
+\hat{\beta}_1 \sim N\left(\beta_1, \frac{\sigma^2}{S_{XX}}\right)
+\]
+\end{block}
+
+\begin{block}{Intercepto}
+\[
+\hat{\beta}_0 \sim N\left(\beta_0, \sigma^2 \left[\frac{1}{n} + \frac{\bar{X}^2}{S_{XX}}\right]\right)
+\]
+\end{block}
+
+\vspace{0.3cm}
+\textbf{Problema:} $\sigma^2$ es desconocido $\Rightarrow$ lo estimamos con:
+\[
+s^2 = \frac{\text{SCR}}{n - 2} = \frac{\sum (Y_i - \hat{Y}_i)^2}{n - 2}
+\]
+\end{frame}
+
+\begin{frame}{Errores estándar}
+Los \textbf{errores estándar} miden la precisión de las estimaciones:
+
+\begin{block}{Error estándar de $\hat{\beta}_1$}
+\[
+\text{SE}(\hat{\beta}_1) = \sqrt{\frac{s^2}{S_{XX}}} = \frac{s}{\sqrt{S_{XX}}}
+\]
+\end{block}
+
+\begin{block}{Error estándar de $\hat{\beta}_0$}
+\[
+\text{SE}(\hat{\beta}_0) = s \sqrt{\frac{1}{n} + \frac{\bar{X}^2}{S_{XX}}}
+\]
+\end{block}
+
+\vspace{0.3cm}
+\textbf{Nota:} Cuanto mayor sea $S_{XX}$ (mayor variabilidad en $X$), menor será el error estándar de $\hat{\beta}_1$
+\end{frame}
+
+%==============================================================================
+\section{Tests de Hipótesis}
+%==============================================================================
+
+\begin{frame}{Test sobre la pendiente}
+La pregunta más importante: \textbf{¿Hay relación entre $X$ e $Y$?}
+
+\begin{block}{Hipótesis}
+\[
+H_0: \beta_1 = 0 \quad \text{vs} \quad H_1: \beta_1 \neq 0
+\]
+\end{block}
+
+\textbf{Estadístico de prueba:}
+\[
+t = \frac{\hat{\beta}_1 - 0}{\text{SE}(\hat{\beta}_1)} = \frac{\hat{\beta}_1}{s/\sqrt{S_{XX}}} \sim t_{n-2}
+\]
+
+\textbf{Regla de decisión:} Al nivel $\alpha$, rechazamos $H_0$ si:
+\[
+|t| > t_{n-2, \alpha/2}
+\]
+
+\textbf{Valor-p:} $P(|T| > |t|)$ donde $T \sim t_{n-2}$
+\end{frame}
+
+\begin{frame}{Ejemplo: Test sobre pendiente}
+Datos: Horas de estudio ($X$) vs Calificación ($Y$) de 20 estudiantes
+
+\vspace{0.3cm}
+Modelo ajustado: $\hat{Y} = 40 + 5.2 X$
+
+\begin{itemize}
+    \item $\hat{\beta}_1 = 5.2$
+    \item $\text{SE}(\hat{\beta}_1) = 1.3$
+    \item $t = \frac{5.2}{1.3} = 4.0$
+\end{itemize}
+
+\vspace{0.3cm}
+Con $n = 20$, $t_{18, 0.025} = 2.101$
+
+\vspace{0.3cm}
+Como $|4.0| > 2.101$ $\Rightarrow$ \textbf{Rechazamos} $H_0$
+
+\vspace{0.3cm}
+\textbf{Conclusión:} Hay evidencia significativa ($\alpha = 0.05$) de que las horas de estudio afectan la calificación.
+\end{frame}
+
+\begin{frame}{Test sobre el intercepto}
+Menos común, pero a veces relevante:
+
+\begin{block}{Hipótesis}
+\[
+H_0: \beta_0 = 0 \quad \text{vs} \quad H_1: \beta_0 \neq 0
+\]
+\end{block}
+
+\textbf{Estadístico:}
+\[
+t = \frac{\hat{\beta}_0}{\text{SE}(\hat{\beta}_0)} \sim t_{n-2}
+\]
+
+\vspace{0.5cm}
+\textbf{¿Cuándo es útil?}
+\begin{itemize}
+    \item Cuando tiene sentido que la línea pase por el origen
+    \item Ejemplo: relación dosis-respuesta donde dosis 0 $\Rightarrow$ respuesta 0
+\end{itemize}
+\end{frame}
+
+%==============================================================================
+\section{Intervalos de Confianza}
+%==============================================================================
+
+\begin{frame}{Intervalo de confianza para $\beta_1$}
+Un intervalo de confianza del $(1-\alpha)\times 100\%$ para $\beta_1$ es:
+
+\begin{block}{IC para la pendiente}
+\[
+\hat{\beta}_1 \pm t_{n-2, \alpha/2} \cdot \text{SE}(\hat{\beta}_1)
+\]
+\end{block}
+
+\vspace{0.5cm}
+\textbf{Interpretación:} Con 95\% de confianza, el verdadero valor de $\beta_1$ está en este intervalo.
+
+\vspace{0.5cm}
+\textbf{Relación con el test:} Si el IC no contiene 0, rechazamos $H_0: \beta_1 = 0$
+\end{frame}
+
+\begin{frame}{Ejemplo: IC para pendiente}
+Continuando el ejemplo anterior:
+
+\begin{itemize}
+    \item $\hat{\beta}_1 = 5.2$
+    \item $\text{SE}(\hat{\beta}_1) = 1.3$
+    \item $t_{18, 0.025} = 2.101$
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{IC 95\%:}
+\[
+5.2 \pm 2.101 \times 1.3 = 5.2 \pm 2.7 = [2.5, 7.9]
+\]
+
+\vspace{0.5cm}
+\textbf{Interpretación:} Con 95\% de confianza, cada hora adicional de estudio aumenta la calificación entre 2.5 y 7.9 puntos.
+
+\vspace{0.3cm}
+Como el intervalo no contiene 0, confirmamos que $\beta_1 \neq 0$ (consistente con el test).
+\end{frame}
+
+\begin{frame}{Intervalo de confianza para $\beta_0$}
+Análogamente:
+
+\begin{block}{IC para el intercepto}
+\[
+\hat{\beta}_0 \pm t_{n-2, \alpha/2} \cdot \text{SE}(\hat{\beta}_0)
+\]
+\end{block}
+
+\vspace{0.5cm}
+\textbf{Nota:} Los IC para $\beta_0$ suelen ser muy anchos si $\bar{X}$ está lejos de 0, porque implica \textbf{extrapolación}.
+\end{frame}
+
+%==============================================================================
+\section{ANOVA del Modelo de Regresión}
+%==============================================================================
+
+\begin{frame}{Tabla ANOVA para regresión}
+Otra forma de probar $H_0: \beta_1 = 0$ es mediante ANOVA:
+
+\begin{table}
+\centering
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Fuente} & \textbf{SC} & \textbf{gl} & \textbf{CM} & \textbf{F} & \textbf{p-valor} \\
+\midrule
+Regresión & SCE & 1 & SCE/1 & CM$_E$/CM$_R$ & $P(F_{1,n-2} > F)$ \\
+Residual & SCR & $n-2$ & SCR/$(n-2)$ & & \\
+\midrule
+Total & SCT & $n-1$ & & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+donde:
+\begin{itemize}
+    \item SC = Suma de Cuadrados
+    \item gl = grados de libertad
+    \item CM = Cuadrado Medio = SC/gl
+    \item $F = \frac{\text{CM}_E}{\text{CM}_R}$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Relación entre test $t$ y test $F$}
+En regresión lineal simple:
+
+\begin{alertblock}{Equivalencia}
+\[
+F = t^2
+\]
+\end{alertblock}
+
+\vspace{0.3cm}
+Ambos tests prueban $H_0: \beta_1 = 0$ y dan la misma conclusión.
+
+\vspace{0.5cm}
+\textbf{¿Cuándo usar cada uno?}
+\begin{itemize}
+    \item Test $t$: regresión simple, o para coeficientes individuales en regresión múltiple
+    \item Test $F$: regresión múltiple (próxima clase), para probar si \textbf{al menos un} predictor es útil
+\end{itemize}
+\end{frame}
+
+%==============================================================================
+\section{Predicción}
+%==============================================================================
+
+\begin{frame}{Dos tipos de predicción}
+Dado un valor $X_0$, queremos estimar:
+
+\begin{enumerate}
+    \item \textbf{La media de $Y$ para $X = X_0$}
+    \[
+    E(Y | X = X_0) = \beta_0 + \beta_1 X_0
+    \]
+    $\Rightarrow$ \textbf{Intervalo de confianza}
+    
+    \vspace{0.5cm}
+    \item \textbf{El valor de una nueva observación individual con $X = X_0$}
+    \[
+    Y_{\text{nuevo}} = \beta_0 + \beta_1 X_0 + \epsilon_{\text{nuevo}}
+    \]
+    $\Rightarrow$ \textbf{Intervalo de predicción}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Predicción puntual}
+Para cualquiera de los dos casos, la estimación puntual es la misma:
+
+\begin{block}{Predicción puntual}
+\[
+\hat{Y}_0 = \hat{\beta}_0 + \hat{\beta}_1 X_0
+\]
+\end{block}
+
+\vspace{0.5cm}
+La diferencia está en la \textbf{incertidumbre} asociada a la predicción.
+\end{frame}
+
+\begin{frame}{Intervalo de confianza para la media}
+IC $(1-\alpha)\times 100\%$ para $E(Y|X=X_0)$:
+
+\begin{block}{IC para la media}
+\[
+\hat{Y}_0 \pm t_{n-2, \alpha/2} \cdot s \sqrt{\frac{1}{n} + \frac{(X_0 - \bar{X})^2}{S_{XX}}}
+\]
+\end{block}
+
+\vspace{0.3cm}
+\textbf{Interpretación:} Estimamos la calificación \textbf{promedio} de todos los estudiantes que estudian $X_0$ horas.
+
+\vspace{0.3cm}
+\textbf{Nota:} El intervalo es más estrecho cerca de $\bar{X}$ y más ancho en los extremos.
+\end{frame}
+
+\begin{frame}{Intervalo de predicción para nueva observación}
+IC $(1-\alpha)\times 100\%$ para $Y_{\text{nuevo}}$:
+
+\begin{block}{Intervalo de predicción}
+\[
+\hat{Y}_0 \pm t_{n-2, \alpha/2} \cdot s \sqrt{1 + \frac{1}{n} + \frac{(X_0 - \bar{X})^2}{S_{XX}}}
+\]
+\end{block}
+
+\vspace{0.3cm}
+\textbf{Interpretación:} Estimamos la calificación de \textbf{un estudiante específico} que estudia $X_0$ horas.
+
+\vspace{0.3cm}
+\textbf{Diferencia clave:} El término adicional "$1$" dentro de la raíz representa la variabilidad individual $\epsilon$.
+\end{frame}
+
+\begin{frame}{Comparación de intervalos}
+\begin{center}
+\includegraphics[width=0.75\textwidth]{intervalos_prediccion.png}
+\end{center}
+
+\begin{itemize}
+    \item \textcolor{blue}{Azul}: Intervalo de confianza para la media
+    \item \textcolor{red}{Rojo}: Intervalo de predicción
+    \item El de predicción es siempre más ancho
+    \item Ambos son más anchos lejos de $\bar{X}$ (extrapolación riesgosa)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ejemplo numérico: Predicción}
+Modelo: Calificación = $40 + 5.2 \times$ Horas
+
+\begin{itemize}
+    \item $n = 20$, $\bar{X} = 4$, $S_{XX} = 80$, $s = 8$
+    \item Queremos predecir para $X_0 = 5$ horas
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Predicción puntual:} $\hat{Y}_0 = 40 + 5.2 \times 5 = 66$
+
+\vspace{0.3cm}
+\textbf{IC 95\% para la media:}
+\[
+66 \pm 2.101 \times 8 \sqrt{\frac{1}{20} + \frac{(5-4)^2}{80}} = 66 \pm 3.8 = [62.2, 69.8]
+\]
+
+\vspace{0.3cm}
+\textbf{Intervalo de predicción 95\%:}
+\[
+66 \pm 2.101 \times 8 \sqrt{1 + \frac{1}{20} + \frac{(5-4)^2}{80}} = 66 \pm 17.1 = [48.9, 83.1]
+\]
+\end{frame}
+
+%==============================================================================
+\section{Implementación en Python}
+%==============================================================================
+
+\begin{frame}[fragile]{Inferencia en Python}
+\begin{lstlisting}[language=Python]
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+
+# Ajustar modelo
+modelo = ols('Y ~ X', data=data).fit()
+
+# Resumen completo (incluye tests t, p-valores, IC)
+print(modelo.summary())
+
+# Extraer coeficientes e ICs
+print(modelo.params)  # coeficientes
+print(modelo.bse)     # errores estandar
+print(modelo.tvalues) # estadisticos t
+print(modelo.pvalues) # p-valores
+
+# IC 95% para coeficientes
+print(modelo.conf_int(alpha=0.05))
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Tabla ANOVA en Python}
+\begin{lstlisting}[language=Python]
+from statsmodels.stats.anova import anova_lm
+
+# Tabla ANOVA
+tabla_anova = anova_lm(modelo, typ=2)
+print(tabla_anova)
+
+# Output:
+#           sum_sq     df         F    PR(>F)
+# X        1234.5    1.0    16.00   0.0008
+# Residual 1389.2   18.0       NaN      NaN
+
+# F = 16.00, p-valor = 0.0008 < 0.05
+# => Rechazamos H0: beta_1 = 0
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Predicción en Python}
+\begin{lstlisting}[language=Python]
+import pandas as pd
+
+# Nuevos datos
+nuevos = pd.DataFrame({'X': [3, 5, 7]})
+
+# Prediccion puntual
+pred = modelo.predict(nuevos)
+print("Predicciones:", pred.values)
+
+# Con intervalos
+pred_obj = modelo.get_prediction(nuevos)
+intervalos = pred_obj.summary_frame(alpha=0.05)
+print(intervalos)
+
+# Columnas:
+# - mean: prediccion puntual
+# - mean_ci_lower/upper: IC para la media
+# - obs_ci_lower/upper: intervalo de prediccion
+\end{lstlisting}
+\end{frame}
+
+%==============================================================================
+\section{Implementación en R}
+%==============================================================================
+
+\begin{frame}[fragile]{Inferencia en R}
+\begin{lstlisting}[language=R]
+# Ajustar modelo
+modelo <- lm(Y ~ X, data = data)
+
+# Resumen (incluye todo)
+summary(modelo)
+
+# Extraer componentes
+coef(modelo)           # coeficientes
+summary(modelo)$coef   # tabla completa con SE, t, p
+
+# IC 95% para coeficientes
+confint(modelo, level = 0.95)
+
+# Tabla ANOVA
+anova(modelo)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Predicción en R}
+\begin{lstlisting}[language=R]
+# Nuevos datos
+nuevos <- data.frame(X = c(3, 5, 7))
+
+# Prediccion puntual
+predict(modelo, nuevos)
+
+# IC para la media
+predict(modelo, nuevos, interval = "confidence", 
+        level = 0.95)
+
+# Intervalo de prediccion
+predict(modelo, nuevos, interval = "prediction", 
+        level = 0.95)
+
+# Output: data.frame con columnas fit, lwr, upr
+\end{lstlisting}
+\end{frame}
+
+%==============================================================================
+\section{Resumen}
+%==============================================================================
+
+\begin{frame}{Resumen de la clase}
+\textbf{Aprendimos:}
+\begin{itemize}
+    \item Distribución de $\hat{\beta}_0$ y $\hat{\beta}_1$
+    \item Tests de hipótesis: $H_0: \beta_1 = 0$
+    \item Intervalos de confianza para los coeficientes
+    \item Tabla ANOVA y relación $F = t^2$
+    \item Dos tipos de predicción:
+    \begin{itemize}
+        \item IC para la media de $Y$
+        \item Intervalo de predicción para nueva observación
+    \end{itemize}
+    \item Implementación completa en Python y R
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Próxima clase:} Diagnóstico del modelo (verificar supuestos, detectar problemas)
+\end{frame}
+
+\end{document}

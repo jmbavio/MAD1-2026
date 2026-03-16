@@ -1,0 +1,489 @@
+---
+title: "Métodos de Análisis de Datos 1 — Unidad 2"
+subtitle: "Análisis Exploratorio de Datos (EDA)"
+author: "Departamento de Matemática — Universidad Nacional del Sur"
+date: "1er Cuatrimestre 2026"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: flatly
+    highlight: tango
+    number_sections: true
+  pdf_document:
+    toc: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width  = 8,
+  fig.height = 4.5,
+  fig.align  = "center"
+)
+```
+
+# Configuración inicial
+
+```{r librerias}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(corrplot)
+library(reshape2)
+
+# Datasets
+data(iris)
+data(tips, package = "reshape2")   # tips está en reshape2
+# También disponible en: tips <- read.csv("https://...")
+
+# Si no tenés reshape2 con tips, usá este bloque:
+# tips <- read.csv("https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv")
+
+head(iris)
+```
+
+---
+
+# Clase 8 — Estadística Descriptiva Univariada
+
+## Resumen general con `summary()` y `dplyr`
+
+```{r resumen-general}
+summary(iris)
+```
+
+```{r resumen-dplyr}
+iris %>%
+  select(where(is.numeric)) %>%
+  summarise(across(everything(), list(
+    n      = ~n(),
+    media  = ~mean(.),
+    mediana= ~median(.),
+    desvio = ~sd(.),
+    cv     = ~sd(.)/mean(.)*100,
+    min    = ~min(.),
+    max    = ~max(.)
+  ), .names = "{.col}__{.fn}")) %>%
+  pivot_longer(everything(),
+               names_to  = c("variable", "estadistico"),
+               names_sep = "__") %>%
+  pivot_wider(names_from = estadistico, values_from = value) %>%
+  mutate(across(where(is.numeric), ~round(., 3)))
+```
+
+## Medidas de posición por grupo
+
+```{r posicion-grupo}
+iris %>%
+  group_by(Species) %>%
+  summarise(
+    n       = n(),
+    media   = mean(Sepal.Length),
+    mediana = median(Sepal.Length),
+    desvio  = sd(Sepal.Length),
+    RIC     = IQR(Sepal.Length),
+    CV      = sd(Sepal.Length) / mean(Sepal.Length) * 100
+  ) %>%
+  mutate(across(where(is.numeric), ~round(., 3)))
+```
+
+## Cuantiles
+
+```{r cuantiles}
+q_probs <- c(0.10, 0.25, 0.50, 0.75, 0.90)
+quantile(iris$Sepal.Length, probs = q_probs)
+```
+
+## Medidas de forma (asimetría y curtosis)
+
+```{r forma}
+library(e1071)  # instalar si es necesario: install.packages("e1071")
+
+vars_num <- names(iris)[sapply(iris, is.numeric)]
+
+data.frame(
+  Variable  = vars_num,
+  Asimetria = sapply(iris[vars_num], skewness),
+  Curtosis  = sapply(iris[vars_num], kurtosis)
+) %>%
+  mutate(across(where(is.numeric), ~round(., 4)))
+```
+
+## Tabla de frecuencias
+
+```{r tabla-frecuencias}
+# Regla de Sturges
+n <- nrow(iris)
+k <- ceiling(1 + 3.322 * log10(n))
+cat("n =", n, "| k (Sturges) =", k, "\n")
+
+# Tabla de frecuencias para Sepal.Length
+breaks <- seq(min(iris$Sepal.Length), max(iris$Sepal.Length),
+              length.out = k + 1)
+cortes <- cut(iris$Sepal.Length, breaks = breaks, include.lowest = TRUE)
+
+tabla <- as.data.frame(table(cortes))
+colnames(tabla) <- c("Clase", "Frec.abs")
+tabla$Frec.rel  <- round(tabla$Frec.abs / n, 4)
+tabla$Frec.acum <- round(cumsum(tabla$Frec.rel), 4)
+print(tabla)
+```
+
+---
+
+# Clase 9 — Análisis de Distribuciones
+
+## Histograma con curva de densidad
+
+```{r histograma-kde}
+ggplot(iris, aes(x = Sepal.Length)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 bins = 15, fill = "steelblue",
+                 color = "white") +
+  geom_density(color = "red", linewidth = 1) +
+  labs(title = "Histograma + KDE — Sepal Length",
+       x = "Longitud del sépalo (cm)", y = "Densidad") +
+  theme_bw()
+```
+
+## Histogramas por variable (panel)
+
+```{r histogramas-panel}
+iris %>%
+  select(where(is.numeric)) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "valor") %>%
+  ggplot(aes(x = valor)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 bins = 15, fill = "steelblue", color = "white") +
+  geom_density(color = "red", linewidth = 0.8) +
+  facet_wrap(~variable, scales = "free", ncol = 2) +
+  labs(title = "Distribuciones — Iris", x = "", y = "Densidad") +
+  theme_bw()
+```
+
+## Boxplot por especie
+
+```{r boxplot-especie}
+ggplot(iris, aes(x = Species, y = Sepal.Length, fill = Species)) +
+  geom_boxplot(alpha = 0.7, outlier.colour = "red", outlier.size = 2) +
+  labs(title = "Longitud del sépalo por especie",
+       x = "Especie", y = "cm") +
+  theme_bw() +
+  theme(legend.position = "none")
+```
+
+## Q-Q Plot
+
+```{r qqplot}
+par(mfrow = c(1, 4), mar = c(4, 4, 3, 1))
+vars_num <- names(iris)[sapply(iris, is.numeric)]
+for (v in vars_num) {
+  qqnorm(iris[[v]], main = v, col = "steelblue", pch = 16)
+  qqline(iris[[v]], col = "red", lwd = 2)
+}
+par(mfrow = c(1, 1))
+```
+
+## Pruebas de normalidad
+
+```{r shapiro}
+vars_num <- names(iris)[sapply(iris, is.numeric)]
+
+resultados <- lapply(vars_num, function(v) {
+  t <- shapiro.test(iris[[v]])
+  data.frame(
+    Variable  = v,
+    Estadistico_W = round(t$statistic, 4),
+    p_valor       = round(t$p.value,   4),
+    Normal_alpha05 = ifelse(t$p.value > 0.05, "Sí", "No")
+  )
+}) %>% bind_rows()
+
+print(resultados, row.names = FALSE)
+```
+
+```{r ks-test}
+# Test de Kolmogorov-Smirnov (Lilliefors) - requiere nortest
+# install.packages("nortest")
+library(nortest)
+
+resultados_lf <- lapply(vars_num, function(v) {
+  t <- lillie.test(iris[[v]])
+  data.frame(
+    Variable = v,
+    D        = round(t$statistic, 4),
+    p_valor  = round(t$p.value,   4),
+    Normal_alpha05 = ifelse(t$p.value > 0.05, "Sí", "No")
+  )
+}) %>% bind_rows()
+
+print(resultados_lf, row.names = FALSE)
+```
+
+---
+
+# Clase 10 — Detección de Outliers
+
+## Criterio IQR de Tukey
+
+```{r outliers-iqr}
+detectar_outliers_iqr <- function(x, k = 1.5) {
+  Q1  <- quantile(x, 0.25)
+  Q3  <- quantile(x, 0.75)
+  IQR <- Q3 - Q1
+  lim_inf <- Q1 - k * IQR
+  lim_sup <- Q3 + k * IQR
+  outliers <- x[x < lim_inf | x > lim_sup]
+  list(outliers = outliers, lim_inf = lim_inf, lim_sup = lim_sup)
+}
+
+vars_num <- names(iris)[sapply(iris, is.numeric)]
+
+cat("Outliers leves (k = 1.5):\n")
+for (v in vars_num) {
+  res <- detectar_outliers_iqr(iris[[v]], k = 1.5)
+  cat(sprintf("  %-15s: %d outlier(s), límites [%.3f, %.3f]\n",
+              v, length(res$outliers), res$lim_inf, res$lim_sup))
+}
+```
+
+## Z-score y Z modificado (MAD)
+
+```{r zscore}
+zscore_mod <- function(x) {
+  med <- median(x)
+  MAD <- median(abs(x - med))
+  0.6745 * (x - med) / MAD
+}
+
+resumen_outliers <- lapply(vars_num, function(v) {
+  x   <- iris[[v]]
+  z   <- abs(scale(x)[, 1])
+  M   <- abs(zscore_mod(x))
+  out <- detectar_outliers_iqr(x)
+  data.frame(
+    Variable      = v,
+    Outliers_IQR  = length(out$outliers),
+    Outliers_Z3   = sum(z > 3),
+    Outliers_M3.5 = sum(M > 3.5)
+  )
+}) %>% bind_rows()
+
+print(resumen_outliers, row.names = FALSE)
+```
+
+## Visualización con ggplot2
+
+```{r outliers-viz}
+col_var <- "Sepal.Width"
+
+Q1  <- quantile(iris[[col_var]], 0.25)
+Q3  <- quantile(iris[[col_var]], 0.75)
+IQR_val <- Q3 - Q1
+lim_sup <- Q3 + 1.5 * IQR_val
+lim_inf <- Q1 - 1.5 * IQR_val
+
+iris$outlier <- iris[[col_var]] < lim_inf | iris[[col_var]] > lim_sup
+iris$id      <- seq_len(nrow(iris))
+
+ggplot(iris, aes(x = id, y = .data[[col_var]])) +
+  geom_point(aes(color = outlier), alpha = 0.6, size = 2) +
+  geom_hline(yintercept = c(lim_inf, lim_sup),
+             linetype = "dashed", color = "red") +
+  scale_color_manual(values = c("FALSE" = "steelblue", "TRUE" = "red"),
+                     labels = c("Normal", "Outlier")) +
+  labs(title = paste("Outliers en", col_var, "(criterio IQR)"),
+       x = "Índice", y = "Valor", color = NULL) +
+  theme_bw()
+
+iris$outlier <- NULL
+iris$id      <- NULL
+```
+
+---
+
+# Clase 11 — Análisis Bivariado
+
+## Gráfico de dispersión
+
+```{r scatter}
+ggplot(iris, aes(x = Sepal.Length, y = Petal.Length,
+                 color = Species)) +
+  geom_point(size = 2, alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 0.8) +
+  labs(title = "Longitud del sépalo vs. longitud del pétalo",
+       x = "Longitud del sépalo (cm)",
+       y = "Longitud del pétalo (cm)") +
+  theme_bw()
+```
+
+## Correlación de Pearson y Spearman
+
+```{r correlacion}
+vars_num <- names(iris)[sapply(iris, is.numeric)]
+
+cat("=== Correlación de Pearson ===\n")
+round(cor(iris[vars_num], method = "pearson"), 3)
+```
+
+```{r corr-spearman}
+cat("=== Correlación de Spearman ===\n")
+round(cor(iris[vars_num], method = "spearman"), 3)
+```
+
+## Heatmap de correlación con `corrplot`
+
+```{r corrplot}
+corr_mat <- cor(iris[vars_num])
+corrplot(corr_mat,
+         method   = "color",
+         type     = "lower",
+         addCoef.col = "black",
+         tl.col   = "black",
+         tl.srt   = 45,
+         title    = "Correlaciones de Pearson — Iris",
+         mar      = c(0, 0, 1.5, 0))
+```
+
+## Test de correlación con p-valor
+
+```{r test-correlacion}
+test <- cor.test(iris$Sepal.Length, iris$Petal.Length,
+                 method = "pearson")
+cat("Pearson r =", round(test$estimate, 4),
+    "| p-valor =", format(test$p.value, scientific = TRUE), "\n")
+
+test_s <- cor.test(iris$Sepal.Length, iris$Petal.Length,
+                   method = "spearman")
+cat("Spearman ρ =", round(test_s$estimate, 4),
+    "| p-valor =", format(test_s$p.value, scientific = TRUE), "\n")
+```
+
+## Tabla de contingencia y test chi-cuadrado
+
+```{r contingencia}
+# Usamos tips: ¿hay asociación entre día y momento?
+tabla_obs <- table(tips$day, tips$time)
+print(tabla_obs)
+```
+
+```{r chi2}
+test_chi <- chisq.test(tabla_obs)
+cat("Chi-cuadrado:", round(test_chi$statistic, 4), "\n")
+cat("Grados de libertad:", test_chi$parameter, "\n")
+cat("p-valor:", round(test_chi$p.value, 4), "\n")
+
+# V de Cramér
+n   <- sum(tabla_obs)
+V   <- sqrt(test_chi$statistic / (n * min(dim(tabla_obs) - 1)))
+cat("V de Cramér:", round(V, 4), "\n")
+```
+
+## Cuantitativa por grupos
+
+```{r cuant-grupos}
+ggplot(tips, aes(x = day, y = total_bill, fill = day)) +
+  geom_violin(alpha = 0.5, trim = FALSE) +
+  geom_boxplot(width = 0.15, fill = "white",
+               outlier.colour = "red", outlier.size = 2) +
+  labs(title = "Cuenta total por día",
+       x = "Día", y = "Cuenta total ($)") +
+  theme_bw() +
+  theme(legend.position = "none")
+```
+
+---
+
+# Clase 12/13 — Visualización Avanzada con ggplot2
+
+## Pairplot equivalente: `GGally::ggpairs`
+
+```{r ggpairs}
+# install.packages("GGally")
+library(GGally)
+
+ggpairs(iris,
+        aes(color = Species, alpha = 0.6),
+        columns = 1:4,
+        upper   = list(continuous = wrap("cor", size = 3)),
+        diag    = list(continuous = wrap("densityDiag")),
+        lower   = list(continuous = wrap("points", size = 1))) +
+  theme_bw() +
+  labs(title = "Pairplot — Iris")
+```
+
+## Facetas
+
+```{r facetas}
+ggplot(iris, aes(x = Sepal.Length, y = Petal.Length)) +
+  geom_point(aes(color = Species), alpha = 0.6, size = 2) +
+  geom_smooth(method = "lm", se = TRUE, color = "black",
+              linewidth = 0.7) +
+  facet_wrap(~Species, ncol = 3) +
+  labs(title = "Relación longitud sépalo–pétalo por especie",
+       x = "Longitud sépalo (cm)",
+       y = "Longitud pétalo (cm)") +
+  theme_bw() +
+  theme(legend.position = "none")
+```
+
+## Personalización de temas
+
+```{r temas}
+p <- ggplot(tips, aes(x = total_bill, y = tip,
+                      color = sex)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title    = "Propina vs. Cuenta total",
+       x        = "Cuenta total ($)",
+       y        = "Propina ($)",
+       color    = "Sexo")
+
+# Comparar temas
+p + theme_bw()    + ggtitle("theme_bw()")
+p + theme_classic() + ggtitle("theme_classic()")
+p + theme_minimal() + ggtitle("theme_minimal()")
+```
+
+## Exportación con `ggsave`
+
+```{r guardar, eval=FALSE}
+p_final <- ggplot(iris,
+                  aes(x = Sepal.Length, y = Petal.Length,
+                      color = Species)) +
+  geom_point(size = 2, alpha = 0.7) +
+  theme_bw()
+
+# PDF vectorial (ideal para publicaciones)
+ggsave("U2_figura_final.pdf", plot = p_final,
+       width = 8, height = 5)
+
+# PNG alta resolución
+ggsave("U2_figura_final.png", plot = p_final,
+       width = 8, height = 5, dpi = 300)
+```
+
+---
+
+# Cierre de la Unidad 2
+
+## Resumen de funciones R utilizadas
+
+| Área | Función | Paquete |
+|------|---------|---------|
+| Descriptiva | `summary()`, `mean()`, `sd()`, `IQR()`, `quantile()` | base R |
+| Forma | `skewness()`, `kurtosis()` | e1071 |
+| Distribuciones | `ggplot + geom_histogram + geom_density` | ggplot2 |
+| Normalidad | `shapiro.test()`, `lillie.test()` | base / nortest |
+| Outliers | IQR manual, `scale()` (Z-score), MAD | base R |
+| Correlación | `cor()`, `cor.test()`, `corrplot()` | base / corrplot |
+| Contingencia | `table()`, `chisq.test()` | base R |
+| Visualización | `ggplot2`, `facet_wrap()`, `ggsave()` | ggplot2 |
+| Pairplot | `ggpairs()` | GGally |
+
+**Unidad 3 → Regresión**

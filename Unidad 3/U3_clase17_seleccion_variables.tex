@@ -1,0 +1,388 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{whale}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{pythonstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=pythonstyle}
+
+\title{Regresión Lineal Múltiple}
+\subtitle{Múltiples Predictores}
+\author{Métodos de Análisis de Datos 1}
+\institute{Universidad Nacional del Sur}
+\date{Unidad 3 - Clase 17}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Contenidos}
+\tableofcontents
+\end{frame}
+
+\section{Del modelo simple al múltiple}
+
+\begin{frame}{Motivación}
+En la práctica, la respuesta depende de \textbf{múltiples} factores.
+
+\vspace{0.3cm}
+\textbf{Ejemplos:}
+\begin{itemize}
+    \item Precio de casa: metros cuadrados, habitaciones, antigüedad, ubicación
+    \item Rendimiento académico: horas de estudio, asistencia, nivel previo
+    \item Ventas: publicidad TV, radio, web, estacionalidad
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Ventajas del modelo múltiple:}
+\begin{enumerate}
+    \item Predicciones más precisas
+    \item Controla confusores (variables que afectan tanto $X$ como $Y$)
+    \item Permite estudiar efecto de cada variable ajustando por las demás
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Modelo de regresión lineal múltiple}
+Con $p$ predictores:
+
+\begin{block}{Modelo}
+\[
+Y_i = \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} + \cdots + \beta_p X_{ip} + \epsilon_i
+\]
+\end{block}
+
+donde:
+\begin{itemize}
+    \item $Y_i$: variable respuesta
+    \item $X_{ij}$: $j$-ésimo predictor para observación $i$
+    \item $\beta_0$: intercepto
+    \item $\beta_j$: coeficiente del $j$-ésimo predictor
+    \item $\epsilon_i \sim N(0, \sigma^2)$: errores independientes
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Forma matricial}
+\begin{block}{Notación matricial}
+\[
+\mathbf{Y} = \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\epsilon}
+\]
+\end{block}
+
+\[
+\begin{bmatrix} Y_1 \\ Y_2 \\ \vdots \\ Y_n \end{bmatrix} = 
+\begin{bmatrix} 
+1 & X_{11} & X_{12} & \cdots & X_{1p} \\
+1 & X_{21} & X_{22} & \cdots & X_{2p} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+1 & X_{n1} & X_{n2} & \cdots & X_{np}
+\end{bmatrix}
+\begin{bmatrix} \beta_0 \\ \beta_1 \\ \vdots \\ \beta_p \end{bmatrix} +
+\begin{bmatrix} \epsilon_1 \\ \epsilon_2 \\ \vdots \\ \epsilon_n \end{bmatrix}
+\]
+
+\vspace{0.3cm}
+\textbf{Dimensiones:} $\mathbf{Y}$ es $n \times 1$, $\mathbf{X}$ es $n \times (p+1)$, $\boldsymbol{\beta}$ es $(p+1) \times 1$
+\end{frame}
+
+\begin{frame}{Estimación por MCO}
+\begin{block}{Estimador MCO}
+\[
+\hat{\boldsymbol{\beta}} = (\mathbf{X}^\top \mathbf{X})^{-1} \mathbf{X}^\top \mathbf{Y}
+\]
+\end{block}
+
+\vspace{0.5cm}
+\textbf{Propiedades:} Mismas que en regresión simple
+\begin{itemize}
+    \item Insesgado
+    \item BLUE (mínima varianza entre estimadores lineales insesgados)
+    \item Consistente
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Nota:} En la práctica, Python y R hacen estos cálculos automáticamente
+\end{frame}
+
+\section{Interpretación}
+
+\begin{frame}{Interpretación de coeficientes}
+\textbf{Diferencia clave con regresión simple:}
+
+\begin{block}{Interpretación en modelo múltiple}
+$\beta_j$ es el cambio esperado en $Y$ cuando $X_j$ aumenta en 1 unidad, \textbf{manteniendo constantes} las demás variables.
+\end{block}
+
+\vspace{0.5cm}
+\textbf{Ejemplo:} Precio de casas
+\[
+\text{Precio} = 50 + 1.2 \times \text{m}^2 + 5 \times \text{habitaciones} - 0.8 \times \text{antigüedad}
+\]
+
+\begin{itemize}
+    \item $\beta_1 = 1.2$: Por cada m$^2$ adicional, el precio aumenta 1.2 mil \$, \textbf{para igual número de habitaciones y antigüedad}
+    \item $\beta_2 = 5$: Cada habitación adicional suma 5 mil \$, \textbf{para igual tamaño y antigüedad}
+    \item $\beta_3 = -0.8$: Cada año adicional reduce 0.8 mil \$, \textbf{para igual tamaño y habitaciones}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Cuidado con la interpretación}
+\begin{alertblock}{Importante}
+Los coeficientes solo tienen sentido si los predictores pueden variar independientemente.
+\end{alertblock}
+
+\vspace{0.5cm}
+\textbf{Problema:} Si hay correlación entre predictores (multicolinealidad), la interpretación se complica.
+
+\vspace{0.3cm}
+\textbf{Ejemplo:} Altura y peso están correlacionados
+\begin{itemize}
+    \item Modelo: IMC $\sim$ altura + peso
+    \item ¿Tiene sentido "mantener peso constante y variar altura"?
+    \item Los coeficientes individuales pueden ser engañosos
+\end{itemize}
+\end{frame}
+
+\section{Bondad de ajuste}
+
+\begin{frame}{$R^2$ y $R^2$ ajustado}
+\textbf{$R^2$ estándar:}
+\[
+R^2 = 1 - \frac{\text{SCR}}{\text{SCT}}
+\]
+
+\textbf{Problema:} $R^2$ siempre aumenta al agregar variables, aunque sean irrelevantes
+
+\vspace{0.5cm}
+\begin{block}{$R^2$ ajustado}
+\[
+R^2_{\text{adj}} = 1 - \frac{\text{SCR}/(n-p-1)}{\text{SCT}/(n-1)} = 1 - (1-R^2)\frac{n-1}{n-p-1}
+\]
+\end{block}
+
+\vspace{0.3cm}
+\textbf{Ventaja:} Penaliza la complejidad. Puede disminuir si se agregan variables irrelevantes.
+
+\vspace{0.3cm}
+\textbf{Uso:} Comparar modelos con distinto número de predictores
+\end{frame}
+
+\section{Inferencia}
+
+\begin{frame}{Test F global}
+¿Es útil el modelo completo?
+
+\begin{block}{Hipótesis}
+\[
+H_0: \beta_1 = \beta_2 = \cdots = \beta_p = 0 \quad \text{vs} \quad H_1: \text{al menos un } \beta_j \neq 0
+\]
+\end{block}
+
+\textbf{Estadístico:}
+\[
+F = \frac{\text{SCE}/p}{\text{SCR}/(n-p-1)} \sim F_{p, n-p-1}
+\]
+
+\vspace{0.3cm}
+Si $p$-valor $< \alpha$ $\Rightarrow$ rechazamos $H_0$ (al menos una variable es útil)
+\end{frame}
+
+\begin{frame}{Tests t individuales}
+Para cada coeficiente:
+
+\begin{block}{Hipótesis}
+\[
+H_0: \beta_j = 0 \quad \text{vs} \quad H_1: \beta_j \neq 0
+\]
+\end{block}
+
+\textbf{Estadístico:}
+\[
+t_j = \frac{\hat{\beta}_j}{\text{SE}(\hat{\beta}_j)} \sim t_{n-p-1}
+\]
+
+\vspace{0.5cm}
+\textbf{Interpretación:} $X_j$ es significativo \textbf{dado que} las demás variables ya están en el modelo.
+
+\vspace{0.3cm}
+\textbf{Cuidado:} Puede ser que $F$ sea significativo pero ningún $t_j$ lo sea (multicolinealidad)
+\end{frame}
+
+\section{Multicolinealidad}
+
+\begin{frame}{¿Qué es la multicolinealidad?}
+\begin{block}{Definición}
+Correlación alta entre dos o más predictores
+\end{block}
+
+\vspace{0.3cm}
+\textbf{Consecuencias:}
+\begin{itemize}
+    \item Coeficientes inestables (alta varianza)
+    \item Errores estándar grandes
+    \item Tests $t$ no significativos, pero test $F$ sí
+    \item Interpretación difícil
+    \item Predicciones siguen siendo válidas
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{No afecta:} $R^2$, predicciones dentro del rango de los datos
+\end{frame}
+
+\begin{frame}{Detección: VIF}
+\begin{block}{Factor de Inflación de la Varianza}
+\[
+\text{VIF}_j = \frac{1}{1 - R^2_j}
+\]
+\end{block}
+
+donde $R^2_j$ es el $R^2$ de la regresión de $X_j$ sobre las demás variables.
+
+\vspace{0.5cm}
+\textbf{Interpretación:}
+\begin{itemize}
+    \item $\text{VIF}_j = 1$: $X_j$ no correlacionado con otras variables
+    \item $\text{VIF}_j > 5$: multicolinealidad moderada
+    \item $\text{VIF}_j > 10$: multicolinealidad severa
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Soluciones a la multicolinealidad}
+\textbf{Opciones:}
+
+\begin{enumerate}
+    \item \textbf{Eliminar variables redundantes}
+    \begin{itemize}
+        \item Quitar variables muy correlacionadas
+    \end{itemize}
+    
+    \item \textbf{Combinar variables}
+    \begin{itemize}
+        \item Crear índices o promedios
+    \end{itemize}
+    
+    \item \textbf{Aumentar tamaño muestral}
+    \begin{itemize}
+        \item Más datos reducen varianza de $\hat{\beta}$
+    \end{itemize}
+    
+    \item \textbf{Regularización}
+    \begin{itemize}
+        \item Ridge, Lasso (veremos en clases futuras)
+    \end{itemize}
+    
+    \item \textbf{PCA (Análisis de Componentes Principales)}
+    \begin{itemize}
+        \item Crear predictores no correlacionados
+    \end{itemize}
+\end{enumerate}
+\end{frame}
+
+\section{Implementación}
+
+\begin{frame}[fragile]{Python: Modelo múltiple}
+\begin{lstlisting}[language=Python]
+from statsmodels.formula.api import ols
+
+# Multiples predictores con formula
+modelo = ols('precio ~ metros + habitaciones + antiguedad',
+             data=casas).fit()
+
+print(modelo.summary())
+
+# O con matriz de diseño manual
+from sklearn.linear_model import LinearRegression
+X = casas[['metros', 'habitaciones', 'antiguedad']]
+y = casas['precio']
+modelo_sk = LinearRegression().fit(X, y)
+print(f"Coeficientes: {modelo_sk.coef_}")
+print(f"Intercepto: {modelo_sk.intercept_}")
+print(f"R^2: {modelo_sk.score(X, y):.4f}")
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Python: VIF}
+\begin{lstlisting}[language=Python]
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+# Calcular VIF para cada variable
+X = casas[['metros', 'habitaciones', 'antiguedad']]
+vif_data = pd.DataFrame()
+vif_data["Variable"] = X.columns
+vif_data["VIF"] = [variance_inflation_factor(X.values, i) 
+                   for i in range(X.shape[1])]
+print(vif_data)
+
+#     Variable    VIF
+# 0      metros   2.3
+# 1 habitaciones  8.5
+# 2  antiguedad   1.8
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{R: Modelo múltiple}
+\begin{lstlisting}[language=R]
+# Ajustar modelo
+modelo <- lm(precio ~ metros + habitaciones + antiguedad,
+             data = casas)
+
+summary(modelo)
+
+# VIF
+library(car)
+vif(modelo)
+
+# Comparar modelos
+modelo1 <- lm(precio ~ metros, data = casas)
+modelo2 <- lm(precio ~ metros + habitaciones, data = casas)
+modelo3 <- lm(precio ~ metros + habitaciones + antiguedad, 
+              data = casas)
+
+anova(modelo1, modelo2, modelo3)
+\end{lstlisting}
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Resumen}
+\textbf{Aprendimos:}
+\begin{itemize}
+    \item Modelo de regresión múltiple: $Y = \beta_0 + \sum \beta_j X_j + \epsilon$
+    \item Interpretación: efecto de $X_j$ manteniendo constantes las demás
+    \item $R^2$ ajustado para comparar modelos
+    \item Test $F$ global y tests $t$ individuales
+    \item Multicolinealidad: detección (VIF) y soluciones
+    \item Implementación en Python y R
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Próxima clase:} Selección de variables y regresión polinomial
+\end{frame}
+
+\end{document}

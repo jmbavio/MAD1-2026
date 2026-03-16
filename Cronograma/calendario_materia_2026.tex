@@ -1,0 +1,80 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{colortbl}
+
+\definecolor{feriado}{RGB}{255, 220, 220}
+\definecolor{encabezado}{RGB}{30, 60, 120}
+
+\begin{document}
+
+\begin{center}
+    {\Large \textbf{Calendario de Clases --- Primer Cuatrimestre 2026}}\\[0.4em]
+    {\large Universidad Nacional del Sur}\\[0.2em]
+    {\normalsize Lunes y Miércoles $\cdot$ 16 de marzo --- 3 de julio}
+\end{center}
+
+\vspace{1em}
+
+\begin{longtable}{|>{\bfseries}p{3cm}|>{\centering\arraybackslash}p{1.2cm}|p{9cm}|}
+\hline
+\rowcolor{encabezado}
+\textcolor{white}{\textbf{Fecha}} & \textcolor{white}{\textbf{Clase}} & \textcolor{white}{\textbf{Tema}} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{encabezado}
+\textcolor{white}{\textbf{Fecha}} & \textcolor{white}{\textbf{Clase}} & \textcolor{white}{\textbf{Tema}} \\
+\hline
+\endhead
+\hline
+\endfoot
+
+Lun 16 mar  & 1 & \textbf{U0.} Presentación de la materia. El ciclo de análisis de datos. Tipos de análisis. Configuración del entorno (Python, R, VS Code) \\[0.4em] \hline
+Mié 18 mar  & 2 & \textbf{U0.} Introducción a notebooks. Sintaxis básica Python y R. Buenas prácticas y reproducibilidad. Caso de estudio completo \\[0.4em] \hline
+Lun 23 mar  & 3 & \textbf{U1.} Fuentes de datos. Carga en Python (pandas) y R (readr, tidyverse). Exploración inicial \\[0.4em] \hline
+Mié 25 mar  & 4 & \textbf{U1.} Calidad de datos. Valores faltantes: detección y estrategias de tratamiento. Duplicados e inconsistencias \\[0.4em] \hline
+Lun 30 mar  & 5 & \textbf{U1.} Transformación de datos: tipos, variables derivadas, codificación de categóricas \\[0.4em] \hline
+Mié 1 abr   & 6 & \textbf{U1.} Normalización y estandarización. Discretización. Integración de datos: joins y merges \\[0.4em] \hline
+Lun 6 abr   & 7 & \textbf{U1.} APIs REST y web scraping. Tidy data. Reshape: pivot, melt, stack \\[0.4em] \hline
+Mié 8 abr   & 8 & \textbf{U2.} Estadística descriptiva univariada: tendencia central, dispersión, forma \\[0.4em] \hline
+Lun 13 abr  & 9 & \textbf{U2.} Estadística descriptiva bivariada: tablas de contingencia, covarianza, correlación \\[0.4em] \hline
+Mié 15 abr  & 10 & \textbf{U2.} Análisis de distribuciones. Tests de normalidad. Q-Q plots. Detección de outliers \\[0.4em] \hline
+Lun 20 abr  & 11 & \textbf{U2.} Visualizaciones en Python: matplotlib, seaborn. Tipos de gráficos \\[0.4em] \hline
+Mié 22 abr  & 12 & \textbf{U2.} Visualizaciones en R: ggplot2, gramática de gráficos, personalización \\[0.4em] \hline
+Lun 27 abr  & 13 & \textbf{U2.} Visualizaciones interactivas (plotly). Principios de visualización efectiva. Exploración multivariada (PCA intro) \\[0.4em] \hline
+Mié 29 abr  & 14 & \textbf{U3.} Correlación vs causalidad. Regresión lineal simple: formulación, OLS, interpretación \\[0.4em] \hline
+Lun 4 may   & 15 & \textbf{U3.} Supuestos del modelo lineal. Análisis de residuos. Evaluación: R², RMSE, MAE \\[0.4em] \hline
+Mié 6 may   & 16 & \textbf{U3.} Regresión lineal múltiple. Interpretación de coeficientes parciales. Multicolinealidad (VIF) \\[0.4em] \hline
+Lun 11 may  & 17 & \textbf{U3.} Selección de variables: forward, backward, stepwise. Tests de hipótesis e intervalos \\[0.4em] \hline
+Mié 13 may  & 18 & \textbf{U3.} Overfitting vs underfitting. Bias-variance tradeoff. Regularización: Ridge, LASSO, Elastic Net \\[0.4em] \hline
+Lun 18 may  & 19 & \textbf{U3.} Regresión logística: clasificación binaria, función logística, odds ratios, máxima verosimilitud \\[0.4em] \hline
+Mié 20 may  & 20 & \textbf{U3.} Validación de modelos: train/validation/test. Validación cruzada (k-fold, stratified). Curvas de aprendizaje \\[0.4em] \hline
+\rowcolor{feriado}
+Lun 25 may  & --- & \textit{Feriado --- Aniversario del Primer Gobierno Patrio} \\[0.4em] \hline
+Mié 27 may  & 21 & \textbf{U4.} Clasificación: conceptos. Árboles de decisión: construcción, criterios de splitting, poda \\[0.4em] \hline
+Lun 1 jun   & 22 & \textbf{U4.} Random Forest: bagging, bootstrap, importancia de variables. Hiperparámetros \\[0.4em] \hline
+Mié 3 jun   & 23 & \textbf{U4.} SVM: hiperplano óptimo, vectores de soporte, kernels. KNN: algoritmo, selección de k \\[0.4em] \hline
+Lun 8 jun   & 24 & \textbf{U4.} Métricas de clasificación: matriz de confusión, accuracy, precision, recall, F1-score \\[0.4em] \hline
+Mié 10 jun  & 25 & \textbf{U4.} Curvas ROC y AUC. Curvas precision-recall. Ingeniería de features \\[0.4em] \hline
+Lun 15 jun  & 26 & \textbf{U4.} Clases desbalanceadas: resampling (SMOTE, undersampling), pesos. Comparación de modelos: grid search, pipelines \\[0.4em] \hline
+\rowcolor{feriado}
+Mié 17 jun  & --- & \textit{Feriado --- Día de Güemes} \\[0.4em] \hline
+Lun 22 jun  & 27 & \textbf{U5.} Ciclo de vida de modelos en producción. Serialización. Interpretabilidad: SHAP, LIME, partial dependence \\[0.4em] \hline
+Mié 24 jun  & 28 & \textbf{U5.} Comunicación de resultados. Reportes reproducibles: Jupyter, R Markdown. Ética en análisis de datos \\[0.4em] \hline
+Lun 29 jun  & 29 & Repaso general. Integración de conceptos. Consultas sobre proyecto integrador \\[0.4em] \hline
+Mié 1 jul   & 30 & Presentación de proyectos integradores / Cierre del curso \\[0.4em] \hline
+
+\end{longtable}
+
+\vspace{0.5em}
+\noindent\small\textit{Total: 32 fechas $\cdot$ 30 clases + 2 feriados.
+Receso de invierno a confirmar según DGCyE Provincia de Buenos Aires.}
+
+\end{document}

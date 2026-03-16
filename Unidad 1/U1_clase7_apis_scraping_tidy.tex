@@ -1,0 +1,824 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[es-ES]{babel}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Tema
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Colores personalizados
+\definecolor{unsazul}{RGB}{30, 60, 120}
+\definecolor{unsverde}{RGB}{0, 100, 0}
+\definecolor{unsrojo}{RGB}{200, 100, 100}
+
+\setbeamercolor{structure}{fg=unsazul}
+\setbeamercolor{palette primary}{bg=unsazul,fg=white}
+\setbeamercolor{palette secondary}{bg=unsazul!80,fg=white}
+\setbeamercolor{palette tertiary}{bg=unsazul!60,fg=white}
+
+% Configuración de listings
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{unsazul}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{unsverde},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+% Información del documento
+\title{Métodos de Análisis de Datos 1}
+\subtitle{Clase 7: APIs, Web Scraping y Tidy Data}
+\author{Universidad Nacional del Sur}
+\date{}
+
+\begin{document}
+
+% Portada
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Contenidos
+\begin{frame}{Contenidos de hoy}
+\tableofcontents
+\end{frame}
+
+\section{APIs REST}
+
+\begin{frame}{¿Qué es una API REST?}
+\begin{block}{API: Application Programming Interface}
+Interfaz que permite comunicación entre aplicaciones
+\end{block}
+
+\begin{block}{REST: REpresentational State Transfer}
+Estilo de arquitectura para servicios web
+\end{block}
+
+\pause
+
+\begin{exampleblock}{Ejemplos de APIs públicas}
+\begin{itemize}
+    \item OpenWeatherMap: datos meteorológicos
+    \item Twitter/X: tweets, usuarios
+    \item GitHub: repositorios, commits
+    \item Google Maps: mapas, geocodificación
+    \item The Movie Database: películas, series
+\end{itemize}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Componentes de una API REST}
+\begin{enumerate}
+    \item \textbf{Endpoint (URL):} Dirección del recurso
+    \begin{itemize}
+        \item \texttt{https://api.ejemplo.com/users}
+    \end{itemize}
+    
+    \item \textbf{Métodos HTTP:}
+    \begin{itemize}
+        \item GET: obtener datos
+        \item POST: crear nuevos datos
+        \item PUT/PATCH: actualizar datos
+        \item DELETE: eliminar datos
+    \end{itemize}
+    
+    \item \textbf{Headers:} Metadatos (autenticación, tipo de contenido)
+    
+    \item \textbf{Parámetros:} Query string o body
+    
+    \item \textbf{Respuesta:} Generalmente JSON o XML
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Anatomía de una request HTTP}
+\begin{exampleblock}{Ejemplo completo}
+\texttt{GET https://api.openweathermap.org/data/2.5/weather?q=BahiaBlanca\&appid=ABC123}
+\end{exampleblock}
+
+\begin{itemize}
+    \item \textbf{Método:} GET
+    \item \textbf{Base URL:} \texttt{https://api.openweathermap.org}
+    \item \textbf{Endpoint:} \texttt{/data/2.5/weather}
+    \item \textbf{Query params:}
+    \begin{itemize}
+        \item \texttt{q=BahiaBlanca} (ciudad)
+        \item \texttt{appid=ABC123} (API key)
+    \end{itemize}
+\end{itemize}
+
+\pause
+
+\begin{block}{Respuesta típica (JSON)}
+\texttt{\{"temp": 25.3, "humidity": 60, "description": "clear sky"\}}
+\end{block}
+\end{frame}
+
+\begin{frame}{Códigos de respuesta HTTP}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Éxito (2xx):}
+\begin{itemize}
+    \item \textcolor{unsverde}{\textbf{200 OK}}: Exitoso
+    \item \textcolor{unsverde}{\textbf{201 Created}}: Recurso creado
+    \item \textcolor{unsverde}{\textbf{204 No Content}}: Sin contenido
+\end{itemize}
+
+\textbf{Redirección (3xx):}
+\begin{itemize}
+    \item \textbf{301 Moved}: Movido permanentemente
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Error del cliente (4xx):}
+\begin{itemize}
+    \item \textcolor{unsrojo}{\textbf{400 Bad Request}}: Solicitud inválida
+    \item \textcolor{unsrojo}{\textbf{401 Unauthorized}}: No autenticado
+    \item \textcolor{unsrojo}{\textbf{404 Not Found}}: No encontrado
+    \item \textcolor{unsrojo}{\textbf{429 Too Many}}: Rate limit
+\end{itemize}
+
+\textbf{Error del servidor (5xx):}
+\begin{itemize}
+    \item \textcolor{unsrojo}{\textbf{500 Internal Error}}: Error del servidor
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{GET Request en Python}
+\begin{lstlisting}[language=Python]
+import requests
+import pandas as pd
+
+# Request simple
+url = "https://api.ejemplo.com/posts"
+response = requests.get(url)
+
+# Verificar éxito
+if response.status_code == 200:
+    data = response.json()
+    df = pd.DataFrame(data)
+    print(df.head())
+else:
+    print(f"Error: {response.status_code}")
+
+# Con parámetros
+params = {'userId': 1, 'limit': 10}
+response = requests.get(url, params=params)
+
+# Con autenticación
+headers = {'Authorization': 'Bearer TU_TOKEN'}
+response = requests.get(url, headers=headers)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{GET Request en R}
+\begin{lstlisting}[language=R]
+library(httr)
+library(jsonlite)
+
+# Request simple
+url <- "https://api.ejemplo.com/posts"
+response <- GET(url)
+
+# Verificar éxito
+if (status_code(response) == 200) {
+  data <- content(response, as = "text")
+  df <- fromJSON(data)
+  head(df)
+} else {
+  print(paste("Error:", status_code(response)))
+}
+
+# Con parámetros
+response <- GET(url, query = list(userId = 1, limit = 10))
+
+# Con autenticación
+response <- GET(url, add_headers(Authorization = "Bearer TU_TOKEN"))
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{POST Request (crear datos)}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+import requests
+
+url = "https://api.ejemplo.com/posts"
+
+# Datos a enviar
+nuevo_post = {
+    'title': 'Nuevo post',
+    'body': 'Contenido',
+    'userId': 1
+}
+
+# POST request
+response = requests.post(
+    url, 
+    json=nuevo_post
+)
+
+if response.status_code == 201:
+    print("Creado:", response.json())
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+library(httr)
+
+url <- "https://api.ejemplo.com/posts"
+
+# Datos a enviar
+nuevo_post <- list(
+  title = 'Nuevo post',
+  body = 'Contenido',
+  userId = 1
+)
+
+# POST request
+response <- POST(
+  url, 
+  body = nuevo_post, 
+  encode = "json"
+)
+
+if (status_code(response) == 201) {
+  print("Creado")
+}
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Rate Limiting}
+\begin{alertblock}{Problema}
+Las APIs limitan el número de requests por tiempo
+\end{alertblock}
+
+\begin{exampleblock}{Límites típicos}
+\begin{itemize}
+    \item 100 requests por hora
+    \item 1000 requests por día
+    \item 10 requests por segundo
+\end{itemize}
+\end{exampleblock}
+
+\pause
+
+\begin{block}{Soluciones}
+\begin{enumerate}
+    \item Espaciar requests (sleep entre llamadas)
+    \item Cachear resultados
+    \item Pagar por plan premium
+    \item Usar múltiples API keys (con cuidado)
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Implementar Rate Limiting}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+import time
+import requests
+
+urls = [
+    'url1', 'url2', 'url3'
+]
+
+resultados = []
+for url in urls:
+    response = requests.get(url)
+    resultados.append(response.json())
+    
+    # Esperar 1 segundo
+    time.sleep(1)
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+library(httr)
+
+urls <- c('url1', 'url2', 'url3')
+
+resultados <- list()
+for (url in urls) {
+  response <- GET(url)
+  resultados[[length(resultados) + 1]] <- content(response)
+  
+  # Esperar 1 segundo
+  Sys.sleep(1)
+}
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\section{Web Scraping}
+
+\begin{frame}{¿Qué es web scraping?}
+\begin{block}{Definición}
+Extraer datos de páginas web mediante programación
+\end{block}
+
+\begin{alertblock}{¿Cuándo usar?}
+\textbf{SOLO cuando no hay API disponible}
+\end{alertblock}
+
+\pause
+
+\begin{block}{Proceso}
+\begin{enumerate}
+    \item Descargar HTML de la página
+    \item Inspeccionar estructura (DevTools del navegador)
+    \item Identificar selectores CSS o XPath
+    \item Extraer información específica
+    \item Limpiar y estructurar datos
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}{Herramientas de web scraping}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{itemize}
+    \item \textbf{BeautifulSoup}: Parsing HTML simple
+    \item \textbf{Scrapy}: Framework completo
+    \item \textbf{Selenium}: Páginas dinámicas (JavaScript)
+    \item \textbf{requests-html}: Combina requests y BS4
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{itemize}
+    \item \textbf{rvest}: Principal librería
+    \item \textbf{xml2}: Parsing XML/HTML
+    \item \textbf{RSelenium}: Páginas dinámicas
+\end{itemize}
+\end{columns}
+
+\vspace{1em}
+
+\begin{exampleblock}{Recomendación}
+Comenzar con BeautifulSoup (Python) o rvest (R)
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Selectores CSS básicos}
+\begin{block}{¿Qué son?}
+Patrones para identificar elementos HTML
+\end{block}
+
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Selector} & \textbf{Descripción} \\
+\hline
+\texttt{p} & Todos los párrafos \\
+\texttt{.clase} & Elementos con clase="clase" \\
+\texttt{\#id} & Elemento con id="id" \\
+\texttt{div p} & Párrafos dentro de divs \\
+\texttt{div > p} & Párrafos hijos directos de divs \\
+\texttt{a[href]} & Enlaces con atributo href \\
+\texttt{.precio.destacado} & Elementos con ambas clases \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{0.5em}
+\small{Usar DevTools del navegador (F12) para inspeccionar elementos}
+\end{frame}
+
+\begin{frame}[fragile]{Web Scraping en Python}
+\begin{lstlisting}[language=Python]
+import requests
+from bs4 import BeautifulSoup
+
+# Descargar página
+url = "https://ejemplo.com/productos"
+response = requests.get(url)
+soup = BeautifulSoup(response.content, 'html.parser')
+
+# Extraer todos los enlaces
+enlaces = soup.find_all('a')
+for link in enlaces:
+    print(link.get('href'))
+
+# Extraer tabla
+tabla = soup.find('table', {'class': 'datos'})
+filas = tabla.find_all('tr')
+
+# Extraer precios por clase
+precios = soup.find_all('span', {'class': 'precio'})
+for precio in precios:
+    print(precio.text.strip())
+
+# Con selector CSS
+productos = soup.select('.producto .nombre')
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Web Scraping en R}
+\begin{lstlisting}[language=R]
+library(rvest)
+
+# Descargar página
+url <- "https://ejemplo.com/productos"
+pagina <- read_html(url)
+
+# Extraer enlaces
+enlaces <- pagina %>%
+  html_nodes("a") %>%
+  html_attr("href")
+
+# Extraer tabla
+tabla <- pagina %>%
+  html_node("table.datos") %>%
+  html_table()
+
+df <- as_tibble(tabla)
+
+# Extraer precios
+precios <- pagina %>%
+  html_nodes(".precio") %>%
+  html_text()
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Consideraciones legales y éticas}
+\begin{alertblock}{SIEMPRE verificar antes de scrapear}
+\begin{enumerate}
+    \item \textbf{Términos de servicio:} ¿Permiten scraping?
+    \item \textbf{robots.txt:} \texttt{https://sitio.com/robots.txt}
+    \item \textbf{Frecuencia:} No saturar el servidor
+    \item \textbf{User-Agent:} Identificarse apropiadamente
+    \item \textbf{Datos personales:} Respetar privacidad
+\end{enumerate}
+\end{alertblock}
+
+\pause
+
+\begin{exampleblock}{Buenas prácticas}
+\begin{itemize}
+    \item Pausas entre requests (1-3 segundos)
+    \item Cachear resultados
+    \item Scrapear de noche (menos carga)
+    \item Respetar directivas de robots.txt
+    \item Contactar al sitio si tenés dudas
+\end{itemize}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{User-Agent y robots.txt}
+\textbf{Configurar User-Agent:}
+\begin{lstlisting}[language=Python]
+# Python
+headers = {
+    'User-Agent': 'MiScraper/1.0 (contacto@ejemplo.com)'
+}
+response = requests.get(url, headers=headers)
+\end{lstlisting}
+
+\vspace{0.5em}
+
+\textbf{Verificar robots.txt:}
+\begin{verbatim}
+https://wikipedia.org/robots.txt
+
+User-agent: *
+Disallow: /wiki/Special:
+Allow: /wiki/
+\end{verbatim}
+
+\begin{alertblock}{Importante}
+Si robots.txt prohíbe, \textbf{NO scrapear}
+\end{alertblock}
+\end{frame}
+
+\section{Tidy Data}
+
+\begin{frame}{Principios de Tidy Data}
+\begin{block}{¿Qué son datos ordenados (tidy)?}
+Datos estructurados de forma consistente para facilitar análisis
+\end{block}
+
+\begin{block}{Tres principios (Hadley Wickham)}
+\begin{enumerate}
+    \item \textbf{Cada variable forma una columna}
+    \item \textbf{Cada observación forma una fila}
+    \item \textbf{Cada tipo de unidad observacional forma una tabla}
+\end{enumerate}
+\end{block}
+
+\pause
+
+\begin{alertblock}{¿Por qué importa?}
+\begin{itemize}
+    \item Facilita manipulación con dplyr/pandas
+    \item Visualización más simple
+    \item Menos errores
+    \item Código más claro y mantenible
+\end{itemize}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Ejemplo: Datos NO ordenados}
+\textbf{Wide format (ancho):}
+
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Persona} & \textbf{2020} & \textbf{2021} & \textbf{2022} \\
+\hline
+Ana & 50000 & 52000 & 54000 \\
+Luis & 48000 & 49000 & 51000 \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{0.5em}
+
+\begin{alertblock}{Problemas}
+\begin{itemize}
+    \item Los años están en columnas (deberían ser valores)
+    \item Difícil agregar nuevos años
+    \item Difícil visualizar series temporales
+\end{itemize}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Ejemplo: Datos ordenados}
+\textbf{Long format (largo):}
+
+\begin{center}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Persona} & \textbf{Año} & \textbf{Ingreso} \\
+\hline
+Ana & 2020 & 50000 \\
+Ana & 2021 & 52000 \\
+Ana & 2022 & 54000 \\
+Luis & 2020 & 48000 \\
+Luis & 2021 & 49000 \\
+Luis & 2022 & 51000 \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{0.5em}
+
+\begin{block}{Ventajas}
+\begin{itemize}
+    \item Fácil filtrar por año
+    \item Fácil agrupar y sumarizar
+    \item Compatible con ggplot2/seaborn
+\end{itemize}
+\end{block}
+\end{frame}
+
+\section{Reshape: Pivot y Melt}
+
+\begin{frame}{Wide → Long (Pivot/Melt)}
+\begin{block}{Objetivo}
+Convertir columnas en filas (wide → long)
+\end{block}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    % Wide
+    \node at (0,3) {\textbf{Wide}};
+    \draw (0,0) rectangle (4,2);
+    \node at (2,1.5) {Persona | 2020 | 2021 | 2022};
+    \node at (2,1) {Ana | 50k | 52k | 54k};
+    \node at (2,0.5) {Luis | 48k | 49k | 51k};
+    
+    % Arrow
+    \draw[->, thick] (4.5,1) -- (5.5,1);
+    
+    % Long
+    \node at (8,3) {\textbf{Long}};
+    \draw (6,0) rectangle (10,2);
+    \node at (8,1.5) {Persona | Año | Ingreso};
+    \node at (8,1) {Ana | 2020 | 50k};
+    \node at (8,0.5) {Ana | 2021 | 52k};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5em}
+
+\begin{itemize}
+    \item Python: \texttt{pd.melt()}
+    \item R: \texttt{pivot\_longer()}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Wide → Long: Python}
+\begin{lstlisting}[language=Python]
+import pandas as pd
+
+# Datos wide
+df_wide = pd.DataFrame({
+    'persona': ['Ana', 'Luis'],
+    '2020': [50000, 48000],
+    '2021': [52000, 49000],
+    '2022': [54000, 51000]
+})
+
+# Melt (wide → long)
+df_long = pd.melt(
+    df_wide,
+    id_vars=['persona'],           # Columnas a mantener
+    value_vars=['2020', '2021', '2022'],  # Columnas a convertir
+    var_name='año',                # Nombre de nueva columna
+    value_name='ingreso'           # Nombre de valores
+)
+
+# Simplificado (todas excepto id_vars)
+df_long = pd.melt(
+    df_wide, 
+    id_vars=['persona'], 
+    var_name='año', 
+    value_name='ingreso'
+)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Wide → Long: R}
+\begin{lstlisting}[language=R]
+library(tidyverse)
+
+# Datos wide
+df_wide <- tibble(
+  persona = c('Ana', 'Luis'),
+  `2020` = c(50000, 48000),
+  `2021` = c(52000, 49000),
+  `2022` = c(54000, 51000)
+)
+
+# Pivot longer (wide → long)
+df_long <- df_wide %>%
+  pivot_longer(
+    cols = c(`2020`, `2021`, `2022`),  # Columnas a convertir
+    names_to = "año",                   # Nombre de columna
+    values_to = "ingreso"               # Nombre de valores
+  )
+
+# Con patrón
+df_long <- df_wide %>%
+  pivot_longer(
+    cols = matches("^\\d{4}$"),  # Regex para años
+    names_to = "año",
+    values_to = "ingreso"
+  )
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Long → Wide (Pivot)}
+\begin{block}{Objetivo}
+Convertir filas en columnas (long → wide)
+\end{block}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    % Long
+    \node at (2,3) {\textbf{Long}};
+    \draw (0,0) rectangle (4,2);
+    \node at (2,1.5) {Persona | Año | Ingreso};
+    \node at (2,1) {Ana | 2020 | 50k};
+    \node at (2,0.5) {Ana | 2021 | 52k};
+    
+    % Arrow
+    \draw[->, thick] (4.5,1) -- (5.5,1);
+    
+    % Wide
+    \node at (8,3) {\textbf{Wide}};
+    \draw (6,0) rectangle (10,2);
+    \node at (8,1.5) {Persona | 2020 | 2021 | 2022};
+    \node at (8,1) {Ana | 50k | 52k | 54k};
+    \node at (8,0.5) {Luis | 48k | 49k | 51k};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5em}
+
+\begin{itemize}
+    \item Python: \texttt{pivot()} o \texttt{pivot\_table()}
+    \item R: \texttt{pivot\_wider()}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Long → Wide: Python}
+\begin{lstlisting}[language=Python]
+# Pivot (long → wide)
+df_wide = df_long.pivot(
+    index='persona',      # Columna para filas
+    columns='año',        # Columna para columnas
+    values='ingreso'      # Valores a rellenar
+)
+
+# Si hay duplicados, usar pivot_table con agregación
+df_wide = df_long.pivot_table(
+    index='persona',
+    columns='año',
+    values='ingreso',
+    aggfunc='mean'  # Función de agregación
+)
+
+# Reset index para tener 'persona' como columna
+df_wide = df_wide.reset_index()
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Long → Wide: R}
+\begin{lstlisting}[language=R]
+# Pivot wider (long → wide)
+df_wide <- df_long %>%
+  pivot_wider(
+    names_from = año,      # Columna que se convierte en columnas
+    values_from = ingreso  # Valores a rellenar
+  )
+
+# Con prefijo
+df_wide <- df_long %>%
+  pivot_wider(
+    names_from = año,
+    values_from = ingreso,
+    names_prefix = "año_"
+  )
+
+# Con múltiples columnas de valores
+df_wide <- df_long %>%
+  pivot_wider(
+    names_from = año,
+    values_from = c(ingreso, bonus)
+  )
+\end{lstlisting}
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Resumen de la clase}
+\begin{itemize}
+    \item Las \textbf{APIs REST} proveen acceso estructurado a datos
+    \item Componentes: endpoint, método HTTP, headers, parámetros, respuesta
+    \item Códigos: 200 (OK), 401 (no autorizado), 404 (no encontrado)
+    \item Implementar \textbf{rate limiting} para respetar límites
+    \item \textbf{Web scraping}: último recurso cuando no hay API
+    \item Herramientas: BeautifulSoup (Python), rvest (R)
+    \item Respetar \textbf{robots.txt} y términos de servicio
+    \item \textbf{Tidy data}: cada variable una columna, cada observación una fila
+    \item \textbf{Wide → Long}: melt/pivot\_longer
+    \item \textbf{Long → Wide}: pivot/pivot\_wider
+\end{itemize}
+
+\vspace{1em}
+
+\begin{block}{Próxima unidad}
+\textbf{Unidad 2: Exploración y Visualización de Datos}
+\end{block}
+\end{frame}
+
+\begin{frame}{Tarea}
+\begin{enumerate}
+    \item \textbf{APIs:}
+    \begin{itemize}
+        \item Elegir una API pública (ej: JSONPlaceholder, OpenWeather)
+        \item Hacer al menos 3 requests diferentes
+        \item Convertir respuestas a DataFrames
+    \end{itemize}
+    
+    \item \textbf{Web scraping (opcional):}
+    \begin{itemize}
+        \item Elegir un sitio simple (verificar robots.txt)
+        \item Extraer una tabla o lista
+        \item Estructurar en DataFrame
+    \end{itemize}
+    
+    \item \textbf{Tidy data:}
+    \begin{itemize}
+        \item Crear dataset wide
+        \item Convertir a long
+        \item Volver a wide
+        \item Visualizar ambos formatos
+    \end{itemize}
+    
+    \item Documentar todo y subir a GitHub
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[standout]
+\Huge ¿Preguntas?
+\end{frame}
+
+\end{document}

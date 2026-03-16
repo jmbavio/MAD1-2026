@@ -1,0 +1,422 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{parskip}
+
+% Colores
+\definecolor{unidadcolor}{RGB}{30, 60, 120}
+\definecolor{practicacolor}{RGB}{0, 100, 0}
+
+% Formato de títulos
+\titleformat{\section}
+  {\Large\bfseries\color{unidadcolor}}
+  {\thesection.}{0.5em}{}
+\titleformat{\subsection}
+  {\large\bfseries}
+  {\thesubsection}{0.5em}{}
+
+\begin{document}
+
+\begin{center}
+    {\LARGE \textbf{Métodos de Análisis de Datos 1}}\\[0.5em]
+    {\large Programa 2026 --- Primer Cuatrimestre}\\[0.3em]
+    {\normalsize Universidad Nacional del Sur}\\[0.3em]
+    {\normalsize Departamento de Matemática}\\[0.3em]
+    {\normalsize Profesor: José Bavio}
+\end{center}
+
+\vspace{1em}
+
+\noindent\textbf{Carga horaria:} 120 horas (30 clases de 2 horas, lunes y miércoles)\\
+\textbf{Modalidad:} Presencial\\
+\textbf{Herramientas:} Python, R, VS Code, Jupyter Notebooks
+
+\vspace{1em}
+
+\section*{Objetivos}
+
+Al finalizar el curso, los estudiantes serán capaces de:
+\begin{itemize}[leftmargin=*]
+    \item Aplicar el ciclo completo de análisis de datos: obtención, limpieza, exploración, modelado y comunicación
+    \item Utilizar Python y R para tareas de análisis de datos
+    \item Construir y evaluar modelos estadísticos y de machine learning
+    \item Comunicar hallazgos mediante visualizaciones y reportes reproducibles
+    \item Trabajar con datos reales de diversas fuentes
+\end{itemize}
+
+\vspace{1em}
+\setcounter{section}{-1}
+
+\section{Unidad 0: Introducción al Análisis de Datos}
+
+\subsection{Contenidos teóricos}
+\begin{itemize}[leftmargin=*]
+    \item El proceso de análisis de datos: ciclo obtención → limpieza → exploración → modelado → predicción → comunicación
+    \item Tipos de análisis: descriptivo, exploratorio, inferencial, predictivo, causal
+    \item Roles en ciencia de datos: analista, científico de datos, ingeniero de datos
+    \item Configuración del entorno de trabajo: instalación y configuración de VS Code, Python (Anaconda), R
+    \item Introducción a Jupyter notebooks y R Markdown
+    \item Sintaxis básica de Python y R: variables, tipos de datos, estructuras de control
+    \item Buenas prácticas: código limpio, comentarios, control de versiones con Git
+    \item Reproducibilidad en análisis de datos
+    \item Caso de estudio completo: de los datos crudos al reporte final
+\end{itemize}
+
+\subsection{Práctica}
+\begin{itemize}[leftmargin=*, labelindent=0pt, label={\textcolor{practicacolor}{$\blacktriangleright$}}]
+    \item \textbf{Práctica 0.1:} Instalación y configuración del entorno (Python, R, VS Code, extensiones)
+    \item \textbf{Práctica 0.2:} Primeros notebooks en Python y R: operaciones básicas, importar librerías
+    \item \textbf{Práctica 0.3:} Análisis exploratorio de un dataset sencillo (iris, mtcars) siguiendo el ciclo completo
+\end{itemize}
+
+\section{Unidad 1: Obtención y Preparación de Datos}
+
+\subsection{Contenidos teóricos}
+\begin{itemize}[leftmargin=*]
+    \item Fuentes de datos: archivos planos (CSV, TSV, Excel), bases de datos (SQL), APIs REST, web scraping
+    \item Carga de datos en Python: pandas (read\_csv, read\_excel, read\_sql)
+    \item Carga de datos en R: readr, readxl, DBI
+    \item Exploración inicial: dimensiones, tipos de datos, primeras filas, resumen estadístico
+    \item Calidad de datos: completitud, consistencia, precisión, actualidad
+    \item Limpieza de datos:
+    \begin{itemize}
+        \item Detección y tratamiento de valores faltantes (NA, NaN, NULL)
+        \item Estrategias: eliminación, imputación (media, mediana, moda, KNN, regresión)
+        \item Duplicados: detección y eliminación
+        \item Inconsistencias: valores fuera de rango, formatos incorrectos
+    \end{itemize}
+    \item Transformación de datos:
+    \begin{itemize}
+        \item Conversión de tipos de datos (casting)
+        \item Creación de variables derivadas (feature engineering básico)
+        \item Codificación de variables categóricas: one-hot encoding, label encoding
+        \item Normalización y estandarización
+        \item Discretización de variables continuas (binning)
+    \end{itemize}
+    \item Integración de datos: joins, merges, concatenación
+    \item Reshape: pivot, melt, stack, unstack
+    \item Tidy data: principios de Hadley Wickham
+\end{itemize}
+
+\subsection{Práctica}
+\begin{itemize}[leftmargin=*, labelindent=0pt, label={\textcolor{practicacolor}{$\blacktriangleright$}}]
+    \item \textbf{Práctica 1.1:} Carga de datos desde CSV y Excel en Python y R
+    \item \textbf{Práctica 1.2:} Conexión a base de datos SQL y extracción de datos
+    \item \textbf{Práctica 1.3:} Web scraping básico con BeautifulSoup/rvest
+    \item \textbf{Práctica 1.4:} Detección y tratamiento de valores faltantes (múltiples estrategias)
+    \item \textbf{Práctica 1.5:} Limpieza de un dataset "sucio": duplicados, inconsistencias, formatos
+    \item \textbf{Práctica 1.6:} Transformaciones: creación de variables, codificación, normalización
+    \item \textbf{Práctica 1.7:} Integración de múltiples fuentes de datos (joins y merges)
+\end{itemize}
+
+\section{Unidad 2: Exploración y Visualización de Datos}
+
+\subsection{Contenidos teóricos}
+\begin{itemize}[leftmargin=*]
+    \item Estadística descriptiva univariada:
+    \begin{itemize}
+        \item Medidas de tendencia central: media, mediana, moda
+        \item Medidas de dispersión: varianza, desviación estándar, rango intercuartílico
+        \item Medidas de forma: asimetría (skewness), curtosis
+        \item Cuantiles y percentiles
+    \end{itemize}
+    \item Estadística descriptiva bivariada:
+    \begin{itemize}
+        \item Tablas de contingencia
+        \item Covarianza y correlación (Pearson, Spearman, Kendall)
+        \item Interpretación de correlaciones
+    \end{itemize}
+    \item Análisis de distribuciones:
+    \begin{itemize}
+        \item Distribuciones empíricas vs teóricas
+        \item Test de normalidad (Shapiro-Wilk, Kolmogorov-Smirnov)
+        \item Q-Q plots
+    \end{itemize}
+    \item Detección de outliers:
+    \begin{itemize}
+        \item Métodos univariados: IQR, Z-score
+        \item Métodos multivariados: Mahalanobis distance, isolation forest
+    \end{itemize}
+    \item Visualizaciones en Python:
+    \begin{itemize}
+        \item matplotlib: anatomía de un gráfico, subplots
+        \item seaborn: gráficos estadísticos de alto nivel
+        \item plotly: gráficos interactivos
+        \item Tipos: histogramas, boxplots, scatter plots, line plots, heatmaps, pair plots
+    \end{itemize}
+    \item Visualizaciones en R:
+    \begin{itemize}
+        \item ggplot2: gramática de gráficos
+        \item Capas, aesthetic mappings, geometrías, facets
+        \item Personalización: themes, scales, labels
+    \end{itemize}
+    \item Principios de visualización efectiva:
+    \begin{itemize}
+        \item Elegir el gráfico apropiado según el tipo de datos y mensaje
+        \item Uso efectivo del color, tamaño, forma
+        \item Evitar distorsiones y gráficos engañosos
+        \item Narrativa visual: contar una historia con los datos
+    \end{itemize}
+    \item Exploración de datos multivariados: PCA (introducción conceptual)
+\end{itemize}
+
+\subsection{Práctica}
+\begin{itemize}[leftmargin=*, labelindent=0pt, label={\textcolor{practicacolor}{$\blacktriangleright$}}]
+    \item \textbf{Práctica 2.1:} Estadística descriptiva univariada en Python y R
+    \item \textbf{Práctica 2.2:} Análisis bivariado: correlaciones y tablas de contingencia
+    \item \textbf{Práctica 2.3:} Visualizaciones básicas con matplotlib y ggplot2
+    \item \textbf{Práctica 2.4:} Gráficos estadísticos con seaborn
+    \item \textbf{Práctica 2.5:} Análisis de distribuciones y tests de normalidad
+    \item \textbf{Práctica 2.6:} Detección de outliers (múltiples métodos)
+    \item \textbf{Práctica 2.7:} Visualizaciones interactivas con plotly
+    \item \textbf{Práctica 2.8:} Exploración multivariada: pair plots, heatmaps de correlación
+    \item \textbf{Práctica 2.9:} Proyecto: análisis exploratorio completo de un dataset real
+\end{itemize}
+
+\section{Unidad 3: Modelado Estadístico}
+
+\subsection{Contenidos teóricos}
+\begin{itemize}[leftmargin=*]
+    \item Correlación vs causalidad:
+    \begin{itemize}
+        \item Variables confundidoras
+        \item Experimentos vs estudios observacionales
+        \item Introducción a inferencia causal (conceptual)
+    \end{itemize}
+    \item Regresión lineal simple:
+    \begin{itemize}
+        \item Formulación del modelo: $y = \beta_0 + \beta_1 x + \epsilon$
+        \item Método de mínimos cuadrados ordinarios (OLS)
+        \item Interpretación de coeficientes
+        \item Supuestos del modelo lineal: linealidad, normalidad, homocedasticidad, independencia
+    \end{itemize}
+    \item Regresión lineal múltiple:
+    \begin{itemize}
+        \item Extensión a múltiples predictores
+        \item Interpretación de coeficientes parciales
+        \item Multicolinealidad: detección (VIF) y tratamiento
+        \item Selección de variables: forward, backward, stepwise
+    \end{itemize}
+    \item Evaluación de modelos de regresión:
+    \begin{itemize}
+        \item Coeficiente de determinación: $R^2$ y $R^2$ ajustado
+        \item Error cuadrático medio: MSE, RMSE
+        \item Error absoluto medio: MAE
+        \item Análisis de residuos: gráficos diagnósticos
+        \item Tests de hipótesis sobre coeficientes
+        \item Intervalos de confianza y predicción
+    \end{itemize}
+    \item Regularización:
+    \begin{itemize}
+        \item Motivación: overfitting vs underfitting, bias-variance tradeoff
+        \item Ridge regression (L2): penalización de la magnitud de coeficientes
+        \item LASSO (L1): penalización y selección de variables
+        \item Elastic Net: combinación de L1 y L2
+        \item Selección de hiperparámetros: cross-validation
+    \end{itemize}
+    \item Regresión logística:
+    \begin{itemize}
+        \item Clasificación binaria
+        \item Función logística (sigmoide)
+        \item Interpretación de odds ratios
+        \item Máxima verosimilitud
+        \item Extensión a clasificación multiclase: one-vs-rest, softmax
+    \end{itemize}
+    \item Validación de modelos:
+    \begin{itemize}
+        \item División de datos: train, validation, test
+        \item Validación cruzada: k-fold, leave-one-out, stratified k-fold
+        \item Curvas de aprendizaje
+    \end{itemize}
+\end{itemize}
+
+\subsection{Práctica}
+\begin{itemize}[leftmargin=*, labelindent=0pt, label={\textcolor{practicacolor}{$\blacktriangleright$}}]
+    \item \textbf{Práctica 3.1:} Regresión lineal simple: ajuste, interpretación, visualización
+    \item \textbf{Práctica 3.2:} Análisis de residuos y diagnóstico del modelo
+    \item \textbf{Práctica 3.3:} Regresión lineal múltiple: selección de variables
+    \item \textbf{Práctica 3.4:} Detección y tratamiento de multicolinealidad
+    \item \textbf{Práctica 3.5:} Regularización: Ridge, LASSO, Elastic Net con scikit-learn y glmnet
+    \item \textbf{Práctica 3.6:} Selección de hiperparámetros con cross-validation
+    \item \textbf{Práctica 3.7:} Regresión logística para clasificación binaria
+    \item \textbf{Práctica 3.8:} Interpretación de odds ratios y probabilidades predichas
+    \item \textbf{Práctica 3.9:} Validación cruzada: implementación y comparación de modelos
+    \item \textbf{Práctica 3.10:} Proyecto: modelado predictivo de un problema real (regresión o clasificación)
+\end{itemize}
+
+\section{Unidad 4: Machine Learning Supervisado}
+
+\subsection{Contenidos teóricos}
+\begin{itemize}[leftmargin=*]
+    \item Clasificación: conceptos fundamentales
+    \begin{itemize}
+        \item Diferencias entre regresión y clasificación
+        \item Clases balanceadas vs desbalanceadas
+        \item Estrategias de evaluación
+    \end{itemize}
+    \item Árboles de decisión:
+    \begin{itemize}
+        \item Construcción del árbol: criterios de splitting (Gini, entropía, ganancia de información)
+        \item Poda: pre-pruning y post-pruning
+        \item Interpretabilidad
+        \item Ventajas y limitaciones
+    \end{itemize}
+    \item Random Forest:
+    \begin{itemize}
+        \item Ensambles: bagging y bootstrap
+        \item Votación mayoritaria
+        \item Importancia de variables
+        \item Hiperparámetros: n\_estimators, max\_depth, min\_samples\_split
+    \end{itemize}
+    \item Support Vector Machines (SVM):
+    \begin{itemize}
+        \item Hiperplano óptimo
+        \item Margen y vectores de soporte
+        \item Kernels: lineal, polinomial, RBF
+        \item Parámetros: C (regularización), gamma
+    \end{itemize}
+    \item K-Nearest Neighbors (KNN):
+    \begin{itemize}
+        \item Algoritmo basado en instancias
+        \item Selección de k
+        \item Distancias: euclidiana, Manhattan, Minkowski
+        \item Limitaciones: escalabilidad, curse of dimensionality
+    \end{itemize}
+    \item Métricas de clasificación:
+    \begin{itemize}
+        \item Matriz de confusión
+        \item Accuracy, precision, recall (sensitivity), specificity
+        \item F1-score, F-beta score
+        \item Curvas ROC y AUC
+        \item Curvas precision-recall
+        \item Cohen's kappa
+    \end{itemize}
+    \item Ingeniería de features:
+    \begin{itemize}
+        \item Interacciones entre variables
+        \item Transformaciones no lineales
+        \item Extracción de características de texto y fechas
+        \item Reducción de dimensionalidad: PCA, selección basada en modelos
+    \end{itemize}
+    \item Manejo de clases desbalanceadas:
+    \begin{itemize}
+        \item Técnicas de resampling: oversampling (SMOTE), undersampling
+        \item Pesos de clase
+        \item Métricas apropiadas (evitar accuracy)
+        \item Estratificación en splits
+    \end{itemize}
+    \item Comparación y selección de modelos:
+    \begin{itemize}
+        \item Pipelines de scikit-learn
+        \item Grid search y random search
+        \item Consideraciones: interpretabilidad, tiempo de entrenamiento, escalabilidad
+    \end{itemize}
+\end{itemize}
+
+\subsection{Práctica}
+\begin{itemize}[leftmargin=*, labelindent=0pt, label={\textcolor{practicacolor}{$\blacktriangleright$}}]
+    \item \textbf{Práctica 4.1:} Árboles de decisión: construcción, visualización, interpretación
+    \item \textbf{Práctica 4.2:} Random Forest: ajuste y análisis de importancia de variables
+    \item \textbf{Práctica 4.3:} SVM: experimentación con diferentes kernels
+    \item \textbf{Práctica 4.4:} KNN: selección de k y análisis de distancias
+    \item \textbf{Práctica 4.5:} Cálculo de métricas de clasificación: matriz de confusión, precision, recall, F1
+    \item \textbf{Práctica 4.6:} Curvas ROC y selección de umbrales
+    \item \textbf{Práctica 4.7:} Ingeniería de features: creación y selección de variables
+    \item \textbf{Práctica 4.8:} Tratamiento de clases desbalanceadas: SMOTE y pesos de clase
+    \item \textbf{Práctica 4.9:} Comparación de modelos: grid search, pipelines
+    \item \textbf{Práctica 4.10:} Proyecto: clasificación en un dataset real con clases desbalanceadas
+\end{itemize}
+
+\section{Unidad 5: Predicción y Comunicación de Resultados}
+
+\subsection{Contenidos teóricos}
+\begin{itemize}[leftmargin=*]
+    \item Ciclo de vida de un modelo en producción:
+    \begin{itemize}
+        \item Entrenamiento, validación, deployment, monitoreo
+        \item Concept drift y data drift
+        \item Reentrenamiento y versionado de modelos
+    \end{itemize}
+    \item Serialización de modelos:
+    \begin{itemize}
+        \item Formatos: pickle, joblib, ONNX
+        \item Consideraciones de seguridad y compatibilidad
+    \end{itemize}
+    \item Interpretabilidad de modelos:
+    \begin{itemize}
+        \item Modelos interpretables vs caja negra
+        \item SHAP (SHapley Additive exPlanations)
+        \item LIME (Local Interpretable Model-agnostic Explanations)
+        \item Partial dependence plots
+        \item Importancia de features
+    \end{itemize}
+    \item Comunicación de resultados:
+    \begin{itemize}
+        \item Audiencias técnicas vs no técnicas
+        \item Estructura de un reporte: contexto, metodología, resultados, conclusiones
+        \item Visualizaciones efectivas para comunicar hallazgos
+        \item Limitaciones y advertencias
+    \end{itemize}
+    \item Reportes reproducibles:
+    \begin{itemize}
+        \item Jupyter notebooks: narrativa, código, visualizaciones
+        \item R Markdown: integración de código R, LaTeX, markdown
+        \item Exportación a HTML, PDF, presentaciones
+        \item Documentación de código y análisis
+    \end{itemize}
+    \item Ética en análisis de datos:
+    \begin{itemize}
+        \item Sesgo en datos y modelos
+        \item Fairness y discriminación algorítmica
+        \item Privacidad y protección de datos
+        \item Responsabilidad en el uso de modelos predictivos
+    \end{itemize}
+\end{itemize}
+
+\subsection{Práctica}
+\begin{itemize}[leftmargin=*, labelindent=0pt, label={\textcolor{practicacolor}{$\blacktriangleright$}}]
+    \item \textbf{Práctica 5.1:} Serialización y carga de modelos: pickle, joblib
+    \item \textbf{Práctica 5.2:} Interpretabilidad: SHAP values y feature importance
+    \item \textbf{Práctica 5.3:} LIME: explicaciones locales de predicciones
+    \item \textbf{Práctica 5.4:} Creación de reportes con Jupyter notebooks
+    \item \textbf{Práctica 5.5:} Reportes con R Markdown: integración de análisis y narrativa
+    \item \textbf{Práctica 5.6:} \textbf{Proyecto integrador final:} Análisis completo de un problema real
+    \begin{itemize}
+        \item Obtención y limpieza de datos
+        \item Exploración y visualización
+        \item Modelado y evaluación
+        \item Comunicación de resultados en formato de reporte profesional
+    \end{itemize}
+\end{itemize}
+
+\section*{Evaluación}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Prácticas semanales:} 40\% (entrega de notebooks resueltos)
+    \item \textbf{Parcial:} 30\% (evaluación práctica en computadora)
+    \item \textbf{Proyecto final integrador:} 30\% (análisis completo + reporte + presentación)
+\end{itemize}
+
+\section*{Bibliografía}
+
+\subsection*{Sugerida}
+\begin{itemize}[leftmargin=*]
+    \item Wickham, H., \& Grolemund, G. (2017). \textit{R for Data Science}. O'Reilly Media.
+    \item VanderPlas, J. (2016). \textit{Python Data Science Handbook}. O'Reilly Media.
+    \item James, G., Witten, D., Hastie, T., \& Tibshirani, R. (2021). \textit{An Introduction to Statistical Learning with Applications in R} (2nd ed.). Springer.
+\end{itemize}
+
+\subsection*{Complementaria}
+\begin{itemize}[leftmargin=*]
+    \item McKinney, W. (2022). \textit{Python for Data Analysis} (3rd ed.). O'Reilly Media.
+    \item Géron, A. (2022). \textit{Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow} (3rd ed.). O'Reilly Media.
+    \item Wickham, H. (2016). \textit{ggplot2: Elegant Graphics for Data Analysis} (2nd ed.). Springer.
+    \item Kuhn, M., \& Johnson, K. (2019). \textit{Feature Engineering and Selection: A Practical Approach for Predictive Models}. Chapman and Hall/CRC.
+\end{itemize}
+
+\end{document}

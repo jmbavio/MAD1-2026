@@ -1,0 +1,436 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{whale}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{pythonstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=pythonstyle}
+
+\title{Correlación y ANCOVA}
+\subtitle{Relación entre variables y análisis de covarianza}
+\author{Métodos de Análisis de Datos 1}
+\institute{Universidad Nacional del Sur}
+\date{Unidad 3 - Clase 19}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Contenidos}
+\tableofcontents
+\end{frame}
+
+\section{Correlación}
+
+\begin{frame}{¿Qué es la correlación?}
+\begin{block}{Definición}
+La correlación mide la \textbf{fuerza y dirección} de la relación lineal entre dos variables.
+\end{block}
+
+\vspace{0.5cm}
+\textbf{Diferencias con regresión:}
+\begin{itemize}
+    \item Correlación: simétrica ($r_{XY} = r_{YX}$)
+    \item Regresión: asimétrica (hay variable respuesta y predictora)
+    \item Correlación: solo mide asociación
+    \item Regresión: permite predicción
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Relación:} En regresión simple, $R^2 = r_{XY}^2$
+\end{frame}
+
+\begin{frame}{Correlación de Pearson}
+\begin{block}{Coeficiente de correlación de Pearson}
+\[
+r_{XY} = \frac{\sum_{i=1}^{n}(X_i - \bar{X})(Y_i - \bar{Y})}{\sqrt{\sum_{i=1}^{n}(X_i - \bar{X})^2} \sqrt{\sum_{i=1}^{n}(Y_i - \bar{Y})^2}}
+\]
+\end{block}
+
+\vspace{0.3cm}
+\textbf{Propiedades:}
+\begin{itemize}
+    \item $-1 \leq r \leq 1$
+    \item $r = 1$: correlación positiva perfecta
+    \item $r = -1$: correlación negativa perfecta
+    \item $r = 0$: no hay correlación \textbf{lineal}
+    \item Adimensional (no depende de unidades)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Interpretación}
+\textbf{Reglas prácticas:}
+\begin{itemize}
+    \item $|r| < 0.3$: correlación débil
+    \item $0.3 \leq |r| < 0.7$: correlación moderada
+    \item $|r| \geq 0.7$: correlación fuerte
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Importante:} El umbral depende del contexto
+\begin{itemize}
+    \item En ciencias sociales: $r = 0.3$ puede ser notable
+    \item En física: $r < 0.9$ puede ser insuficiente
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Test de significancia}
+¿Es $r$ significativamente distinto de 0?
+
+\begin{block}{Hipótesis}
+\[
+H_0: \rho = 0 \quad \text{vs} \quad H_1: \rho \neq 0
+\]
+\end{block}
+
+\textbf{Estadístico:}
+\[
+t = \frac{r\sqrt{n-2}}{\sqrt{1-r^2}} \sim t_{n-2}
+\]
+
+\vspace{0.5cm}
+\textbf{Supuestos:}
+\begin{itemize}
+    \item $(X, Y)$ siguen distribución normal bivariada
+    \item Relación lineal
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Correlación de Spearman}
+\textbf{Uso:} Cuando los datos no son normales o la relación es monótona pero no lineal
+
+\vspace{0.3cm}
+\begin{block}{Coeficiente de Spearman}
+\[
+r_S = 1 - \frac{6\sum_{i=1}^{n} d_i^2}{n(n^2-1)}
+\]
+\end{block}
+
+donde $d_i$ es la diferencia entre los rangos de $X_i$ e $Y_i$.
+
+\vspace{0.5cm}
+\textbf{Ventajas:}
+\begin{itemize}
+    \item Robusto a outliers
+    \item No requiere normalidad
+    \item Detecta relaciones monótonas no lineales
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Correlación $\neq$ Causalidad}
+\begin{alertblock}{Regla de oro}
+\textbf{Correlación NO implica causalidad}
+\end{alertblock}
+
+\vspace{0.5cm}
+\textbf{Posibles explicaciones para $r_{XY} \neq 0$:}
+\begin{enumerate}
+    \item $X$ causa $Y$
+    \item $Y$ causa $X$
+    \item Existe variable $Z$ que causa tanto $X$ como $Y$ (confusor)
+    \item Correlación espuria (coincidencia)
+\end{enumerate}
+
+\vspace{0.5cm}
+\textbf{Ejemplo clásico:}
+\begin{itemize}
+    \item Alta correlación entre ventas de helados y ahogamientos
+    \item No es que los helados causen ahogamientos
+    \item Ambos aumentan en verano (variable confusora)
+\end{itemize}
+\end{frame}
+
+\section{ANCOVA}
+
+\begin{frame}{¿Qué es ANCOVA?}
+\textbf{ANCOVA = Análisis de Covarianza}
+
+\vspace{0.3cm}
+\begin{block}{Definición}
+Combina ANOVA con regresión lineal. Compara grupos mientras se ajusta por variables continuas (covariables).
+\end{block}
+
+\vspace{0.5cm}
+\textbf{Modelo:}
+\[
+Y_{ij} = \mu + \alpha_i + \beta X_{ij} + \epsilon_{ij}
+\]
+
+donde:
+\begin{itemize}
+    \item $Y_{ij}$: respuesta de observación $j$ en grupo $i$
+    \item $\alpha_i$: efecto del grupo $i$
+    \item $X_{ij}$: covariable continua
+    \item $\beta$: pendiente (común a todos los grupos)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{¿Cuándo usar ANCOVA?}
+\textbf{Situaciones comunes:}
+\begin{enumerate}
+    \item Comparar tratamientos ajustando por medida basal
+    \begin{itemize}
+        \item Ejemplo: Comparar dietas ajustando por peso inicial
+    \end{itemize}
+    
+    \item Reducir variabilidad no explicada
+    \begin{itemize}
+        \item Ejemplo: Comparar métodos de enseñanza ajustando por nivel previo
+    \end{itemize}
+    
+    \item Controlar por variables confusoras
+    \begin{itemize}
+        \item Ejemplo: Comparar salarios por género ajustando por experiencia
+    \end{itemize}
+\end{enumerate}
+
+\vspace{0.5cm}
+\textbf{Ventaja principal:} Mayor potencia estadística (menor error)
+\end{frame}
+
+\begin{frame}{Supuestos de ANCOVA}
+Además de los supuestos de regresión lineal:
+
+\begin{enumerate}
+    \item \textbf{Independencia de covariable y tratamiento}
+    \begin{itemize}
+        \item La covariable no debe estar afectada por el grupo
+        \item Ejemplo: peso inicial debe ser pre-tratamiento
+    \end{itemize}
+    
+    \item \textbf{Pendientes paralelas (homogeneidad de regresión)}
+    \begin{itemize}
+        \item La relación $X$-$Y$ es la misma en todos los grupos
+        \item Mismo $\beta$ para todos los grupos
+    \end{itemize}
+    
+    \item \textbf{Linealidad}
+    \begin{itemize}
+        \item Relación lineal entre covariable y respuesta
+    \end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Test de pendientes paralelas}
+\textbf{¿Cómo verificar?} Ajustar modelo con interacción:
+
+\[
+Y_{ij} = \mu + \alpha_i + \beta X_{ij} + (\alpha\beta)_i X_{ij} + \epsilon_{ij}
+\]
+
+\vspace{0.3cm}
+\begin{block}{Hipótesis}
+\[
+H_0: (\alpha\beta)_1 = (\alpha\beta)_2 = \cdots = 0 \quad \text{(pendientes iguales)}
+\]
+\end{block}
+
+\vspace{0.3cm}
+\textbf{Decisión:}
+\begin{itemize}
+    \item Si NO rechazamos $H_0$ $\Rightarrow$ OK, usar ANCOVA
+    \item Si rechazamos $H_0$ $\Rightarrow$ pendientes diferentes, ANCOVA no apropiado
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Interpretación de resultados}
+Después de ajustar por la covariable:
+
+\vspace{0.3cm}
+\textbf{Efecto de la covariable:}
+\begin{itemize}
+    \item $\hat{\beta}$: cambio en $Y$ por unidad de $X$, común a todos los grupos
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Efecto del grupo:}
+\begin{itemize}
+    \item $\hat{\alpha}_i$: diferencias entre grupos \textbf{ajustadas} por $X$
+    \item Son las diferencias que quedan después de controlar por $X$
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Ventaja:} Si la covariable explica mucha variabilidad, el error residual disminuye $\Rightarrow$ mayor potencia para detectar diferencias entre grupos
+\end{frame}
+
+\section{Implementación}
+
+\begin{frame}[fragile]{Python: Correlación}
+\begin{lstlisting}[language=Python]
+import scipy.stats as stats
+import numpy as np
+
+# Correlacion de Pearson
+r_pearson, p_pearson = stats.pearsonr(X, Y)
+print(f"Pearson: r = {r_pearson:.3f}, p = {p_pearson:.4f}")
+
+# Correlacion de Spearman
+r_spearman, p_spearman = stats.spearmanr(X, Y)
+print(f"Spearman: r_s = {r_spearman:.3f}, p = {p_spearman:.4f}")
+
+# Matriz de correlacion
+import pandas as pd
+df = pd.DataFrame({'X1': X1, 'X2': X2, 'X3': X3, 'Y': Y})
+corr_matrix = df.corr()
+print(corr_matrix)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Python: ANCOVA}
+\begin{lstlisting}[language=Python]
+from statsmodels.formula.api import ols
+from statsmodels.stats.anova import anova_lm
+
+# Modelo ANCOVA
+modelo_ancova = ols('peso_final ~ C(dieta) + peso_inicial',
+                    data=datos).fit()
+
+# Tabla ANOVA tipo II (ajustada)
+print(anova_lm(modelo_ancova, typ=2))
+
+# Test de pendientes paralelas (interaccion)
+modelo_interaccion = ols('peso_final ~ C(dieta) * peso_inicial',
+                         data=datos).fit()
+print(anova_lm(modelo_interaccion, typ=2))
+
+# Si interaccion NO significativa => OK usar ANCOVA
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{R: Correlación}
+\begin{lstlisting}[language=R]
+# Correlacion de Pearson
+cor.test(X, Y, method = "pearson")
+
+# Correlacion de Spearman
+cor.test(X, Y, method = "spearman")
+
+# Matriz de correlacion
+datos <- data.frame(X1, X2, X3, Y)
+cor(datos)
+
+# Visualizacion
+library(corrplot)
+corrplot(cor(datos), method = "circle")
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{R: ANCOVA}
+\begin{lstlisting}[language=R]
+# Modelo ANCOVA
+modelo_ancova <- lm(peso_final ~ dieta + peso_inicial,
+                    data = datos)
+
+# Tabla ANOVA
+anova(modelo_ancova)
+
+# O con car para tipo II
+library(car)
+Anova(modelo_ancova, type = "II")
+
+# Test de pendientes paralelas
+modelo_interaccion <- lm(peso_final ~ dieta * peso_inicial,
+                         data = datos)
+anova(modelo_interaccion)
+
+# Comparar modelos
+anova(modelo_ancova, modelo_interaccion)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Ejemplo completo: ANCOVA}
+\textbf{Datos:} Efecto de 3 dietas sobre pérdida de peso
+
+\begin{lstlisting}[language=Python]
+# Cargar datos
+dieta A: peso_inicial=[80,78,85], peso_final=[72,68,75]
+dieta B: peso_inicial=[82,75,88], peso_final=[70,65,78]
+dieta C: peso_inicial=[81,79,84,76], peso_final=[71,69,73,67]
+
+# ANCOVA
+modelo = ols('peso_final ~ C(dieta) + peso_inicial',
+             data=datos).fit()
+print(anova_lm(modelo, typ=2))
+
+# Resultados:
+#                    sum_sq    df         F    PR(>F)
+# C(dieta)            120.5   2.0      8.50   0.0089
+# peso_inicial        890.2   1.0     62.50   0.0001
+# Residual             99.9   7.0       NaN      NaN
+
+# Conclusion: Hay diferencias entre dietas (p=0.009)
+# ajustando por peso inicial
+\end{lstlisting}
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Resumen de la Unidad 3}
+\textbf{Clase 14-15: Regresión lineal simple}
+\begin{itemize}
+    \item Modelo, estimación (MCO), $R^2$
+    \item Inferencia: tests, IC, predicción
+\end{itemize}
+
+\textbf{Clase 16: Diagnóstico}
+\begin{itemize}
+    \item Gráficos de residuos
+    \item Tests formales
+    \item Medidas de influencia
+\end{itemize}
+
+\textbf{Clase 17: Regresión múltiple}
+\begin{itemize}
+    \item Modelo con múltiples predictores
+    \item Interpretación ajustada
+    \item Multicolinealidad (VIF)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Resumen de la Unidad 3 (cont.)}
+\textbf{Clase 18: Selección y polinomios}
+\begin{itemize}
+    \item Criterios: AIC, BIC
+    \item Métodos: forward, backward, stepwise
+    \item Regresión polinomial
+\end{itemize}
+
+\textbf{Clase 19: Correlación y ANCOVA}
+\begin{itemize}
+    \item Correlación de Pearson y Spearman
+    \item Correlación $\neq$ causalidad
+    \item ANCOVA: comparar grupos ajustando por covariable
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Próxima unidad:} ANOVA y diseño de experimentos
+\end{frame}
+
+\end{document}

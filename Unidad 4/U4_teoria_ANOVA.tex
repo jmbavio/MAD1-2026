@@ -1,0 +1,726 @@
+\documentclass[11pt,a4paper]{article}
+
+% Paquetes básicos
+\usepackage[utf8]{inputenc}
+% Spanish babel removed for compatibility
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+% Paquetes para código
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Configuración de listings para Python
+\lstdefinestyle{python}{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{red},
+    showstringspaces=false,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=8pt,
+    frame=single,
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=4,
+    captionpos=b
+}
+
+% Configuración de listings para R
+\lstdefinestyle{rstyle}{
+    language=R,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{red},
+    showstringspaces=false,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=8pt,
+    frame=single,
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=4,
+    captionpos=b
+}
+
+% Teoremas y definiciones
+\theoremstyle{definition}
+\newtheorem{definicion}{Definición}[section]
+\newtheorem{ejemplo}{Ejemplo}[section]
+\newtheorem{teorema}{Teorema}[section]
+
+% Información del documento
+\title{\textbf{Unidad 4: ANOVA y Diseño de Experimentos} \\ 
+\Large Métodos de Análisis de Datos 1}
+\author{Departamento de Matemática \\ Universidad Nacional del Sur}
+\date{Primer Semestre 2026}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introducción}
+
+El Análisis de Varianza (ANOVA, por sus siglas en inglés \textit{Analysis of Variance}) es una técnica estadística fundamental para comparar las medias de tres o más grupos. Mientras que las pruebas t permiten comparar dos grupos, ANOVA extiende este concepto a múltiples grupos simultáneamente, controlando el error tipo I que se acumularía al realizar múltiples comparaciones por pares.
+
+El principio básico de ANOVA es descomponer la variabilidad total de los datos en componentes: variabilidad entre grupos (explicada por el factor) y variabilidad dentro de los grupos (no explicada, o error). Si la variabilidad entre grupos es significativamente mayor que la variabilidad dentro de los grupos, hay evidencia de que al menos una media grupal difiere de las demás.
+
+\subsection{Aplicaciones}
+
+ANOVA se utiliza en una amplia variedad de contextos:
+
+\begin{itemize}
+    \item \textbf{Medicina:} Comparar la efectividad de diferentes tratamientos
+    \item \textbf{Agronomía:} Evaluar el efecto de distintos fertilizantes en el rendimiento de cultivos
+    \item \textbf{Psicología:} Analizar diferencias en desempeño cognitivo entre grupos de edad
+    \item \textbf{Manufactura:} Estudiar el efecto de diferentes máquinas o procesos en la calidad del producto
+    \item \textbf{Marketing:} Comparar la efectividad de diferentes estrategias publicitarias
+\end{itemize}
+
+\section{ANOVA de un Factor}
+
+\subsection{Modelo Estadístico}
+
+El modelo ANOVA de un factor (o de una vía) considera una variable respuesta cuantitativa $Y$ y un factor categórico con $k$ niveles o grupos. El modelo estadístico es:
+
+\begin{equation}
+Y_{ij} = \mu + \tau_i + \varepsilon_{ij}
+\end{equation}
+
+donde:
+\begin{itemize}
+    \item $Y_{ij}$ es la $j$-ésima observación del grupo $i$
+    \item $\mu$ es la media global
+    \item $\tau_i$ es el efecto del tratamiento $i$ (con $i = 1, 2, \ldots, k$)
+    \item $\varepsilon_{ij} \sim N(0, \sigma^2)$ es el error aleatorio
+    \item $j = 1, 2, \ldots, n_i$ (donde $n_i$ es el número de observaciones en el grupo $i$)
+\end{itemize}
+
+El modelo puede expresarse equivalentemente como:
+\begin{equation}
+Y_{ij} = \mu_i + \varepsilon_{ij}
+\end{equation}
+
+donde $\mu_i = \mu + \tau_i$ es la media del grupo $i$.
+
+\subsection{Hipótesis a Contrastar}
+
+Las hipótesis del ANOVA de un factor son:
+
+\begin{align*}
+H_0 &: \mu_1 = \mu_2 = \cdots = \mu_k \quad \text{(todas las medias son iguales)} \\
+H_1 &: \text{Al menos una media difiere de las demás}
+\end{align*}
+
+Equivalentemente, en términos de los efectos:
+\begin{align*}
+H_0 &: \tau_1 = \tau_2 = \cdots = \tau_k = 0 \\
+H_1 &: \text{Al menos un } \tau_i \neq 0
+\end{align*}
+
+\subsection{Descomposición de la Variabilidad}
+
+ANOVA descompone la variabilidad total (SST, \textit{Sum of Squares Total}) en dos componentes:
+
+\begin{equation}
+\text{SST} = \text{SSB} + \text{SSW}
+\end{equation}
+
+donde:
+\begin{itemize}
+    \item \textbf{SST (Suma de Cuadrados Total):} Variabilidad total de los datos
+    \begin{equation}
+    \text{SST} = \sum_{i=1}^{k} \sum_{j=1}^{n_i} (Y_{ij} - \bar{Y})^2
+    \end{equation}
+    
+    \item \textbf{SSB (Suma de Cuadrados Entre Grupos):} Variabilidad explicada por el factor
+    \begin{equation}
+    \text{SSB} = \sum_{i=1}^{k} n_i (\bar{Y}_i - \bar{Y})^2
+    \end{equation}
+    
+    \item \textbf{SSW (Suma de Cuadrados Dentro de Grupos):} Variabilidad no explicada (error)
+    \begin{equation}
+    \text{SSW} = \sum_{i=1}^{k} \sum_{j=1}^{n_i} (Y_{ij} - \bar{Y}_i)^2
+    \end{equation}
+\end{itemize}
+
+Aquí, $\bar{Y}$ es la media global y $\bar{Y}_i$ es la media del grupo $i$.
+
+\subsection{Tabla ANOVA}
+
+Los resultados se resumen en la tabla ANOVA:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Fuente & Suma de Cuadrados & GL & Cuadrados Medios & Estadístico F \\
+\midrule
+Entre grupos & SSB & $k-1$ & MSB = SSB/(k-1) & $F = \frac{\text{MSB}}{\text{MSW}}$ \\
+Dentro de grupos & SSW & $N-k$ & MSW = SSW/(N-k) & \\
+Total & SST & $N-1$ & & \\
+\bottomrule
+\end{tabular}
+\caption{Tabla ANOVA de un factor}
+\end{table}
+
+donde $N = \sum_{i=1}^{k} n_i$ es el número total de observaciones.
+
+\subsection{Estadístico F y Decisión}
+
+El estadístico F compara la variabilidad entre grupos con la variabilidad dentro de grupos:
+
+\begin{equation}
+F = \frac{\text{MSB}}{\text{MSW}}
+\end{equation}
+
+Bajo $H_0$, este estadístico sigue una distribución $F_{k-1, N-k}$. Se rechaza $H_0$ si:
+
+\begin{equation}
+F > F_{k-1, N-k, \alpha}
+\end{equation}
+
+o equivalentemente, si el p-valor $< \alpha$.
+
+\subsection{Supuestos del ANOVA}
+
+Para que los resultados del ANOVA sean válidos, deben cumplirse tres supuestos:
+
+\begin{enumerate}
+    \item \textbf{Independencia:} Las observaciones deben ser independientes entre sí
+    \item \textbf{Normalidad:} Los errores $\varepsilon_{ij}$ siguen una distribución normal (o equivalentemente, $Y_{ij}$ es normal en cada grupo)
+    \item \textbf{Homocedasticidad:} La varianza es constante en todos los grupos: $\text{Var}(Y_{ij}) = \sigma^2$ para todo $i$
+\end{enumerate}
+
+\textbf{Verificación de supuestos:}
+\begin{itemize}
+    \item \textbf{Normalidad:} Gráfico Q-Q de residuos, test de Shapiro-Wilk
+    \item \textbf{Homocedasticidad:} Test de Levene, test de Bartlett, gráfico de residuos vs. valores ajustados
+\end{itemize}
+
+\subsection{Tamaño del Efecto: $\eta^2$ (Eta Cuadrado)}
+
+El tamaño del efecto mide la proporción de variabilidad explicada por el factor:
+
+\begin{equation}
+\eta^2 = \frac{\text{SSB}}{\text{SST}}
+\end{equation}
+
+Interpretación (reglas generales de Cohen):
+\begin{itemize}
+    \item $\eta^2 < 0.06$: efecto pequeño
+    \item $0.06 \leq \eta^2 < 0.14$: efecto mediano
+    \item $\eta^2 \geq 0.14$: efecto grande
+\end{itemize}
+
+\section{Comparaciones Múltiples Post-Hoc}
+
+Si el ANOVA rechaza $H_0$, sabemos que al menos una media difiere, pero no sabemos cuáles. Las pruebas post-hoc permiten identificar qué pares de grupos son significativamente diferentes, controlando el error tipo I acumulado.
+
+\subsection{Test de Tukey HSD}
+
+El test HSD (\textit{Honestly Significant Difference}) de Tukey es el más utilizado cuando todas las comparaciones por pares son de interés y los tamaños muestrales son iguales o similares.
+
+Para cada par de grupos $i$ y $j$, se calcula:
+
+\begin{equation}
+\text{HSD} = q_{\alpha, k, N-k} \sqrt{\frac{\text{MSW}}{n}}
+\end{equation}
+
+donde $q_{\alpha, k, N-k}$ es el valor crítico de la distribución del rango estudentizado. Dos grupos difieren significativamente si:
+
+\begin{equation}
+|\bar{Y}_i - \bar{Y}_j| > \text{HSD}
+\end{equation}
+
+\subsection{Corrección de Bonferroni}
+
+El método de Bonferroni es más conservador y controla el error tipo I familiar ajustando el nivel de significancia:
+
+\begin{equation}
+\alpha_{\text{ajustado}} = \frac{\alpha}{m}
+\end{equation}
+
+donde $m$ es el número de comparaciones. Para $k$ grupos, $m = \binom{k}{2} = \frac{k(k-1)}{2}$.
+
+\textbf{Ventaja:} Simple y muy conservador. \\
+\textbf{Desventaja:} Puede ser demasiado conservador (baja potencia) cuando hay muchas comparaciones.
+
+\subsection{Test de Scheffé}
+
+El método de Scheffé es el más conservador y permite realizar cualquier tipo de contraste lineal, no solo comparaciones por pares. Es útil cuando se desean hacer comparaciones complejas o no planificadas.
+
+El valor crítico es:
+
+\begin{equation}
+S = \sqrt{(k-1) F_{k-1, N-k, \alpha}}
+\end{equation}
+
+Dos grupos difieren si:
+
+\begin{equation}
+|\bar{Y}_i - \bar{Y}_j| > S \sqrt{\text{MSW} \left(\frac{1}{n_i} + \frac{1}{n_j}\right)}
+\end{equation}
+
+\subsection{Comparación de Métodos}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lp{5cm}p{5cm}}
+\toprule
+Método & Ventajas & Cuándo usar \\
+\midrule
+Tukey HSD & Potente para comparaciones por pares, controla error familiar & Comparar todos los pares, tamaños similares \\
+Bonferroni & Simple, muy conservador & Pocas comparaciones planificadas \\
+Scheffé & Más flexible, permite contrastes complejos & Comparaciones no planificadas o contrastes complejos \\
+\bottomrule
+\end{tabular}
+\caption{Comparación de métodos post-hoc}
+\end{table}
+
+\section{ANOVA de Dos Factores}
+
+El ANOVA de dos factores (o de dos vías) permite estudiar simultáneamente el efecto de dos factores categóricos sobre una variable respuesta, así como su interacción.
+
+\subsection{Modelo Estadístico}
+
+El modelo para dos factores A (con $a$ niveles) y B (con $b$ niveles) es:
+
+\begin{equation}
+Y_{ijk} = \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij} + \varepsilon_{ijk}
+\end{equation}
+
+donde:
+\begin{itemize}
+    \item $\mu$ es la media global
+    \item $\alpha_i$ es el efecto principal del factor A (nivel $i$)
+    \item $\beta_j$ es el efecto principal del factor B (nivel $j$)
+    \item $(\alpha\beta)_{ij}$ es el efecto de interacción entre A y B
+    \item $\varepsilon_{ijk} \sim N(0, \sigma^2)$ es el error aleatorio
+    \item $k = 1, 2, \ldots, n_{ij}$ (réplicas en la celda $ij$)
+\end{itemize}
+
+\subsection{Efectos Principales e Interacción}
+
+\begin{itemize}
+    \item \textbf{Efecto principal del factor A:} Diferencia promedio entre niveles de A, ignorando B
+    \item \textbf{Efecto principal del factor B:} Diferencia promedio entre niveles de B, ignorando A
+    \item \textbf{Interacción A$\times$B:} El efecto de un factor depende del nivel del otro factor
+\end{itemize}
+
+\textbf{Interpretación de la interacción:}
+\begin{itemize}
+    \item Si la interacción es significativa, los efectos principales pueden no ser informativos por sí solos
+    \item Gráficamente, las líneas de perfiles no son paralelas cuando hay interacción
+    \item Si no hay interacción, las líneas son aproximadamente paralelas
+\end{itemize}
+
+\subsection{Tabla ANOVA de Dos Factores}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Fuente & Suma de Cuadrados & GL & Cuadrados Medios \\
+\midrule
+Factor A & $\text{SS}_A$ & $a-1$ & $\text{MS}_A = \text{SS}_A/(a-1)$ \\
+Factor B & $\text{SS}_B$ & $b-1$ & $\text{MS}_B = \text{SS}_B/(b-1)$ \\
+Interacción A$\times$B & $\text{SS}_{AB}$ & $(a-1)(b-1)$ & $\text{MS}_{AB} = \text{SS}_{AB}/[(a-1)(b-1)]$ \\
+Error & $\text{SS}_E$ & $N-ab$ & $\text{MS}_E = \text{SS}_E/(N-ab)$ \\
+Total & $\text{SS}_T$ & $N-1$ & \\
+\bottomrule
+\end{tabular}
+\caption{Tabla ANOVA de dos factores}
+\end{table}
+
+Los estadísticos F para cada hipótesis son:
+\begin{align*}
+F_A &= \frac{\text{MS}_A}{\text{MS}_E} \sim F_{a-1, N-ab} \\
+F_B &= \frac{\text{MS}_B}{\text{MS}_E} \sim F_{b-1, N-ab} \\
+F_{AB} &= \frac{\text{MS}_{AB}}{\text{MS}_E} \sim F_{(a-1)(b-1), N-ab}
+\end{align*}
+
+\section{Diseños Experimentales Básicos}
+
+Un diseño experimental bien planificado permite obtener conclusiones causales válidas y maximizar la eficiencia del estudio.
+
+\subsection{Principios Básicos del Diseño Experimental}
+
+\begin{enumerate}
+    \item \textbf{Aleatorización:} Asignación aleatoria de tratamientos a unidades experimentales para evitar sesgos
+    \item \textbf{Replicación:} Repetir el experimento para estimar el error experimental y aumentar la precisión
+    \item \textbf{Control local (bloqueo):} Agrupar unidades experimentales homogéneas para reducir variabilidad
+\end{enumerate}
+
+\subsection{Diseño Completamente Aleatorizado (DCA)}
+
+El DCA es el diseño más simple. Los tratamientos se asignan aleatoriamente a todas las unidades experimentales sin restricciones.
+
+\textbf{Características:}
+\begin{itemize}
+    \item Máxima flexibilidad en la asignación
+    \item Útil cuando las unidades experimentales son homogéneas
+    \item Modelo: ANOVA de un factor
+\end{itemize}
+
+\textbf{Ventajas:} Análisis sencillo, máximos grados de libertad para el error. \\
+\textbf{Desventajas:} Si hay heterogeneidad no controlada, aumenta el error experimental.
+
+\subsection{Diseño en Bloques Completos Aleatorizados (DBCA)}
+
+El DBCA agrupa las unidades experimentales en bloques homogéneos. Dentro de cada bloque, los tratamientos se asignan aleatoriamente.
+
+\textbf{Características:}
+\begin{itemize}
+    \item Cada bloque contiene todos los tratamientos (una réplica completa)
+    \item Se controla una fuente de variabilidad conocida (bloques)
+    \item Modelo: ANOVA de dos factores sin interacción (bloques como factor)
+\end{itemize}
+
+\textbf{Modelo estadístico:}
+\begin{equation}
+Y_{ij} = \mu + \tau_i + \beta_j + \varepsilon_{ij}
+\end{equation}
+
+donde $\tau_i$ es el efecto del tratamiento $i$ y $\beta_j$ es el efecto del bloque $j$.
+
+\textbf{Ventajas:} Reduce el error experimental al controlar variabilidad de bloques. \\
+\textbf{Cuándo usar:} Cuando se puede identificar una fuente clara de variabilidad (ej: lotes de materia prima, días de medición, posición geográfica).
+
+\subsection{Diseño en Cuadrado Latino}
+
+El Cuadrado Latino controla dos fuentes de variabilidad simultáneamente mediante filas y columnas. Cada tratamiento aparece exactamente una vez en cada fila y una vez en cada columna.
+
+\textbf{Características:}
+\begin{itemize}
+    \item Número de tratamientos = número de filas = número de columnas
+    \item Controla dos fuentes de variabilidad
+    \item Modelo: ANOVA de tres factores (tratamientos, filas, columnas) sin interacciones
+\end{itemize}
+
+\textbf{Ejemplo:} Estudio de rendimiento de 4 máquinas, controlando el efecto del operador (filas) y el turno (columnas).
+
+\textbf{Ventajas:} Muy eficiente cuando hay dos fuentes de variabilidad. \\
+\textbf{Desventajas:} Requiere que el número de niveles de todos los factores sea igual; no permite estimar interacciones.
+
+\section{ANOVA de Medidas Repetidas}
+
+El ANOVA de medidas repetidas se utiliza cuando se mide la misma unidad experimental en múltiples ocasiones (por ejemplo, a lo largo del tiempo).
+
+\subsection{Modelo y Supuestos}
+
+El modelo básico es:
+
+\begin{equation}
+Y_{ij} = \mu + \pi_i + \tau_j + \varepsilon_{ij}
+\end{equation}
+
+donde $\pi_i$ es el efecto del sujeto $i$ y $\tau_j$ es el efecto del tiempo (o condición) $j$.
+
+\textbf{Supuesto de esfericidad:} Las varianzas de las diferencias entre todos los pares de mediciones repetidas deben ser iguales. Este supuesto es más restrictivo que la homocedasticidad del ANOVA clásico.
+
+\subsection{Verificación de Esfericidad}
+
+El test de Mauchly evalúa la hipótesis de esfericidad. Si se viola este supuesto, los grados de libertad del estadístico F deben corregirse:
+
+\begin{itemize}
+    \item \textbf{Corrección de Greenhouse-Geisser:} Más conservadora, recomendada cuando $\epsilon < 0.75$
+    \item \textbf{Corrección de Huynh-Feldt:} Menos conservadora, recomendada cuando $\epsilon > 0.75$
+\end{itemize}
+
+donde $\epsilon$ es el estimador de esfericidad.
+
+\section{Implementación Computacional}
+
+\subsection{ANOVA en Python}
+
+Python ofrece varias librerías para realizar ANOVA, principalmente \texttt{scipy} y \texttt{statsmodels}.
+
+\subsubsection{ANOVA de un factor con scipy}
+
+\begin{lstlisting}[style=python, caption=ANOVA de un factor en Python]
+import numpy as np
+from scipy import stats
+import pandas as pd
+
+# Datos de ejemplo: tiempo de reaccion (ms) para 3 tratamientos
+grupo1 = [23, 25, 27, 29, 24]
+grupo2 = [30, 32, 35, 33, 31]
+grupo3 = [28, 26, 29, 30, 27]
+
+# ANOVA de un factor
+F_stat, p_value = stats.f_oneway(grupo1, grupo2, grupo3)
+
+print(f"Estadistico F: {F_stat:.4f}")
+print(f"p-valor: {p_value:.4f}")
+
+if p_value < 0.05:
+    print("Rechazamos H0: Al menos una media difiere")
+else:
+    print("No rechazamos H0: No hay diferencias significativas")
+\end{lstlisting}
+
+\subsubsection{ANOVA con statsmodels y post-hoc}
+
+\begin{lstlisting}[style=python, caption=ANOVA completo con tabla y post-hoc]
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+
+# Crear DataFrame
+data = pd.DataFrame({
+    'tiempo': grupo1 + grupo2 + grupo3,
+    'tratamiento': ['A']*5 + ['B']*5 + ['C']*5
+})
+
+# Ajustar modelo ANOVA
+modelo = ols('tiempo ~ C(tratamiento)', data=data).fit()
+tabla_anova = sm.stats.anova_lm(modelo, typ=2)
+
+print(tabla_anova)
+
+# Calcular eta cuadrado
+ssb = tabla_anova.loc['C(tratamiento)', 'sum_sq']
+sst = tabla_anova['sum_sq'].sum()
+eta_squared = ssb / sst
+print(f"\nEta cuadrado: {eta_squared:.4f}")
+
+# Test post-hoc de Tukey
+tukey = pairwise_tukeyhsd(endog=data['tiempo'], 
+                          groups=data['tratamiento'], 
+                          alpha=0.05)
+print("\nTest de Tukey HSD:")
+print(tukey)
+\end{lstlisting}
+
+\subsubsection{ANOVA de dos factores}
+
+\begin{lstlisting}[style=python, caption=ANOVA de dos factores con interacción]
+# Datos con dos factores
+data2 = pd.DataFrame({
+    'rendimiento': [45, 47, 50, 52, 43, 46, 55, 58, 60, 62, 54, 57],
+    'fertilizante': ['A', 'A', 'A', 'A', 'B', 'B', 'B', 'B', 
+                     'C', 'C', 'C', 'C'],
+    'riego': ['bajo', 'bajo', 'alto', 'alto', 'bajo', 'bajo', 
+              'alto', 'alto', 'bajo', 'bajo', 'alto', 'alto']
+})
+
+# ANOVA de dos factores con interacción
+modelo2 = ols('rendimiento ~ C(fertilizante) * C(riego)', 
+              data=data2).fit()
+tabla_anova2 = sm.stats.anova_lm(modelo2, typ=2)
+
+print(tabla_anova2)
+
+# Grafico de interacción
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.figure(figsize=(8, 5))
+sns.pointplot(data=data2, x='fertilizante', y='rendimiento', 
+              hue='riego', markers=['o', 's'], capsize=0.1)
+plt.title('Grafico de Interaccion')
+plt.ylabel('Rendimiento')
+plt.xlabel('Fertilizante')
+plt.legend(title='Riego')
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('interaccion.png', dpi=150)
+plt.show()
+\end{lstlisting}
+
+\subsection{ANOVA en R}
+
+R tiene funciones nativas muy potentes para ANOVA, incluyendo \texttt{aov()}, \texttt{lm()}, y el paquete \texttt{car}.
+
+\subsubsection{ANOVA de un factor en R}
+
+\begin{lstlisting}[style=rstyle, caption=ANOVA de un factor en R]
+# Crear datos
+grupo1 <- c(23, 25, 27, 29, 24)
+grupo2 <- c(30, 32, 35, 33, 31)
+grupo3 <- c(28, 26, 29, 30, 27)
+
+# Crear data frame
+datos <- data.frame(
+  tiempo = c(grupo1, grupo2, grupo3),
+  tratamiento = factor(rep(c("A", "B", "C"), each = 5))
+)
+
+# ANOVA
+modelo <- aov(tiempo ~ tratamiento, data = datos)
+summary(modelo)
+
+# Verificar supuestos
+# Normalidad de residuos
+shapiro.test(residuals(modelo))
+
+# Homocedasticidad
+library(car)
+leveneTest(tiempo ~ tratamiento, data = datos)
+
+# Graficos de diagnostico
+par(mfrow = c(2, 2))
+plot(modelo)
+
+# Test post-hoc de Tukey
+TukeyHSD(modelo)
+\end{lstlisting}
+
+\subsubsection{ANOVA de dos factores en R}
+
+\begin{lstlisting}[style=rstyle, caption=ANOVA de dos factores en R]
+# Datos
+datos2 <- data.frame(
+  rendimiento = c(45, 47, 50, 52, 43, 46, 55, 58, 60, 62, 54, 57),
+  fertilizante = factor(rep(c("A", "B", "C"), each = 4)),
+  riego = factor(rep(c("bajo", "alto"), 6))
+)
+
+# ANOVA de dos factores con interacción
+modelo2 <- aov(rendimiento ~ fertilizante * riego, data = datos2)
+summary(modelo2)
+
+# Grafico de interacción
+interaction.plot(x.factor = datos2$fertilizante,
+                 trace.factor = datos2$riego,
+                 response = datos2$rendimiento,
+                 fun = mean,
+                 type = "b",
+                 col = c("blue", "red"),
+                 pch = c(19, 17),
+                 lty = 1,
+                 lwd = 2,
+                 xlab = "Fertilizante",
+                 ylab = "Rendimiento medio",
+                 trace.label = "Riego")
+\end{lstlisting}
+
+\subsubsection{Diseño en Bloques Completos Aleatorizados}
+
+\begin{lstlisting}[style=rstyle, caption=DBCA en R]
+# Datos de DBCA
+datos_dbca <- data.frame(
+  produccion = c(50, 55, 58, 48, 53, 60, 52, 57, 62),
+  maquina = factor(rep(c("M1", "M2", "M3"), 3)),
+  operador = factor(rep(c("Op1", "Op2", "Op3"), each = 3))
+)
+
+# ANOVA para DBCA (bloques como factor, sin interacción)
+modelo_dbca <- aov(produccion ~ maquina + operador, data = datos_dbca)
+summary(modelo_dbca)
+
+# Comparaciones múltiples para máquinas
+TukeyHSD(modelo_dbca, "maquina")
+\end{lstlisting}
+
+\section{Ejercicios Propuestos}
+
+\subsection{Ejercicio 1: ANOVA de un factor}
+
+Un investigador desea comparar la efectividad de cuatro métodos de enseñanza (A, B, C, D) midiendo el puntaje en un examen estandarizado. Los datos son:
+
+\begin{itemize}
+    \item Método A: 78, 82, 79, 85, 80
+    \item Método B: 88, 90, 85, 92, 87
+    \item Método C: 75, 78, 73, 80, 76
+    \item Método D: 82, 84, 86, 83, 85
+\end{itemize}
+
+\textbf{Tareas:}
+\begin{enumerate}
+    \item Realizar un ANOVA de un factor ($\alpha = 0.05$)
+    \item Verificar los supuestos (normalidad, homocedasticidad)
+    \item Calcular $\eta^2$ e interpretar
+    \item Si hay diferencias significativas, realizar un test post-hoc de Tukey
+\end{enumerate}
+
+\subsection{Ejercicio 2: ANOVA de dos factores}
+
+Un estudio evalúa el efecto de dos factores en el tiempo de secado de pintura:
+\begin{itemize}
+    \item Factor A (tipo de pintura): látex, acrílica
+    \item Factor B (temperatura): baja (15°C), media (25°C), alta (35°C)
+\end{itemize}
+
+Se miden tiempos de secado (minutos) con 3 réplicas por combinación de tratamientos.
+
+\textbf{Tareas:}
+\begin{enumerate}
+    \item Realizar ANOVA de dos factores
+    \item Evaluar efectos principales e interacción
+    \item Graficar el diagrama de interacción e interpretar
+    \item Si hay interacción significativa, analizar efectos simples
+\end{enumerate}
+
+\subsection{Ejercicio 3: Diseño en Bloques}
+
+Se estudia el rendimiento de 4 variedades de trigo en 5 parcelas (bloques). Cada bloque contiene las 4 variedades asignadas aleatoriamente.
+
+\textbf{Tareas:}
+\begin{enumerate}
+    \item Identificar el diseño experimental
+    \item Realizar el ANOVA correspondiente
+    \item Comparar con un DCA (ignorando bloques) y comentar diferencias
+    \item Realizar comparaciones múltiples entre variedades
+\end{enumerate}
+
+\subsection{Ejercicio 4: Análisis Completo}
+
+Datos simulados de un experimento sobre productividad laboral bajo diferentes niveles de ruido (silencio, ruido bajo, ruido moderado, ruido alto).
+
+\textbf{Tareas:}
+\begin{enumerate}
+    \item Análisis exploratorio: boxplots, estadísticas descriptivas
+    \item Verificar supuestos de ANOVA
+    \item Realizar ANOVA e interpretar resultados
+    \item Calcular tamaño del efecto
+    \item Realizar comparaciones post-hoc apropiadas
+    \item Redactar conclusiones en lenguaje no técnico
+\end{enumerate}
+
+\section{Conclusiones}
+
+El ANOVA es una herramienta fundamental en estadística aplicada que permite comparar medias de múltiples grupos de manera rigurosa. Los conceptos clave incluyen:
+
+\begin{itemize}
+    \item La descomposición de variabilidad en componentes explicados y no explicados
+    \item La importancia de verificar supuestos para validez de las conclusiones
+    \item El uso de comparaciones múltiples post-hoc para identificar diferencias específicas
+    \item La extensión a diseños más complejos (dos factores, medidas repetidas)
+    \item El diseño experimental adecuado como base para inferencias causales válidas
+\end{itemize}
+
+En la práctica, el ANOVA se complementa con visualizaciones efectivas, verificación cuidadosa de supuestos, y reporte transparente de todos los análisis realizados. Las implementaciones en Python y R facilitan estos análisis, permitiendo al analista enfocarse en la interpretación sustantiva de los resultados.
+
+\vspace{1cm}
+
+\noindent\textbf{Referencias recomendadas:}
+\begin{itemize}
+    \item Montgomery, D. C. (2017). \textit{Design and Analysis of Experiments}. Wiley.
+    \item Kutner, M. H., et al. (2005). \textit{Applied Linear Statistical Models}. McGraw-Hill.
+    \item Field, A., Miles, J., \& Field, Z. (2012). \textit{Discovering Statistics Using R}. SAGE.
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,1524 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[es-ES]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+
+% Colores
+\definecolor{unidadcolor}{RGB}{30, 60, 120}
+\definecolor{objetivocolor}{RGB}{0, 100, 0}
+\definecolor{ejemplocolor}{RGB}{200, 200, 200}
+\definecolor{advertenciacolor}{RGB}{200, 100, 100}
+
+% Configuración de listings
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{unidadcolor}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{objetivocolor},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+\begin{document}
+
+\begin{center}
+    {\Large \textbf{Métodos de Análisis de Datos 1}}\\[0.3em]
+    {\large Unidad 1: Obtención y Preparación de Datos}\\[0.2em]
+    {\normalsize Clases 3 a 7}
+\end{center}
+
+\vspace{1em}
+
+\section*{Objetivos de la unidad}
+
+Al finalizar esta unidad, los estudiantes serán capaces de:
+\begin{itemize}[leftmargin=*]
+    \item Identificar y acceder a diferentes fuentes de datos
+    \item Cargar datos desde archivos, bases de datos y APIs
+    \item Evaluar la calidad de los datos
+    \item Detectar y tratar valores faltantes, duplicados e inconsistencias
+    \item Transformar datos para análisis
+    \item Normalizar y estandarizar variables
+    \item Integrar múltiples fuentes de datos
+    \item Obtener datos mediante web scraping
+    \item Organizar datos en formato tidy
+\end{itemize}
+
+\section{Clase 3: Fuentes de Datos y Carga}
+
+\subsection{Fuentes de datos}
+
+Los datos pueden provenir de múltiples fuentes. Es fundamental saber cómo acceder a cada una de ellas.
+
+\subsubsection{Archivos planos}
+
+Los formatos más comunes son:
+
+\begin{itemize}
+    \item \textbf{CSV (Comma-Separated Values):} Valores separados por comas
+    \item \textbf{TSV (Tab-Separated Values):} Valores separados por tabulaciones
+    \item \textbf{Excel (XLSX, XLS):} Hojas de cálculo de Microsoft Excel
+    \item \textbf{JSON (JavaScript Object Notation):} Formato estructurado común en APIs web
+    \item \textbf{XML (eXtensible Markup Language):} Datos jerárquicos estructurados
+\end{itemize}
+
+\begin{tcolorbox}[colback=ejemplocolor!20, colframe=unidadcolor, title=Ventajas y desventajas de CSV]
+\textbf{Ventajas:}
+\begin{itemize}
+    \item Simple y ligero
+    \item Compatible con casi cualquier herramienta
+    \item Fácil de inspeccionar en un editor de texto
+\end{itemize}
+
+\textbf{Desventajas:}
+\begin{itemize}
+    \item No preserva tipos de datos (todo es texto)
+    \item Problemas con delimitadores en el contenido
+    \item No soporta múltiples hojas/tablas
+    \item Sin compresión nativa
+\end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Bases de datos}
+
+Las bases de datos relacionales almacenan datos en tablas estructuradas:
+
+\begin{itemize}
+    \item \textbf{SQLite:} Base de datos local, sin servidor, ideal para proyectos pequeños
+    \item \textbf{PostgreSQL:} Base de datos robusta y de código abierto
+    \item \textbf{MySQL/MariaDB:} Muy populares en aplicaciones web
+    \item \textbf{SQL Server:} Solución empresarial de Microsoft
+\end{itemize}
+
+Para acceder a bases de datos, se utiliza \textbf{SQL (Structured Query Language)}.
+
+\subsubsection{APIs (Application Programming Interfaces)}
+
+Las APIs permiten acceder a datos de servicios web de forma programática:
+
+\begin{itemize}
+    \item \textbf{REST APIs:} Usan HTTP (GET, POST, PUT, DELETE)
+    \item \textbf{GraphQL:} Permite consultas más flexibles
+    \item \textbf{Autenticación:} Muchas APIs requieren API keys o tokens
+\end{itemize}
+
+\begin{tcolorbox}[colback=ejemplocolor!20, colframe=unidadcolor, title=Ejemplo de API pública]
+\textbf{OpenWeatherMap:} API para obtener datos meteorológicos
+
+URL de ejemplo:
+\begin{verbatim}
+https://api.openweathermap.org/data/2.5/weather?
+    q=BahiaBlanca&appid=TU_API_KEY
+\end{verbatim}
+
+Retorna un JSON con temperatura, humedad, presión, etc.
+\end{tcolorbox}
+
+\subsubsection{Web scraping}
+
+Cuando los datos están en páginas web sin API disponible, se puede usar \textbf{web scraping}:
+
+\begin{itemize}
+    \item Descarga el HTML de la página
+    \item Extrae la información usando selectores CSS o XPath
+    \item Transforma los datos en formato estructurado
+\end{itemize}
+
+\begin{tcolorbox}[colback=advertenciacolor!20, colframe=red, title=Advertencia sobre web scraping]
+\textbf{Consideraciones legales y éticas:}
+\begin{itemize}
+    \item Revisar los términos de servicio del sitio
+    \item Respetar el archivo robots.txt
+    \item No sobrecargar el servidor (rate limiting)
+    \item Verificar si existe una API oficial
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Carga de datos en Python}
+
+\subsubsection{Pandas para archivos}
+
+La librería \texttt{pandas} es la herramienta principal para cargar y manipular datos en Python.
+
+\textbf{CSV:}
+\begin{lstlisting}[language=Python]
+import pandas as pd
+
+# Cargar CSV
+df = pd.read_csv('datos.csv')
+
+# Con opciones
+df = pd.read_csv(
+    'datos.csv',
+    sep=',',              # Delimitador
+    encoding='utf-8',     # Codificación
+    na_values=['NA', ''], # Valores que representan NaN
+    parse_dates=['fecha'] # Parsear columnas como fechas
+)
+\end{lstlisting}
+
+\textbf{Excel:}
+\begin{lstlisting}[language=Python]
+# Cargar Excel
+df = pd.read_excel('datos.xlsx', sheet_name='Hoja1')
+
+# Múltiples hojas
+todas_las_hojas = pd.read_excel('datos.xlsx', sheet_name=None)
+\end{lstlisting}
+
+\textbf{JSON:}
+\begin{lstlisting}[language=Python]
+# Cargar JSON
+df = pd.read_json('datos.json')
+
+# JSON anidado (requiere normalización)
+import json
+with open('datos.json', 'r') as f:
+    data = json.load(f)
+df = pd.json_normalize(data)
+\end{lstlisting}
+
+\subsubsection{Conexión a bases de datos}
+
+\begin{lstlisting}[language=Python]
+import sqlite3
+import pandas as pd
+
+# Conectar a SQLite
+conn = sqlite3.connect('base_datos.db')
+
+# Ejecutar query y cargar en DataFrame
+query = "SELECT * FROM ventas WHERE fecha >= '2024-01-01'"
+df = pd.read_sql_query(query, conn)
+
+# Cerrar conexión
+conn.close()
+\end{lstlisting}
+
+Para PostgreSQL, MySQL, etc., se usa \texttt{sqlalchemy}:
+
+\begin{lstlisting}[language=Python]
+from sqlalchemy import create_engine
+
+# Crear conexión
+engine = create_engine('postgresql://user:pass@localhost/db')
+
+# Cargar datos
+df = pd.read_sql_query("SELECT * FROM tabla", engine)
+\end{lstlisting}
+
+\subsubsection{Acceso a APIs}
+
+\begin{lstlisting}[language=Python]
+import requests
+import pandas as pd
+
+# Hacer request a API
+url = "https://api.ejemplo.com/datos"
+headers = {'Authorization': 'Bearer TU_TOKEN'}
+response = requests.get(url, headers=headers)
+
+# Verificar que fue exitoso
+if response.status_code == 200:
+    data = response.json()
+    df = pd.DataFrame(data)
+else:
+    print(f"Error: {response.status_code}")
+\end{lstlisting}
+
+\subsection{Carga de datos en R}
+
+\subsubsection{Tidyverse para archivos}
+
+El ecosistema \texttt{tidyverse} provee herramientas eficientes para carga de datos.
+
+\textbf{CSV:}
+\begin{lstlisting}[language=R]
+library(readr)
+
+# Cargar CSV
+df <- read_csv('datos.csv')
+
+# Con opciones
+df <- read_csv(
+  'datos.csv',
+  col_types = cols(
+    edad = col_integer(),
+    fecha = col_date(format = "%Y-%m-%d")
+  ),
+  na = c("NA", "", "N/A")
+)
+\end{lstlisting}
+
+\textbf{Excel:}
+\begin{lstlisting}[language=R]
+library(readxl)
+
+# Cargar Excel
+df <- read_excel('datos.xlsx', sheet = 'Hoja1')
+
+# Ver nombres de hojas
+excel_sheets('datos.xlsx')
+\end{lstlisting}
+
+\textbf{JSON:}
+\begin{lstlisting}[language=R]
+library(jsonlite)
+
+# Cargar JSON
+data <- fromJSON('datos.json')
+
+# Si es una lista, convertir a data frame
+df <- as.data.frame(data)
+\end{lstlisting}
+
+\subsubsection{Conexión a bases de datos}
+
+\begin{lstlisting}[language=R]
+library(DBI)
+library(RSQLite)
+
+# Conectar a SQLite
+conn <- dbConnect(RSQLite::SQLite(), "base_datos.db")
+
+# Ejecutar query
+df <- dbGetQuery(conn, "SELECT * FROM ventas")
+
+# Cerrar conexión
+dbDisconnect(conn)
+\end{lstlisting}
+
+Para PostgreSQL:
+\begin{lstlisting}[language=R]
+library(RPostgres)
+
+conn <- dbConnect(
+  RPostgres::Postgres(),
+  dbname = 'mi_base',
+  host = 'localhost',
+  user = 'usuario',
+  password = 'clave'
+)
+
+df <- dbGetQuery(conn, "SELECT * FROM tabla")
+dbDisconnect(conn)
+\end{lstlisting}
+
+\subsubsection{Acceso a APIs}
+
+\begin{lstlisting}[language=R]
+library(httr)
+library(jsonlite)
+
+# Hacer request
+url <- "https://api.ejemplo.com/datos"
+response <- GET(url, add_headers(Authorization = "Bearer TOKEN"))
+
+# Verificar status
+if (status_code(response) == 200) {
+  data <- content(response, as = "text")
+  df <- fromJSON(data)
+} else {
+  print(paste("Error:", status_code(response)))
+}
+\end{lstlisting}
+
+\subsection{Exploración inicial}
+
+Una vez cargados los datos, siempre realizar una exploración inicial:
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Dimensiones
+print(df.shape)  # (filas, columnas)
+
+# Primeras filas
+df.head()
+
+# Información general (tipos, memoria)
+df.info()
+
+# Estadísticas descriptivas
+df.describe()
+
+# Nombres de columnas
+df.columns
+
+# Tipos de datos
+df.dtypes
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Dimensiones
+dim(df)  # c(filas, columnas)
+
+# Primeras filas
+head(df)
+
+# Estructura
+str(df)
+
+# Resumen estadístico
+summary(df)
+
+# Nombres de columnas
+names(df)
+
+# Tipos de datos
+sapply(df, class)
+\end{lstlisting}
+
+\section{Clase 4: Calidad de Datos}
+
+\subsection{Dimensiones de la calidad de datos}
+
+La calidad de los datos se evalúa en varias dimensiones:
+
+\begin{enumerate}
+    \item \textbf{Completitud:} ¿Hay valores faltantes?
+    \item \textbf{Consistencia:} ¿Los datos son coherentes entre sí?
+    \item \textbf{Precisión:} ¿Los datos son correctos?
+    \item \textbf{Actualidad:} ¿Los datos están actualizados?
+    \item \textbf{Validez:} ¿Los datos cumplen con las reglas de negocio?
+\end{enumerate}
+
+\subsection{Valores faltantes}
+
+Los valores faltantes (missing values) son uno de los problemas más comunes en datasets reales.
+
+\subsubsection{Tipos de valores faltantes}
+
+\begin{itemize}
+    \item \textbf{MCAR (Missing Completely At Random):} La ausencia no tiene relación con ninguna variable
+    \item \textbf{MAR (Missing At Random):} La ausencia está relacionada con variables observadas
+    \item \textbf{MNAR (Missing Not At Random):} La ausencia está relacionada con el valor faltante mismo
+\end{itemize}
+
+\begin{tcolorbox}[colback=ejemplocolor!20, colframe=unidadcolor, title=Ejemplos de tipos de missingness]
+\textbf{MCAR:} Un sensor falla aleatoriamente
+
+\textbf{MAR:} Personas jóvenes no responden pregunta sobre ingresos (relacionado con edad, no con ingresos)
+
+\textbf{MNAR:} Personas con ingresos altos no responden pregunta sobre ingresos (relacionado con el valor mismo)
+\end{tcolorbox}
+
+\subsubsection{Detección de valores faltantes}
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Contar valores faltantes por columna
+df.isnull().sum()
+
+# Porcentaje de valores faltantes
+(df.isnull().sum() / len(df)) * 100
+
+# Visualizar patrón de missingness
+import missingno as msno
+msno.matrix(df)
+msno.heatmap(df)  # Correlación de missingness
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Contar valores faltantes
+colSums(is.na(df))
+
+# Porcentaje
+colMeans(is.na(df)) * 100
+
+# Visualizar con naniar
+library(naniar)
+vis_miss(df)
+gg_miss_var(df)
+\end{lstlisting}
+
+\subsubsection{Estrategias para tratar valores faltantes}
+
+\textbf{1. Eliminación}
+
+\begin{itemize}
+    \item \textbf{Listwise deletion:} Eliminar filas con algún valor faltante
+    \item \textbf{Pairwise deletion:} Usar solo datos disponibles para cada análisis
+    \item \textbf{Por columna:} Eliminar columnas con demasiados faltantes
+\end{itemize}
+
+\begin{tcolorbox}[colback=advertenciacolor!20, colframe=red, title=Cuidado con la eliminación]
+Eliminar puede causar:
+\begin{itemize}
+    \item Pérdida de información valiosa
+    \item Sesgos si los datos no son MCAR
+    \item Reducción significativa del tamaño del dataset
+\end{itemize}
+
+\textbf{Regla general:} Solo eliminar si $<$5\% de faltantes y son MCAR
+\end{tcolorbox}
+
+\textbf{Python - Eliminación:}
+\begin{lstlisting}[language=Python]
+# Eliminar filas con cualquier NA
+df_clean = df.dropna()
+
+# Eliminar filas donde columnas específicas tienen NA
+df_clean = df.dropna(subset=['columna1', 'columna2'])
+
+# Eliminar columnas con >50% de NAs
+umbral = len(df) * 0.5
+df_clean = df.dropna(thresh=umbral, axis=1)
+\end{lstlisting}
+
+\textbf{R - Eliminación:}
+\begin{lstlisting}[language=R]
+# Eliminar filas con cualquier NA
+df_clean <- na.omit(df)
+
+# Eliminar filas donde columnas específicas tienen NA
+df_clean <- df %>%
+  filter(!is.na(columna1), !is.na(columna2))
+
+# Eliminar columnas con >50% NAs
+umbral <- nrow(df) * 0.5
+df_clean <- df %>%
+  select(where(~ sum(is.na(.)) < umbral))
+\end{lstlisting}
+
+\textbf{2. Imputación simple}
+
+Reemplazar valores faltantes con un valor estadístico:
+
+\begin{itemize}
+    \item \textbf{Media/Mediana:} Para variables numéricas
+    \item \textbf{Moda:} Para variables categóricas
+    \item \textbf{Valor constante:} Como 0, "desconocido", etc.
+\end{itemize}
+
+\textbf{Python - Imputación simple:}
+\begin{lstlisting}[language=Python]
+from sklearn.impute import SimpleImputer
+
+# Imputar con media
+imputer = SimpleImputer(strategy='mean')
+df[['columna1', 'columna2']] = imputer.fit_transform(
+    df[['columna1', 'columna2']]
+)
+
+# Imputar con moda (más frecuente)
+imputer = SimpleImputer(strategy='most_frequent')
+df['categoria'] = imputer.fit_transform(df[['categoria']])
+
+# Imputar con constante
+df['columna'].fillna(0, inplace=True)
+\end{lstlisting}
+
+\textbf{R - Imputación simple:}
+\begin{lstlisting}[language=R]
+library(tidyverse)
+
+# Imputar con media
+df <- df %>%
+  mutate(columna1 = ifelse(is.na(columna1), 
+                           mean(columna1, na.rm = TRUE), 
+                           columna1))
+
+# Imputar con mediana
+df <- df %>%
+  mutate(across(where(is.numeric), 
+                ~replace_na(., median(., na.rm = TRUE))))
+
+# Imputar categorías con moda
+moda <- function(x) {
+  ux <- unique(x[!is.na(x)])
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+df <- df %>%
+  mutate(categoria = replace_na(categoria, moda(categoria)))
+\end{lstlisting}
+
+\textbf{3. Imputación avanzada}
+
+Métodos más sofisticados que consideran relaciones entre variables:
+
+\begin{itemize}
+    \item \textbf{KNN (K-Nearest Neighbors):} Imputa usando valores de observaciones similares
+    \item \textbf{Regresión:} Predice valores faltantes usando otras variables
+    \item \textbf{MICE (Multiple Imputation by Chained Equations):} Imputación múltiple iterativa
+    \item \textbf{Interpolación:} Para series temporales
+\end{itemize}
+
+\textbf{Python - KNN:}
+\begin{lstlisting}[language=Python]
+from sklearn.impute import KNNImputer
+
+# Imputar con KNN (k=5 vecinos)
+imputer = KNNImputer(n_neighbors=5)
+df_imputed = pd.DataFrame(
+    imputer.fit_transform(df),
+    columns=df.columns
+)
+\end{lstlisting}
+
+\textbf{R - MICE:}
+\begin{lstlisting}[language=R]
+library(mice)
+
+# Imputación múltiple
+imputed <- mice(df, m = 5, method = 'pmm', seed = 42)
+
+# Obtener dataset completo
+df_complete <- complete(imputed, 1)  # Primera imputación
+\end{lstlisting}
+
+\subsection{Duplicados}
+
+\subsubsection{Detección de duplicados}
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Detectar duplicados (todas las columnas)
+duplicados = df.duplicated()
+print(f"Duplicados totales: {duplicados.sum()}")
+
+# Detectar duplicados por columnas específicas
+duplicados = df.duplicated(subset=['id', 'fecha'])
+
+# Ver las filas duplicadas
+df[duplicados]
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Detectar duplicados
+duplicados <- duplicated(df)
+cat("Duplicados totales:", sum(duplicados), "\n")
+
+# Por columnas específicas
+duplicados <- df %>%
+  duplicated(by = c('id', 'fecha'))
+
+# Ver duplicados
+df[duplicados, ]
+\end{lstlisting}
+
+\subsubsection{Eliminación de duplicados}
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Eliminar duplicados (mantiene primera ocurrencia)
+df_clean = df.drop_duplicates()
+
+# Por columnas específicas
+df_clean = df.drop_duplicates(subset=['id', 'fecha'])
+
+# Mantener última ocurrencia
+df_clean = df.drop_duplicates(keep='last')
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Eliminar duplicados
+df_clean <- distinct(df)
+
+# Por columnas específicas
+df_clean <- df %>%
+  distinct(id, fecha, .keep_all = TRUE)
+\end{lstlisting}
+
+\subsection{Inconsistencias}
+
+Las inconsistencias son errores en los datos que violan reglas lógicas o de negocio.
+
+\subsubsection{Tipos de inconsistencias}
+
+\begin{enumerate}
+    \item \textbf{Valores fuera de rango:} Edad = -5, temperatura = 500°C
+    \item \textbf{Formatos incorrectos:} Fechas como "32/13/2024"
+    \item \textbf{Inconsistencias entre variables:} Fecha de nacimiento posterior a fecha de graduación
+    \item \textbf{Errores tipográficos:} "Bahia Blanca", "B. Blanca", "Bahía blanca" (mismo valor, diferentes strings)
+    \item \textbf{Valores imposibles:} Porcentajes >100\%, probabilidades <0
+\end{enumerate}
+
+\subsubsection{Detección de inconsistencias}
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Valores fuera de rango
+print("Edades negativas:", (df['edad'] < 0).sum())
+print("Edades >120:", (df['edad'] > 120).sum())
+
+# Verificar rangos esperados
+print(f"Edad min: {df['edad'].min()}, max: {df['edad'].max()}")
+
+# Valores únicos (buscar variaciones)
+print(df['ciudad'].value_counts())
+
+# Inconsistencias entre columnas
+inconsistentes = df[df['fecha_nacimiento'] > df['fecha_registro']]
+print(f"Registros inconsistentes: {len(inconsistentes)}")
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Valores fuera de rango
+cat("Edades negativas:", sum(df$edad < 0, na.rm = TRUE), "\n")
+cat("Edades >120:", sum(df$edad > 120, na.rm = TRUE), "\n")
+
+# Rangos
+cat("Edad min:", min(df$edad, na.rm = TRUE), 
+    "max:", max(df$edad, na.rm = TRUE), "\n")
+
+# Valores únicos
+table(df$ciudad)
+
+# Inconsistencias
+inconsistentes <- df %>%
+  filter(fecha_nacimiento > fecha_registro)
+cat("Registros inconsistentes:", nrow(inconsistentes), "\n")
+\end{lstlisting}
+
+\subsubsection{Corrección de inconsistencias}
+
+\textbf{Estandarización de texto:}
+
+\begin{lstlisting}[language=Python]
+# Python - Estandarizar texto
+df['ciudad'] = df['ciudad'].str.lower().str.strip()
+
+# Reemplazar variaciones
+df['ciudad'] = df['ciudad'].replace({
+    'b. blanca': 'bahia blanca',
+    'bahia blanca': 'bahía blanca'
+})
+\end{lstlisting}
+
+\begin{lstlisting}[language=R]
+# R - Estandarizar texto
+df <- df %>%
+  mutate(ciudad = str_to_lower(str_trim(ciudad)))
+
+# Reemplazar variaciones
+df <- df %>%
+  mutate(ciudad = recode(ciudad,
+    'b. blanca' = 'bahia blanca',
+    'bahia blanca' = 'bahía blanca'
+  ))
+\end{lstlisting}
+
+\textbf{Corrección de valores fuera de rango:}
+
+\begin{lstlisting}[language=Python]
+# Python - Reemplazar valores imposibles con NA
+df.loc[df['edad'] < 0, 'edad'] = np.nan
+df.loc[df['edad'] > 120, 'edad'] = np.nan
+
+# O clip (limitar valores)
+df['edad'] = df['edad'].clip(lower=0, upper=120)
+\end{lstlisting}
+
+\begin{lstlisting}[language=R]
+# R - Reemplazar con NA
+df <- df %>%
+  mutate(edad = ifelse(edad < 0 | edad > 120, NA, edad))
+
+# O con pmin/pmax
+df <- df %>%
+  mutate(edad = pmin(pmax(edad, 0), 120))
+\end{lstlisting}
+
+\section{Clase 5: Transformación de Datos}
+
+\subsection{Conversión de tipos de datos}
+
+Los datos pueden cargarse con tipos incorrectos. Es fundamental corregirlos.
+
+\subsubsection{Tipos de datos comunes}
+
+\begin{itemize}
+    \item \textbf{Numéricos:} int, float
+    \item \textbf{Texto:} string, categorical
+    \item \textbf{Booleanos:} True/False
+    \item \textbf{Fechas:} datetime, date
+    \item \textbf{Categóricos ordenados:} ordinal
+\end{itemize}
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Convertir a numérico
+df['edad'] = pd.to_numeric(df['edad'], errors='coerce')
+
+# Convertir a string
+df['id'] = df['id'].astype(str)
+
+# Convertir a fecha
+df['fecha'] = pd.to_datetime(df['fecha'], format='%Y-%m-%d')
+
+# Convertir a categórico
+df['categoria'] = df['categoria'].astype('category')
+
+# Categórico ordenado
+df['educacion'] = pd.Categorical(
+    df['educacion'],
+    categories=['primaria', 'secundaria', 'universitaria'],
+    ordered=True
+)
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Convertir a numérico
+df$edad <- as.numeric(df$edad)
+
+# Convertir a string
+df$id <- as.character(df$id)
+
+# Convertir a fecha
+library(lubridate)
+df$fecha <- ymd(df$fecha)
+
+# Convertir a factor
+df$categoria <- as.factor(df$categoria)
+
+# Factor ordenado
+df$educacion <- factor(
+  df$educacion,
+  levels = c('primaria', 'secundaria', 'universitaria'),
+  ordered = TRUE
+)
+\end{lstlisting}
+
+\subsection{Creación de variables derivadas}
+
+Crear nuevas variables a partir de las existentes (feature engineering básico).
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Operaciones aritméticas
+df['imc'] = df['peso'] / (df['altura'] ** 2)
+
+# Operaciones con fechas
+df['edad'] = (pd.Timestamp.now() - df['fecha_nacimiento']).dt.days / 365.25
+
+# Extraer componentes de fecha
+df['año'] = df['fecha'].dt.year
+df['mes'] = df['fecha'].dt.month
+df['dia_semana'] = df['fecha'].dt.dayofweek
+
+# Operaciones con texto
+df['nombre_completo'] = df['nombre'] + ' ' + df['apellido']
+df['longitud_nombre'] = df['nombre'].str.len()
+
+# Condiciones
+df['adulto'] = df['edad'] >= 18
+df['categoria_edad'] = pd.cut(
+    df['edad'],
+    bins=[0, 18, 65, 100],
+    labels=['joven', 'adulto', 'mayor']
+)
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+library(tidyverse)
+
+df <- df %>%
+  mutate(
+    # Operaciones aritméticas
+    imc = peso / (altura^2),
+    
+    # Operaciones con fechas
+    edad = as.numeric(difftime(Sys.Date(), fecha_nacimiento, units = "days")) / 365.25,
+    año = year(fecha),
+    mes = month(fecha),
+    dia_semana = wday(fecha),
+    
+    # Operaciones con texto
+    nombre_completo = paste(nombre, apellido),
+    longitud_nombre = nchar(nombre),
+    
+    # Condiciones
+    adulto = edad >= 18,
+    categoria_edad = cut(edad, 
+                        breaks = c(0, 18, 65, 100),
+                        labels = c('joven', 'adulto', 'mayor'))
+  )
+\end{lstlisting}
+
+\subsection{Codificación de variables categóricas}
+
+Los algoritmos de machine learning requieren datos numéricos. Las variables categóricas deben codificarse.
+
+\subsubsection{Label Encoding}
+
+Asigna un número único a cada categoría.
+
+\begin{tcolorbox}[colback=advertenciacolor!20, colframe=red, title=Cuidado con Label Encoding]
+Solo usar label encoding cuando las categorías tienen un orden natural (ordinal).
+
+Para categorías nominales, usar one-hot encoding para evitar que el modelo asuma relaciones ordinales falsas.
+\end{tcolorbox}
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+from sklearn.preprocessing import LabelEncoder
+
+# Label encoding
+le = LabelEncoder()
+df['educacion_encoded'] = le.fit_transform(df['educacion'])
+
+# Ver mapeo
+print(dict(zip(le.classes_, le.transform(le.classes_))))
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Label encoding (automático con factor)
+df$educacion_encoded <- as.numeric(factor(df$educacion))
+
+# Con orden específico
+df$educacion_encoded <- as.numeric(factor(
+  df$educacion,
+  levels = c('primaria', 'secundaria', 'universitaria')
+))
+\end{lstlisting}
+
+\subsubsection{One-Hot Encoding}
+
+Crea una columna binaria para cada categoría.
+
+\textbf{Ejemplo:}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Original} & \textbf{color\_rojo} & \textbf{color\_verde} & \textbf{color\_azul} \\
+\hline
+rojo & 1 & 0 & 0 \\
+verde & 0 & 1 & 0 \\
+azul & 0 & 0 & 1 \\
+rojo & 1 & 0 & 0 \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# One-hot encoding
+df_encoded = pd.get_dummies(df, columns=['color'], prefix='color')
+
+# Con sklearn (más control)
+from sklearn.preprocessing import OneHotEncoder
+
+encoder = OneHotEncoder(sparse=False, drop='first')  # drop primera para evitar multicolinealidad
+encoded = encoder.fit_transform(df[['color']])
+
+# Convertir a DataFrame
+df_encoded = pd.DataFrame(
+    encoded,
+    columns=encoder.get_feature_names_out(['color'])
+)
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# One-hot encoding
+library(caret)
+
+dummies <- dummyVars(" ~ color", data = df)
+df_encoded <- predict(dummies, newdata = df)
+
+# Con tidyverse
+df_encoded <- df %>%
+  mutate(value = 1) %>%
+  pivot_wider(names_from = color, 
+              values_from = value, 
+              values_fill = 0,
+              names_prefix = "color_")
+\end{lstlisting}
+
+\section{Clase 6: Normalización e Integración}
+
+\subsection{Normalización y Estandarización}
+
+Muchos algoritmos de ML son sensibles a la escala de las variables. La normalización/estandarización ayuda a:
+\begin{itemize}
+    \item Mejorar convergencia en algoritmos de optimización
+    \item Dar igual peso a todas las variables
+    \item Mejorar interpretabilidad de coeficientes
+\end{itemize}
+
+\subsubsection{Min-Max Scaling (Normalización)}
+
+Escala valores al rango [0, 1]:
+
+$$X_{norm} = \frac{X - X_{min}}{X_{max} - X_{min}}$$
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+from sklearn.preprocessing import MinMaxScaler
+
+scaler = MinMaxScaler()
+df[['edad', 'ingreso']] = scaler.fit_transform(df[['edad', 'ingreso']])
+
+# Con rango personalizado [-1, 1]
+scaler = MinMaxScaler(feature_range=(-1, 1))
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Normalización manual
+normalizar <- function(x) {
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+
+df <- df %>%
+  mutate(across(c(edad, ingreso), normalizar))
+
+# Con caret
+preproc <- preProcess(df[, c('edad', 'ingreso')], method = "range")
+df[, c('edad', 'ingreso')] <- predict(preproc, df[, c('edad', 'ingreso')])
+\end{lstlisting}
+
+\subsubsection{Standardization (Z-score)}
+
+Transforma a media 0 y desviación estándar 1:
+
+$$X_{std} = \frac{X - \mu}{\sigma}$$
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+df[['edad', 'ingreso']] = scaler.fit_transform(df[['edad', 'ingreso']])
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Estandarización
+df <- df %>%
+  mutate(across(c(edad, ingreso), scale))
+
+# Con caret
+preproc <- preProcess(df[, c('edad', 'ingreso')], method = c("center", "scale"))
+df[, c('edad', 'ingreso')] <- predict(preproc, df[, c('edad', 'ingreso')])
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=ejemplocolor!20, colframe=unidadcolor, title=¿Cuándo usar cada uno?]
+\textbf{Min-Max:}
+\begin{itemize}
+    \item Cuando necesitas valores en un rango específico
+    \item Neural networks, KNN
+    \item No hay outliers extremos
+\end{itemize}
+
+\textbf{Standardization:}
+\begin{itemize}
+    \item Cuando asumes distribución normal
+    \item Regresión logística, SVM, PCA
+    \item Presencia de outliers (más robusto)
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Discretización (Binning)}
+
+Convertir variables continuas en categóricas dividiendo en intervalos.
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Bins de igual ancho
+df['edad_grupo'] = pd.cut(
+    df['edad'],
+    bins=5,  # 5 intervalos de igual tamaño
+    labels=['muy_joven', 'joven', 'adulto', 'mayor', 'muy_mayor']
+)
+
+# Bins con puntos de corte específicos
+df['edad_grupo'] = pd.cut(
+    df['edad'],
+    bins=[0, 18, 30, 50, 65, 100],
+    labels=['menor', 'joven', 'adulto', 'maduro', 'mayor']
+)
+
+# Bins de igual frecuencia (quantiles)
+df['ingreso_grupo'] = pd.qcut(
+    df['ingreso'],
+    q=4,  # 4 cuartiles
+    labels=['bajo', 'medio_bajo', 'medio_alto', 'alto']
+)
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Bins de igual ancho
+df <- df %>%
+  mutate(edad_grupo = cut(
+    edad,
+    breaks = 5,
+    labels = c('muy_joven', 'joven', 'adulto', 'mayor', 'muy_mayor')
+  ))
+
+# Bins con puntos específicos
+df <- df %>%
+  mutate(edad_grupo = cut(
+    edad,
+    breaks = c(0, 18, 30, 50, 65, 100),
+    labels = c('menor', 'joven', 'adulto', 'maduro', 'mayor')
+  ))
+
+# Bins de igual frecuencia
+df <- df %>%
+  mutate(ingreso_grupo = cut(
+    ingreso,
+    breaks = quantile(ingreso, probs = seq(0, 1, 0.25), na.rm = TRUE),
+    labels = c('bajo', 'medio_bajo', 'medio_alto', 'alto'),
+    include.lowest = TRUE
+  ))
+\end{lstlisting}
+
+\subsection{Integración de datos}
+
+A menudo necesitamos combinar datos de múltiples fuentes.
+
+\subsubsection{Joins (uniones)}
+
+Similar a SQL, existen diferentes tipos de joins:
+
+\begin{itemize}
+    \item \textbf{Inner join:} Solo filas con match en ambas tablas
+    \item \textbf{Left join:} Todas las filas de la izquierda + matches de la derecha
+    \item \textbf{Right join:} Todas las filas de la derecha + matches de la izquierda
+    \item \textbf{Outer join:} Todas las filas de ambas tablas
+\end{itemize}
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Inner join
+df_merged = pd.merge(df1, df2, on='id', how='inner')
+
+# Left join
+df_merged = pd.merge(df1, df2, on='id', how='left')
+
+# Join con nombres diferentes de columnas
+df_merged = pd.merge(
+    df1, df2,
+    left_on='cliente_id',
+    right_on='id',
+    how='left'
+)
+
+# Join con múltiples columnas
+df_merged = pd.merge(df1, df2, on=['id', 'fecha'], how='inner')
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+library(dplyr)
+
+# Inner join
+df_merged <- inner_join(df1, df2, by = "id")
+
+# Left join
+df_merged <- left_join(df1, df2, by = "id")
+
+# Join con nombres diferentes
+df_merged <- left_join(
+  df1, df2,
+  by = c("cliente_id" = "id")
+)
+
+# Join con múltiples columnas
+df_merged <- inner_join(df1, df2, by = c("id", "fecha"))
+\end{lstlisting}
+
+\subsubsection{Concatenación}
+
+Apilar DataFrames verticalmente u horizontalmente.
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Concatenar verticalmente (apilar filas)
+df_combined = pd.concat([df1, df2], axis=0, ignore_index=True)
+
+# Concatenar horizontalmente (añadir columnas)
+df_combined = pd.concat([df1, df2], axis=1)
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Concatenar verticalmente
+df_combined <- bind_rows(df1, df2)
+
+# Concatenar horizontalmente
+df_combined <- bind_cols(df1, df2)
+\end{lstlisting}
+
+\section{Clase 7: APIs, Web Scraping y Tidy Data}
+
+\subsection{APIs REST}
+
+Las APIs REST permiten obtener datos de servicios web de forma estructurada.
+
+\subsubsection{Componentes de una API REST}
+
+\begin{itemize}
+    \item \textbf{Endpoint:} URL del recurso
+    \item \textbf{Métodos HTTP:} GET (obtener), POST (crear), PUT (actualizar), DELETE (eliminar)
+    \item \textbf{Headers:} Metadatos (autenticación, tipo de contenido)
+    \item \textbf{Parámetros:} Query parameters o body
+    \item \textbf{Respuesta:} Generalmente JSON
+\end{itemize}
+
+\textbf{Python - Ejemplo completo:}
+\begin{lstlisting}[language=Python]
+import requests
+import pandas as pd
+
+# API pública de ejemplo: JSONPlaceholder
+url = "https://jsonplaceholder.typicode.com/posts"
+
+# GET request simple
+response = requests.get(url)
+
+if response.status_code == 200:
+    data = response.json()
+    df = pd.DataFrame(data)
+    print(df.head())
+else:
+    print(f"Error: {response.status_code}")
+
+# GET con parámetros
+params = {'userId': 1}
+response = requests.get(url, params=params)
+
+# GET con autenticación
+headers = {'Authorization': 'Bearer TU_TOKEN'}
+response = requests.get(url, headers=headers)
+
+# POST request
+nuevo_post = {
+    'title': 'Nuevo post',
+    'body': 'Contenido del post',
+    'userId': 1
+}
+response = requests.post(url, json=nuevo_post)
+\end{lstlisting}
+
+\textbf{R - Ejemplo completo:}
+\begin{lstlisting}[language=R]
+library(httr)
+library(jsonlite)
+
+# API pública
+url <- "https://jsonplaceholder.typicode.com/posts"
+
+# GET request
+response <- GET(url)
+
+if (status_code(response) == 200) {
+  data <- content(response, as = "text")
+  df <- fromJSON(data)
+  head(df)
+} else {
+  print(paste("Error:", status_code(response)))
+}
+
+# GET con parámetros
+response <- GET(url, query = list(userId = 1))
+
+# GET con autenticación
+response <- GET(
+  url,
+  add_headers(Authorization = "Bearer TU_TOKEN")
+)
+
+# POST request
+nuevo_post <- list(
+  title = 'Nuevo post',
+  body = 'Contenido',
+  userId = 1
+)
+response <- POST(url, body = nuevo_post, encode = "json")
+\end{lstlisting}
+
+\subsection{Web Scraping}
+
+Cuando no hay API disponible, se puede extraer datos directamente del HTML.
+
+\subsubsection{Herramientas}
+
+\begin{itemize}
+    \item \textbf{Python:} BeautifulSoup, Scrapy, Selenium (para páginas dinámicas)
+    \item \textbf{R:} rvest, xml2
+\end{itemize}
+
+\subsubsection{Proceso de web scraping}
+
+\begin{enumerate}
+    \item Inspeccionar la estructura HTML de la página
+    \item Identificar selectores CSS o XPath
+    \item Descargar el HTML
+    \item Extraer la información
+    \item Limpiar y estructurar los datos
+\end{enumerate}
+
+\textbf{Python - BeautifulSoup:}
+\begin{lstlisting}[language=Python]
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+# Descargar página
+url = "https://ejemplo.com/tabla"
+response = requests.get(url)
+soup = BeautifulSoup(response.content, 'html.parser')
+
+# Encontrar todos los enlaces
+enlaces = soup.find_all('a')
+for link in enlaces:
+    print(link.get('href'))
+
+# Extraer tabla
+tabla = soup.find('table', {'class': 'datos'})
+filas = tabla.find_all('tr')
+
+data = []
+for fila in filas[1:]:  # Saltar encabezado
+    celdas = fila.find_all('td')
+    data.append([celda.text.strip() for celda in celdas])
+
+df = pd.DataFrame(data, columns=['col1', 'col2', 'col3'])
+
+# Extraer por clase CSS
+elementos = soup.find_all('div', {'class': 'precio'})
+precios = [elem.text for elem in elementos]
+
+# Extraer por selector CSS
+elementos = soup.select('.producto .precio')
+\end{lstlisting}
+
+\textbf{R - rvest:}
+\begin{lstlisting}[language=R]
+library(rvest)
+library(tidyverse)
+
+# Descargar página
+url <- "https://ejemplo.com/tabla"
+pagina <- read_html(url)
+
+# Extraer todos los enlaces
+enlaces <- pagina %>%
+  html_nodes("a") %>%
+  html_attr("href")
+
+# Extraer tabla
+tabla <- pagina %>%
+  html_node("table.datos") %>%
+  html_table()
+
+df <- as_tibble(tabla)
+
+# Extraer por clase CSS
+precios <- pagina %>%
+  html_nodes(".precio") %>%
+  html_text()
+
+# Extraer por selector CSS
+elementos <- pagina %>%
+  html_nodes(".producto .precio") %>%
+  html_text()
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=advertenciacolor!20, colframe=red, title=Mejores prácticas de web scraping]
+\begin{enumerate}
+    \item Revisar robots.txt: \texttt{https://sitio.com/robots.txt}
+    \item Respetar términos de servicio
+    \item Usar rate limiting (pausas entre requests)
+    \item Identificarse con User-Agent apropiado
+    \item No sobrecargar el servidor
+    \item Cachear resultados
+\end{enumerate}
+\end{tcolorbox}
+
+\textbf{Python - Rate limiting:}
+\begin{lstlisting}[language=Python]
+import time
+
+urls = ['url1', 'url2', 'url3']
+for url in urls:
+    response = requests.get(url)
+    # Procesar respuesta
+    time.sleep(1)  # Esperar 1 segundo entre requests
+\end{lstlisting}
+
+\subsection{Tidy Data}
+
+Los \textbf{datos ordenados} (tidy data) siguen tres principios:
+
+\begin{enumerate}
+    \item Cada variable forma una columna
+    \item Cada observación forma una fila
+    \item Cada tipo de unidad observacional forma una tabla
+\end{enumerate}
+
+\begin{tcolorbox}[colback=ejemplocolor!20, colframe=unidadcolor, title=Ejemplo: Datos no ordenados vs ordenados]
+\textbf{No ordenado (wide):}
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Persona & Año\_2020 & Año\_2021 \\
+\hline
+Ana & 50000 & 52000 \\
+Luis & 48000 & 49000 \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Ordenado (long):}
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Persona & Año & Ingreso \\
+\hline
+Ana & 2020 & 50000 \\
+Ana & 2021 & 52000 \\
+Luis & 2020 & 48000 \\
+Luis & 2021 & 49000 \\
+\hline
+\end{tabular}
+\end{center}
+\end{tcolorbox}
+
+\subsection{Reshape: Pivot y Melt}
+
+\subsubsection{Pivot (wide → long)}
+
+Convertir columnas en filas.
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Melt (wide → long)
+df_long = pd.melt(
+    df,
+    id_vars=['persona'],           # Columnas a mantener
+    value_vars=['año_2020', 'año_2021'],  # Columnas a convertir
+    var_name='año',                # Nombre de la nueva columna de variables
+    value_name='ingreso'           # Nombre de la nueva columna de valores
+)
+
+# Simplificado (todas las columnas excepto id_vars)
+df_long = pd.melt(df, id_vars=['persona'], var_name='año', value_name='ingreso')
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Pivot longer (wide → long)
+df_long <- df %>%
+  pivot_longer(
+    cols = c(año_2020, año_2021),  # Columnas a convertir
+    names_to = "año",               # Nombre de columna de nombres
+    values_to = "ingreso"           # Nombre de columna de valores
+  )
+
+# Con prefijo a remover
+df_long <- df %>%
+  pivot_longer(
+    cols = starts_with("año_"),
+    names_to = "año",
+    names_prefix = "año_",
+    values_to = "ingreso"
+  )
+\end{lstlisting}
+
+\subsubsection{Pivot (long → wide)}
+
+Convertir filas en columnas.
+
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Pivot (long → wide)
+df_wide = df_long.pivot(
+    index='persona',      # Columna que define las filas
+    columns='año',        # Columna que se convierte en columnas
+    values='ingreso'      # Valores a rellenar
+)
+
+# Pivot con agregación (si hay duplicados)
+df_wide = df_long.pivot_table(
+    index='persona',
+    columns='año',
+    values='ingreso',
+    aggfunc='mean'  # Función de agregación
+)
+\end{lstlisting}
+
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Pivot wider (long → wide)
+df_wide <- df_long %>%
+  pivot_wider(
+    names_from = año,      # Columna que se convierte en columnas
+    values_from = ingreso  # Valores a rellenar
+  )
+
+# Con prefijo
+df_wide <- df_long %>%
+  pivot_wider(
+    names_from = año,
+    values_from = ingreso,
+    names_prefix = "año_"
+  )
+\end{lstlisting}
+
+\section*{Resumen de la Unidad 1}
+
+\begin{itemize}[leftmargin=*]
+    \item Los datos provienen de \textbf{múltiples fuentes}: archivos, bases de datos, APIs, web scraping
+    \item \textbf{Pandas (Python)} y \textbf{tidyverse (R)} son las herramientas principales para carga y manipulación
+    \item La \textbf{calidad de datos} se evalúa en: completitud, consistencia, precisión, actualidad, validez
+    \item Los \textbf{valores faltantes} requieren estrategias apropiadas: eliminación o imputación
+    \item Siempre verificar \textbf{duplicados} e \textbf{inconsistencias}
+    \item La \textbf{transformación} incluye: conversión de tipos, creación de variables, codificación de categóricas
+    \item La \textbf{normalización/estandarización} es crucial para muchos algoritmos de ML
+    \item La \textbf{integración} de datos se hace mediante joins y concatenación
+    \item Las \textbf{APIs REST} proveen acceso estructurado a datos
+    \item El \textbf{web scraping} permite extraer datos de páginas web
+    \item Los \textbf{datos ordenados} (tidy data) facilitan el análisis
+\end{itemize}
+
+\section*{Conceptos clave}
+
+\begin{itemize}[leftmargin=*]
+    \item Fuentes de datos: CSV, Excel, JSON, SQL, APIs
+    \item Calidad de datos
+    \item Valores faltantes: MCAR, MAR, MNAR
+    \item Imputación: simple, KNN, MICE
+    \item Duplicados e inconsistencias
+    \item Conversión de tipos
+    \item Feature engineering
+    \item Label encoding vs one-hot encoding
+    \item Normalización vs estandarización
+    \item Discretización (binning)
+    \item Joins: inner, left, right, outer
+    \item REST API
+    \item Web scraping: BeautifulSoup, rvest
+    \item Tidy data
+    \item Pivot, melt, reshape
+\end{itemize}
+
+\section*{Próxima unidad}
+
+En la Unidad 2 nos enfocaremos en la \textbf{Exploración y Visualización de Datos}: estadística descriptiva, análisis de distribuciones, detección de outliers, y creación de visualizaciones efectivas con matplotlib, seaborn y ggplot2.
+
+\end{document}

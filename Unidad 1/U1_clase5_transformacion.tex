@@ -1,0 +1,547 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[es-ES]{babel}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Tema
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Colores personalizados
+\definecolor{unsazul}{RGB}{30, 60, 120}
+\definecolor{unsverde}{RGB}{0, 100, 0}
+
+\setbeamercolor{structure}{fg=unsazul}
+\setbeamercolor{palette primary}{bg=unsazul,fg=white}
+\setbeamercolor{palette secondary}{bg=unsazul!80,fg=white}
+\setbeamercolor{palette tertiary}{bg=unsazul!60,fg=white}
+
+% Configuración de listings
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{unsazul}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{unsverde},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+% Información del documento
+\title{Métodos de Análisis de Datos 1}
+\subtitle{Clase 5: Transformación de Datos}
+\author{Universidad Nacional del Sur}
+\date{}
+
+\begin{document}
+
+% Portada
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Contenidos
+\begin{frame}{Contenidos de hoy}
+\tableofcontents
+\end{frame}
+
+\section{Conversión de tipos}
+
+\begin{frame}{¿Por qué importan los tipos de datos?}
+\begin{alertblock}{Problema común}
+Los datos se cargan con tipos incorrectos
+\end{alertblock}
+
+\begin{exampleblock}{Ejemplos}
+\begin{itemize}
+    \item Números como texto: \texttt{"123"} en vez de \texttt{123}
+    \item Fechas como texto: \texttt{"2024-01-15"} en vez de \texttt{datetime}
+    \item Categóricas como texto: \texttt{"rojo"} en vez de \texttt{category}
+    \item Booleanos como números: \texttt{1/0} en vez de \texttt{True/False}
+\end{itemize}
+\end{exampleblock}
+
+\pause
+
+\begin{block}{Consecuencias}
+\begin{itemize}
+    \item Operaciones incorrectas (\texttt{"1" + "2" = "12"})
+    \item Más memoria usada
+    \item Visualizaciones erróneas
+    \item Modelos de ML fallan
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Tipos de datos principales}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Numéricos:}
+\begin{itemize}
+    \item \texttt{int}: Enteros
+    \item \texttt{float}: Decimales
+\end{itemize}
+
+\textbf{Texto:}
+\begin{itemize}
+    \item \texttt{string}: Texto general
+    \item \texttt{category}: Categóricas (menos memoria)
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Booleanos:}
+\begin{itemize}
+    \item \texttt{bool}: True/False
+\end{itemize}
+
+\textbf{Fechas:}
+\begin{itemize}
+    \item \texttt{datetime}: Fecha y hora
+    \item \texttt{date}: Solo fecha
+\end{itemize}
+
+\textbf{Categóricos ordenados:}
+\begin{itemize}
+    \item \texttt{ordinal}: Con orden natural
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Conversión de tipos en Python}
+\begin{lstlisting}[language=Python]
+import pandas as pd
+
+# A numérico (errores → NaN)
+df['edad'] = pd.to_numeric(df['edad'], errors='coerce')
+
+# A string
+df['id'] = df['id'].astype(str)
+
+# A fecha
+df['fecha'] = pd.to_datetime(df['fecha'], format='%Y-%m-%d')
+
+# A categórico
+df['color'] = df['color'].astype('category')
+
+# Categórico ordenado
+df['educacion'] = pd.Categorical(
+    df['educacion'],
+    categories=['primaria', 'secundaria', 'universitaria'],
+    ordered=True
+)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Conversión de tipos en R}
+\begin{lstlisting}[language=R]
+library(lubridate)
+
+# A numérico
+df$edad <- as.numeric(df$edad)
+
+# A string
+df$id <- as.character(df$id)
+
+# A fecha
+df$fecha <- ymd(df$fecha)  # año-mes-día
+# Otras: dmy(), mdy(), ymd_hms()
+
+# A factor
+df$color <- as.factor(df$color)
+
+# Factor ordenado
+df$educacion <- factor(
+  df$educacion,
+  levels = c('primaria', 'secundaria', 'universitaria'),
+  ordered = TRUE
+)
+\end{lstlisting}
+\end{frame}
+
+\section{Variables derivadas}
+
+\begin{frame}{Feature Engineering básico}
+\begin{block}{¿Qué son variables derivadas?}
+Nuevas variables creadas a partir de las existentes
+\end{block}
+
+\begin{block}{¿Por qué crearlas?}
+\begin{itemize}
+    \item Extraer información útil
+    \item Capturar relaciones no lineales
+    \item Mejorar performance de modelos
+    \item Facilitar interpretación
+\end{itemize}
+\end{block}
+
+\pause
+
+\begin{exampleblock}{Ejemplos}
+\begin{itemize}
+    \item IMC = peso / altura²
+    \item Edad = hoy - fecha\_nacimiento
+    \item Nombre\_completo = nombre + apellido
+    \item Es\_adulto = edad >= 18
+    \item Trimestre = ceil(mes / 3)
+\end{itemize}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{Variables derivadas: Python}
+\begin{lstlisting}[language=Python]
+# Operaciones aritméticas
+df['imc'] = df['peso'] / (df['altura'] ** 2)
+
+# Operaciones con fechas
+df['edad'] = (pd.Timestamp.now() - df['fecha_nac']).dt.days / 365.25
+
+# Extraer componentes de fecha
+df['año'] = df['fecha'].dt.year
+df['mes'] = df['fecha'].dt.month
+df['dia_semana'] = df['fecha'].dt.dayofweek  # 0=lunes
+
+# Operaciones con texto
+df['nombre_completo'] = df['nombre'] + ' ' + df['apellido']
+df['longitud_nombre'] = df['nombre'].str.len()
+
+# Condiciones
+df['adulto'] = df['edad'] >= 18
+df['categoria_edad'] = pd.cut(
+    df['edad'],
+    bins=[0, 18, 65, 100],
+    labels=['joven', 'adulto', 'mayor']
+)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Variables derivadas: R}
+\begin{lstlisting}[language=R]
+library(tidyverse)
+
+df <- df %>%
+  mutate(
+    # Aritmética
+    imc = peso / (altura^2),
+    
+    # Fechas
+    edad = as.numeric(difftime(Sys.Date(), fecha_nac, units = "days")) / 365.25,
+    año = year(fecha),
+    mes = month(fecha),
+    dia_semana = wday(fecha),  # 1=domingo
+    
+    # Texto
+    nombre_completo = paste(nombre, apellido),
+    longitud_nombre = nchar(nombre),
+    
+    # Condiciones
+    adulto = edad >= 18,
+    categoria_edad = cut(edad, 
+                        breaks = c(0, 18, 65, 100),
+                        labels = c('joven', 'adulto', 'mayor'))
+  )
+\end{lstlisting}
+\end{frame}
+
+\section{Codificación de categóricas}
+
+\begin{frame}{El problema de las variables categóricas}
+\begin{alertblock}{Algoritmos de ML requieren números}
+La mayoría de algoritmos no pueden trabajar directamente con texto
+\end{alertblock}
+
+\begin{exampleblock}{Ejemplo}
+\begin{center}
+\begin{tabular}{|c|}
+\hline
+\textbf{Color} \\
+\hline
+rojo \\
+verde \\
+azul \\
+\hline
+\end{tabular}
+\quad $\rightarrow$ \quad ¿Cómo convertir a números?
+\end{center}
+\end{exampleblock}
+
+\pause
+
+\begin{block}{Dos estrategias principales}
+\begin{enumerate}
+    \item \textbf{Label Encoding:} Asignar un número a cada categoría
+    \item \textbf{One-Hot Encoding:} Crear columna binaria por categoría
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}{Label Encoding}
+\begin{block}{Concepto}
+Asigna un número único a cada categoría
+
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Color} & \textbf{Codificado} \\
+\hline
+rojo & 0 \\
+verde & 1 \\
+azul & 2 \\
+\hline
+\end{tabular}
+\end{center}
+\end{block}
+
+\pause
+
+\begin{alertblock}{⚠ Cuidado}
+\textbf{Solo usar para variables ordinales} (con orden natural)
+
+Para variables nominales, el modelo asumirá que 2 > 1 > 0, lo cual no tiene sentido para colores
+\end{alertblock}
+
+\begin{block}{¿Cuándo usar?}
+Educación: primaria (0) < secundaria (1) < universitaria (2) ✓
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Label Encoding: Código}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+from sklearn.preprocessing import LabelEncoder
+
+# Label encoding
+le = LabelEncoder()
+df['educacion_encoded'] = le.fit_transform(
+    df['educacion']
+)
+
+# Ver mapeo
+mapeo = dict(zip(
+    le.classes_, 
+    le.transform(le.classes_)
+))
+print(mapeo)
+# {'primaria': 0, 
+#  'secundaria': 1, 
+#  'universitaria': 2}
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Automático con factor
+df$educacion_encoded <- as.numeric(
+  factor(df$educacion)
+)
+
+# Con orden específico
+df$educacion_encoded <- as.numeric(
+  factor(
+    df$educacion,
+    levels = c('primaria', 
+               'secundaria', 
+               'universitaria')
+  )
+)
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}{One-Hot Encoding}
+\begin{block}{Concepto}
+Crea una columna binaria (0/1) para cada categoría
+\end{block}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Original} & \textbf{color\_rojo} & \textbf{color\_verde} & \textbf{color\_azul} \\
+\hline
+rojo & 1 & 0 & 0 \\
+verde & 0 & 1 & 0 \\
+azul & 0 & 0 & 1 \\
+rojo & 1 & 0 & 0 \\
+\hline
+\end{tabular}
+\end{center}
+
+\pause
+
+\begin{block}{Ventajas}
+\begin{itemize}
+    \item No asume orden entre categorías
+    \item Funciona para variables nominales
+    \item Fácil de interpretar
+\end{itemize}
+\end{block}
+
+\begin{alertblock}{Desventaja}
+Aumenta mucho la dimensionalidad si hay muchas categorías
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]{One-Hot Encoding: Python}
+\begin{lstlisting}[language=Python]
+import pandas as pd
+
+# Método simple
+df_encoded = pd.get_dummies(
+    df, 
+    columns=['color'], 
+    prefix='color'
+)
+
+# Con sklearn (más control)
+from sklearn.preprocessing import OneHotEncoder
+
+encoder = OneHotEncoder(
+    sparse=False,      # Retornar array denso
+    drop='first'       # Eliminar primera categoría 
+)                      # (evita multicolinealidad)
+
+encoded = encoder.fit_transform(df[['color']])
+
+# A DataFrame
+df_encoded = pd.DataFrame(
+    encoded,
+    columns=encoder.get_feature_names_out(['color'])
+)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{One-Hot Encoding: R}
+\begin{lstlisting}[language=R]
+library(caret)
+
+# Con caret
+dummies <- dummyVars(" ~ color", data = df)
+df_encoded <- predict(dummies, newdata = df)
+
+# Con tidyverse
+df_encoded <- df %>%
+  mutate(value = 1) %>%
+  pivot_wider(
+    names_from = color, 
+    values_from = value, 
+    values_fill = 0,
+    names_prefix = "color_"
+  )
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{¿Label o One-Hot?}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Label Encoding:}
+\begin{itemize}
+    \item ✓ Variables ordinales
+    \item ✓ Árboles de decisión
+    \item ✓ Menos columnas
+    \item ✗ Variables nominales
+    \item ✗ Regresión lineal
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{One-Hot Encoding:}
+\begin{itemize}
+    \item ✓ Variables nominales
+    \item ✓ Regresión lineal/logística
+    \item ✓ Neural networks
+    \item ✗ Muchas categorías
+    \item ✗ Aumenta dimensionalidad
+\end{itemize}
+\end{columns}
+
+\vspace{1em}
+
+\begin{exampleblock}{Regla práctica}
+\begin{itemize}
+    \item Ordinal → Label Encoding
+    \item Nominal con pocas categorías (<10) → One-Hot
+    \item Nominal con muchas categorías → Target Encoding, Frequency Encoding, etc.
+\end{itemize}
+\end{exampleblock}
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Pipeline de transformación}
+\begin{enumerate}
+    \item \textbf{Verificar tipos de datos}
+    \begin{itemize}
+        \item \texttt{df.dtypes} (Python) o \texttt{str(df)} (R)
+    \end{itemize}
+    
+    \item \textbf{Convertir tipos incorrectos}
+    \begin{itemize}
+        \item Fechas como datetime
+        \item Números como int/float
+        \item Categóricas como category/factor
+    \end{itemize}
+    
+    \item \textbf{Crear variables derivadas}
+    \begin{itemize}
+        \item Extraer info de fechas
+        \item Combinar columnas
+        \item Aplicar fórmulas
+    \end{itemize}
+    
+    \item \textbf{Codificar categóricas}
+    \begin{itemize}
+        \item Label encoding para ordinales
+        \item One-hot encoding para nominales
+    \end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Resumen de la clase}
+\begin{itemize}
+    \item Los \textbf{tipos de datos} deben ser correctos
+    \item Conversión en Python: \texttt{astype()}, \texttt{pd.to\_numeric()}, \texttt{pd.to\_datetime()}
+    \item Conversión en R: \texttt{as.numeric()}, \texttt{ymd()}, \texttt{factor()}
+    \item Las \textbf{variables derivadas} extraen información útil
+    \item \textbf{Label encoding:} solo para ordinales
+    \item \textbf{One-hot encoding:} para nominales
+    \item La elección depende del tipo de variable y del algoritmo
+\end{itemize}
+
+\vspace{1em}
+
+\begin{block}{Próxima clase}
+\textbf{Normalización, estandarización e integración de datos}
+\end{block}
+\end{frame}
+
+\begin{frame}{Tarea}
+\begin{enumerate}
+    \item Usar el dataset limpio de la clase anterior
+    \item Transformaciones a realizar:
+    \begin{itemize}
+        \item Verificar y corregir tipos de datos
+        \item Crear al menos 3 variables derivadas útiles
+        \item Si hay fechas, extraer componentes (año, mes, día semana)
+        \item Identificar variables categóricas
+        \item Codificar variables categóricas apropiadamente
+    \end{itemize}
+    \item Documentar en el notebook:
+    \begin{itemize}
+        \item Qué transformaciones hiciste
+        \item Por qué elegiste label o one-hot
+        \item Comparar dimensiones antes vs después
+    \end{itemize}
+    \item Subir a GitHub
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[standout]
+\Huge ¿Preguntas?
+\end{frame}
+
+\end{document}

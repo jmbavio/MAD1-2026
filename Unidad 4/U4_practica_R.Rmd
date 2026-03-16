@@ -1,0 +1,357 @@
+---
+title: "MAD1 - Unidad 4: ANOVA y Diseños Experimentales"
+subtitle: "Práctica en R"
+author: "Métodos de Análisis de Datos 1 - UNS"
+date: "Primer Semestre 2026"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Paquetes necesarios
+
+```{r}
+# Instalar si es necesario: install.packages(c("car", "agricolae", "emmeans", "ggplot2"))
+library(car)       # Levene test, Anova()
+library(agricolae) # HSD.test(), diseños
+library(emmeans)   # Medias marginales
+library(ggplot2)   # Gráficos
+```
+
+---
+
+# 1. ANOVA de Un Factor
+
+## Datos de ejemplo: Dietas de pollos
+
+```{r}
+# Peso ganado (gramos) con 4 dietas
+peso <- c(179,160,136,227,217,168,108,124,  # Dieta 1
+          309,229,181,141,260,203,          # Dieta 2
+          141,148,169,213,257,244,271,      # Dieta 3
+          309,229,181,141,260,203,148)      # Dieta 4
+
+dieta <- factor(c(rep("D1", 8), rep("D2", 6), rep("D3", 7), rep("D4", 7)))
+
+# Crear data frame
+datos_dieta <- data.frame(peso, dieta)
+```
+
+## ANOVA
+
+```{r}
+# Modelo
+modelo1 <- aov(peso ~ dieta, data = datos_dieta)
+summary(modelo1)
+
+# Alternativamente con Anova() de car (Type II SS)
+# Anova(modelo1, type = "II")
+```
+
+## Supuestos
+
+```{r}
+# Normalidad
+shapiro.test(residuals(modelo1))
+qqnorm(residuals(modelo1)); qqline(residuals(modelo1), col="red")
+
+# Homocedasticidad
+leveneTest(modelo1)
+
+# Gráficos diagnósticos
+par(mfrow=c(2,2))
+plot(modelo1)
+par(mfrow=c(1,1))
+```
+
+## Comparaciones múltiples
+
+```{r}
+# Tukey HSD
+tukey1 <- HSD.test(modelo1, "dieta", group=TRUE, console=FALSE)
+print(tukey1$groups)
+
+# Alternativamente con emmeans
+# emm1 <- emmeans(modelo1, ~ dieta)
+# pairs(emm1, adjust="tukey")
+```
+
+---
+
+# 2. ANOVA de Dos Factores
+
+## Datos: Rendimiento de cultivos
+
+```{r}
+# Rendimiento (kg/ha) según Fertilizante y Riego
+rendimiento <- c(45,47,46,48, 55,57,56,58,
+                 52,54,53,55, 58,60,59,61,
+                 48,50,49,51, 62,64,63,65)
+
+fertilizante <- factor(rep(c("F1","F2","F3"), each=8))
+riego <- factor(rep(rep(c("Bajo","Alto"), each=4), 3))
+
+datos_cultivo <- data.frame(rendimiento, fertilizante, riego)
+```
+
+## ANOVA con interacción
+
+```{r}
+# Modelo con interacción (dos formas equivalentes)
+modelo2 <- aov(rendimiento ~ fertilizante * riego, data = datos_cultivo)
+# modelo2 <- aov(rendimiento ~ fertilizante + riego + fertilizante:riego)
+
+summary(modelo2)
+```
+
+**Interpretación:** Las tres pruebas (Fertilizante, Riego, Interacción) son significativas. Como hay interacción significativa, el efecto de un factor depende del nivel del otro.
+
+## Gráfico de interacción
+
+```{r}
+# Con ggplot2
+medias_cultivo <- aggregate(rendimiento ~ fertilizante + riego, 
+                            data = datos_cultivo, FUN = mean)
+
+ggplot(medias_cultivo, aes(x = riego, y = rendimiento, 
+                           color = fertilizante, group = fertilizante)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 4) +
+  labs(title = "Gráfico de Interacción",
+       x = "Nivel de Riego", 
+       y = "Rendimiento Medio (kg/ha)") +
+  theme_minimal()
+
+# Base R alternativa
+# interaction.plot(riego, fertilizante, rendimiento, 
+#                  lwd=2, col=2:4, xlab="Riego", ylab="Rendimiento")
+```
+
+**Observación:** Las líneas no son paralelas → confirma interacción. F3 es mejor con riego alto, F2 es más estable.
+
+## Efectos simples (cuando hay interacción)
+
+```{r}
+# Comparar fertilizantes dentro de cada nivel de riego
+emm2 <- emmeans(modelo2, ~ fertilizante | riego)
+pairs(emm2, adjust = "tukey")
+
+# O comparar todas las combinaciones
+# emm2_todas <- emmeans(modelo2, ~ fertilizante * riego)
+# pairs(emm2_todas, adjust = "tukey")
+```
+
+---
+
+# 3. Diseño en Bloques Completos Aleatorizados (DBCA)
+
+## Datos: Variedades de trigo
+
+```{r}
+# Rendimiento (ton/ha) de 4 variedades en 5 lotes
+rendimiento_trigo <- c(5.2,4.8,5.5,4.9,5.1,  # V1
+                       6.1,5.7,6.4,5.8,6.0,  # V2
+                       5.8,5.4,6.1,5.5,5.7,  # V3
+                       5.5,5.1,5.8,5.2,5.4)  # V4
+
+variedad <- factor(rep(c("V1","V2","V3","V4"), each=5))
+lote <- factor(rep(1:5, 4))
+
+datos_trigo <- data.frame(rendimiento_trigo, variedad, lote)
+```
+
+## ANOVA en bloques
+
+```{r}
+# Modelo: tratamiento + bloque (sin interacción)
+modelo_dbca <- aov(rendimiento_trigo ~ variedad + lote, data = datos_trigo)
+summary(modelo_dbca)
+```
+
+**Interpretación:** Tanto Variedad como Lote son significativos. El bloqueo fue efectivo (redujo error).
+
+## Comparaciones múltiples (solo variedades)
+
+```{r}
+tukey_dbca <- HSD.test(modelo_dbca, "variedad", group=TRUE, console=FALSE)
+print(tukey_dbca$groups)
+```
+
+## Eficiencia del bloqueo
+
+```{r}
+# Comparar con DCA (sin bloques)
+modelo_dca <- aov(rendimiento_trigo ~ variedad)
+anova(modelo_dca, modelo_dbca)
+
+# CM_E menor en DBCA → mayor precisión
+```
+
+---
+
+# 4. Diseño en Cuadrado Latino (DCL)
+
+## Datos: Tiempo de secado de pintura
+
+```{r}
+# 4 formulaciones, 4 operadores, 4 días
+tiempo <- c(73,74,71,75,  # Op1
+            73,75,72,74,  # Op2
+            75,73,76,74,  # Op3
+            72,75,73,71)  # Op4
+
+formulacion <- factor(c('A','B','C','D','B','C','D','A',
+                        'C','D','A','B','D','A','B','C'))
+operador <- factor(rep(1:4, each=4))
+dia <- factor(rep(1:4, 4))
+
+datos_dcl <- data.frame(tiempo, formulacion, operador, dia)
+```
+
+## ANOVA en Cuadrado Latino
+
+```{r}
+# Modelo: tratamiento + fila + columna (sin interacciones)
+modelo_dcl <- aov(tiempo ~ formulacion + operador + dia, data = datos_dcl)
+summary(modelo_dcl)
+```
+
+**Interpretación:** Probar si Formulación es significativa controlando por Operador y Día.
+
+## Comparaciones múltiples
+
+```{r}
+tukey_dcl <- HSD.test(modelo_dcl, "formulacion", group=TRUE, console=FALSE)
+print(tukey_dcl$groups)
+```
+
+---
+
+# 5. Verificación de Supuestos (Ejemplo completo)
+
+```{r}
+# Usar modelo de dos factores como ejemplo
+modelo <- modelo2
+
+# 1. NORMALIDAD
+shapiro.test(residuals(modelo))  # H0: normalidad
+qqnorm(residuals(modelo)); qqline(residuals(modelo), col="red")
+
+# 2. HOMOCEDASTICIDAD
+leveneTest(modelo)  # H0: varianzas iguales
+# Gráfico residuos vs ajustados
+plot(fitted(modelo), residuals(modelo), 
+     xlab="Valores ajustados", ylab="Residuos")
+abline(h=0, col="red", lty=2)
+
+# 3. INDEPENDENCIA (si hay orden temporal)
+plot(residuals(modelo), type='o', ylab="Residuos", xlab="Orden")
+abline(h=0, col="red", lty=2)
+
+# Durbin-Watson (requiere lmtest)
+# library(lmtest)
+# dwtest(modelo)
+```
+
+---
+
+# 6. Transformaciones
+
+## Box-Cox
+
+```{r}
+library(MASS)
+
+# Encontrar lambda óptimo
+bc <- boxcox(modelo1, lambda = seq(-2, 2, 0.1))
+lambda <- bc$x[which.max(bc$y)]
+cat("Lambda óptimo:", round(lambda, 3), "\n")
+
+# Aplicar transformación
+if (abs(lambda) < 0.01) {
+  y_trans <- log(peso)
+} else {
+  y_trans <- (peso^lambda - 1) / lambda
+}
+
+# Re-analizar
+modelo_trans <- aov(y_trans ~ dieta)
+summary(modelo_trans)
+shapiro.test(residuals(modelo_trans))
+```
+
+## Otras transformaciones comunes
+
+```{r}
+# Raíz cuadrada (conteos, varianza proporcional a media)
+# sqrt(y)
+
+# Logaritmo (varianza proporcional a media^2)
+# log(y)
+
+# Arcoseno (proporciones/porcentajes)
+# asin(sqrt(y))
+```
+
+---
+
+# 7. Pruebas No Paramétricas
+
+## Kruskal-Wallis (alternativa a ANOVA un factor)
+
+```{r}
+# Cuando no se cumplen supuestos de normalidad
+kruskal.test(peso ~ dieta, data = datos_dieta)
+
+# Comparaciones post-hoc
+library(FSA)
+dunnTest(peso ~ dieta, data = datos_dieta, method="bonferroni")
+```
+
+## Friedman (alternativa a DBCA)
+
+```{r}
+# Organizar datos en matriz: bloques x tratamientos
+# Ejemplo con datos de trigo
+matriz_trigo <- matrix(rendimiento_trigo, nrow=4, ncol=5, byrow=TRUE)
+friedman.test(matriz_trigo)
+```
+
+---
+
+# 8. Ejercicios Propuestos
+
+1. **DCA:** Comparar 5 métodos de enseñanza. Simular datos y realizar ANOVA completo.
+
+2. **DBCA:** Experimento agrícola con 3 fertilizantes en 6 parcelas. Verificar si el bloqueo fue necesario.
+
+3. **DCL:** Diseñar un cuadrado latino 5x5 para estudiar 5 tratamientos controlando dos fuentes de variación.
+
+4. **Interacciones:** Crear un dataset donde haya interacción significativa. Graficar e interpretar.
+
+5. **Transformaciones:** Generar datos con varianza no constante. Aplicar Box-Cox y comparar resultados.
+
+---
+
+# Notas Finales
+
+- **Siempre verificar supuestos** antes de interpretar resultados
+- **Si hay interacción significativa**, no interpretar efectos principales por separado
+- **Ajustar por comparaciones múltiples** (Tukey, Bonferroni, etc.)
+- **Reportar tamaños de efecto** además de p-valores
+- **Documentar el proceso** de aleatorización y diseño
+
+---
+
+**Referencias:**
+
+- Montgomery, D.C. (2017). *Design and Analysis of Experiments*.
+- Documentación de `agricolae`: https://cran.r-project.org/package=agricolae
+- `emmeans` vignettes: https://cran.r-project.org/package=emmeans

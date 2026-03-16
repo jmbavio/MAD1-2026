@@ -1,0 +1,902 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{float}
+
+\geometry{margin=2.5cm}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{pythonstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=pythonstyle}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Métodos de Análisis de Datos 1}
+\fancyhead[R]{\small Unidad 3 - Regresión y Correlación}
+\fancyfoot[C]{\thepage}
+
+\title{\textbf{Unidad 3: Modelado Estadístico}\\ \Large Regresión y Correlación}
+\author{Métodos de Análisis de Datos 1\\Universidad Nacional del Sur}
+\date{Primer Semestre 2026}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+%=============================================================================
+\section{Introducción al Modelado Estadístico}
+%=============================================================================
+
+El modelado estadístico es el proceso de construir representaciones matemáticas de fenómenos del mundo real utilizando datos observados. En esta unidad nos centraremos en modelos de \textbf{regresión}, que permiten estudiar y cuantificar relaciones entre variables.
+
+\subsection{¿Qué es un modelo de regresión?}
+
+Un modelo de regresión describe cómo una variable respuesta $Y$ (también llamada variable dependiente) se relaciona con una o más variables predictoras $X_1, X_2, \ldots, X_p$ (variables independientes o explicativas).
+
+\textbf{Objetivos principales:}
+\begin{itemize}
+    \item \textbf{Descripción:} Entender cómo se relacionan las variables
+    \item \textbf{Predicción:} Estimar valores de $Y$ para nuevos valores de $X$
+    \item \textbf{Inferencia:} Determinar qué variables son importantes y cuantificar su efecto
+    \item \textbf{Control:} Ajustar por variables confusoras en estudios observacionales
+\end{itemize}
+
+\subsection{Tipos de modelos de regresión}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Tipo} & \textbf{Características} \\
+\midrule
+Regresión lineal simple & 1 predictor, relación lineal \\
+Regresión lineal múltiple & $\geq 2$ predictores, relación lineal \\
+Regresión polinomial & 1 predictor, relación no lineal \\
+Regresión no paramétrica & Relaciones complejas sin forma funcional \\
+Regresión logística & Variable respuesta binaria \\
+Regresión de Poisson & Variable respuesta de conteo \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+En esta unidad nos concentraremos en modelos de \textbf{regresión lineal}.
+
+%=============================================================================
+\section{Regresión Lineal Simple}
+%=============================================================================
+
+\subsection{Definición del modelo}
+
+La regresión lineal simple modela la relación entre una variable respuesta $Y$ y un predictor $X$ mediante una línea recta:
+
+\begin{equation}
+Y_i = \beta_0 + \beta_1 X_i + \epsilon_i, \quad i = 1, 2, \ldots, n
+\end{equation}
+
+donde:
+\begin{itemize}
+    \item $Y_i$: valor observado de la variable respuesta para la observación $i$
+    \item $X_i$: valor del predictor para la observación $i$
+    \item $\beta_0$: ordenada al origen (intercepto)
+    \item $\beta_1$: pendiente (cambio en $Y$ por unidad de cambio en $X$)
+    \item $\epsilon_i$: error aleatorio, $\epsilon_i \sim N(0, \sigma^2)$ independientes
+    \item $n$: tamaño de la muestra
+\end{itemize}
+
+\subsection{Supuestos del modelo}
+
+Para que la inferencia sea válida, se asumen:
+
+\begin{enumerate}
+    \item \textbf{Linealidad:} La relación entre $X$ e $Y$ es lineal
+    \item \textbf{Independencia:} Las observaciones son independientes entre sí
+    \item \textbf{Homocedasticidad:} La varianza de los errores es constante: $\text{Var}(\epsilon_i) = \sigma^2$ para todo $i$
+    \item \textbf{Normalidad:} Los errores siguen una distribución normal: $\epsilon_i \sim N(0, \sigma^2)$
+    \item \textbf{No multicolinealidad:} (más relevante en regresión múltiple)
+\end{enumerate}
+
+\subsection{Estimación de parámetros: Mínimos Cuadrados Ordinarios (MCO)}
+
+El método de \textbf{mínimos cuadrados ordinarios} (MCO, o OLS en inglés) estima $\beta_0$ y $\beta_1$ minimizando la suma de los cuadrados de los residuos:
+
+\begin{equation}
+\text{SCR} = \sum_{i=1}^{n} (Y_i - \hat{Y}_i)^2 = \sum_{i=1}^{n} (Y_i - \hat{\beta}_0 - \hat{\beta}_1 X_i)^2
+\end{equation}
+
+Las estimaciones por MCO son:
+
+\begin{align}
+\hat{\beta}_1 &= \frac{\sum_{i=1}^{n} (X_i - \bar{X})(Y_i - \bar{Y})}{\sum_{i=1}^{n} (X_i - \bar{X})^2} = \frac{S_{XY}}{S_{XX}} \\
+\hat{\beta}_0 &= \bar{Y} - \hat{\beta}_1 \bar{X}
+\end{align}
+
+donde $\bar{X}$ y $\bar{Y}$ son las medias muestrales de $X$ e $Y$.
+
+\subsection{Interpretación de los coeficientes}
+
+\begin{itemize}
+    \item \textbf{Intercepto} $\hat{\beta}_0$: Valor esperado de $Y$ cuando $X = 0$
+    \item \textbf{Pendiente} $\hat{\beta}_1$: Cambio esperado en $Y$ cuando $X$ aumenta en 1 unidad
+\end{itemize}
+
+\textbf{Ejemplo:} Si modelamos el precio de casas ($Y$, en miles de \$) en función de los metros cuadrados ($X$) y obtenemos:
+\[
+\hat{Y} = 50 + 1.2 X
+\]
+entonces:
+\begin{itemize}
+    \item $\hat{\beta}_0 = 50$: Una casa de 0 m$^2$ tendría un precio base de 50 mil \$ (interpretación sin sentido práctico en este caso)
+    \item $\hat{\beta}_1 = 1.2$: Cada m$^2$ adicional aumenta el precio esperado en 1.2 mil \$ (1200 \$)
+\end{itemize}
+
+\subsection{Coeficiente de determinación $R^2$}
+
+El $R^2$ mide la proporción de variabilidad de $Y$ explicada por el modelo:
+
+\begin{equation}
+R^2 = \frac{\text{SCE}}{\text{SCT}} = 1 - \frac{\text{SCR}}{\text{SCT}}
+\end{equation}
+
+donde:
+\begin{itemize}
+    \item $\text{SCT} = \sum_{i=1}^{n} (Y_i - \bar{Y})^2$: suma de cuadrados total
+    \item $\text{SCE} = \sum_{i=1}^{n} (\hat{Y}_i - \bar{Y})^2$: suma de cuadrados explicada (por el modelo)
+    \item $\text{SCR} = \sum_{i=1}^{n} (Y_i - \hat{Y}_i)^2$: suma de cuadrados residual
+\end{itemize}
+
+\textbf{Propiedades:}
+\begin{itemize}
+    \item $0 \leq R^2 \leq 1$
+    \item $R^2 = 0$: el modelo no explica nada ($X$ no ayuda a predecir $Y$)
+    \item $R^2 = 1$: ajuste perfecto (todos los puntos sobre la recta)
+    \item En regresión lineal simple: $R^2 = r_{XY}^2$ (cuadrado de la correlación de Pearson)
+\end{itemize}
+
+\textbf{Advertencia:} Un $R^2$ alto no implica causalidad ni garantiza que el modelo sea adecuado.
+
+\subsection{Inferencia sobre los coeficientes}
+
+Bajo los supuestos del modelo, los estimadores $\hat{\beta}_0$ y $\hat{\beta}_1$ siguen distribuciones normales:
+
+\begin{align}
+\hat{\beta}_1 &\sim N\left(\beta_1, \frac{\sigma^2}{S_{XX}}\right) \\
+\hat{\beta}_0 &\sim N\left(\beta_0, \sigma^2 \left[\frac{1}{n} + \frac{\bar{X}^2}{S_{XX}}\right]\right)
+\end{align}
+
+En la práctica, $\sigma^2$ se estima con:
+\begin{equation}
+s^2 = \frac{\text{SCR}}{n - 2}
+\end{equation}
+
+\textbf{Test de hipótesis:} Para probar $H_0: \beta_1 = 0$ vs $H_1: \beta_1 \neq 0$:
+
+\begin{equation}
+t = \frac{\hat{\beta}_1}{\text{SE}(\hat{\beta}_1)} \sim t_{n-2}
+\end{equation}
+
+donde $\text{SE}(\hat{\beta}_1) = \sqrt{s^2 / S_{XX}}$.
+
+Si $|t| > t_{n-2, \alpha/2}$, rechazamos $H_0$ al nivel $\alpha$.
+
+\textbf{Intervalos de confianza:}
+\begin{equation}
+\text{IC}_{1-\alpha}(\beta_1) = \hat{\beta}_1 \pm t_{n-2, \alpha/2} \cdot \text{SE}(\hat{\beta}_1)
+\end{equation}
+
+\subsection{Predicción}
+
+Dado un nuevo valor $X_0$, podemos calcular:
+
+\textbf{1. Predicción puntual:}
+\begin{equation}
+\hat{Y}_0 = \hat{\beta}_0 + \hat{\beta}_1 X_0
+\end{equation}
+
+\textbf{2. Intervalo de confianza para la media} $E(Y | X = X_0)$:
+\begin{equation}
+\hat{Y}_0 \pm t_{n-2, \alpha/2} \cdot s \sqrt{\frac{1}{n} + \frac{(X_0 - \bar{X})^2}{S_{XX}}}
+\end{equation}
+
+\textbf{3. Intervalo de predicción para una nueva observación:}
+\begin{equation}
+\hat{Y}_0 \pm t_{n-2, \alpha/2} \cdot s \sqrt{1 + \frac{1}{n} + \frac{(X_0 - \bar{X})^2}{S_{XX}}}
+\end{equation}
+
+El intervalo de predicción es siempre más ancho que el de confianza porque incluye tanto la incertidumbre del modelo como la variabilidad individual.
+
+%=============================================================================
+\section{Diagnóstico del Modelo}
+%=============================================================================
+
+\subsection{Análisis de residuos}
+
+Los \textbf{residuos} son las diferencias entre valores observados y predichos:
+\begin{equation}
+e_i = Y_i - \hat{Y}_i
+\end{equation}
+
+Examinamos los residuos para verificar los supuestos del modelo.
+
+\subsubsection{Gráficos de diagnóstico principales}
+
+\textbf{1. Residuos vs Valores Ajustados:}
+\begin{itemize}
+    \item \textbf{Qué buscar:} Patrón aleatorio sin estructura
+    \item \textbf{Problemas detectables:} No linealidad, heterocedasticidad
+    \item Si hay patrón en forma de embudo $\Rightarrow$ heterocedasticidad
+    \item Si hay curvatura $\Rightarrow$ relación no lineal
+\end{itemize}
+
+\textbf{2. Q-Q Plot (Normal):}
+\begin{itemize}
+    \item \textbf{Qué buscar:} Puntos sobre la diagonal
+    \item \textbf{Problemas detectables:} Violación de normalidad
+\end{itemize}
+
+\textbf{3. Scale-Location (Raíz de residuos estandarizados vs valores ajustados):}
+\begin{itemize}
+    \item \textbf{Qué buscar:} Banda horizontal con dispersión uniforme
+    \item \textbf{Problemas detectables:} Heterocedasticidad
+\end{itemize}
+
+\textbf{4. Residuos vs Leverage (Distancia de Cook):}
+\begin{itemize}
+    \item \textbf{Qué buscar:} Identificar observaciones influyentes
+    \item \textbf{Problemas detectables:} Outliers con alta influencia
+\end{itemize}
+
+\subsection{Tests formales}
+
+\textbf{Test de normalidad:}
+\begin{itemize}
+    \item Shapiro-Wilk: $H_0$: los residuos siguen una distribución normal
+\end{itemize}
+
+\textbf{Test de homocedasticidad:}
+\begin{itemize}
+    \item Breusch-Pagan: $H_0$: varianza constante
+    \item White: versión más robusta
+\end{itemize}
+
+\subsection{Medidas de influencia}
+
+\textbf{Leverage (apalancamiento):} Mide qué tan lejos está $X_i$ del promedio $\bar{X}$
+\begin{equation}
+h_i = \frac{1}{n} + \frac{(X_i - \bar{X})^2}{S_{XX}}
+\end{equation}
+
+\textbf{Distancia de Cook:} Combina residuo y leverage para medir influencia
+\begin{equation}
+D_i = \frac{(e_i)^2}{2s^2} \cdot \frac{h_i}{1 - h_i}
+\end{equation}
+
+Observaciones con $D_i > 1$ son influyentes y deben ser examinadas cuidadosamente.
+
+%=============================================================================
+\section{Regresión Lineal Múltiple}
+%=============================================================================
+
+\subsection{Modelo con múltiples predictores}
+
+La regresión lineal múltiple extiende el modelo simple a $p$ predictores:
+
+\begin{equation}
+Y_i = \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} + \cdots + \beta_p X_{ip} + \epsilon_i
+\end{equation}
+
+En forma matricial:
+\begin{equation}
+\mathbf{Y} = \mathbf{X} \boldsymbol{\beta} + \boldsymbol{\epsilon}
+\end{equation}
+
+donde:
+\begin{itemize}
+    \item $\mathbf{Y}$: vector de respuestas ($n \times 1$)
+    \item $\mathbf{X}$: matriz de diseño ($n \times (p+1)$), incluye columna de 1's para el intercepto
+    \item $\boldsymbol{\beta}$: vector de coeficientes ($(p+1) \times 1$)
+    \item $\boldsymbol{\epsilon}$: vector de errores ($n \times 1$)
+\end{itemize}
+
+\subsection{Estimación por MCO}
+
+El estimador de MCO en forma matricial:
+\begin{equation}
+\hat{\boldsymbol{\beta}} = (\mathbf{X}^\top \mathbf{X})^{-1} \mathbf{X}^\top \mathbf{Y}
+\end{equation}
+
+\textbf{Supuestos:} Los mismos que en regresión simple, más:
+\begin{itemize}
+    \item \textbf{No multicolinealidad:} Las variables predictoras no están perfectamente correlacionadas entre sí
+\end{itemize}
+
+\subsection{Interpretación de coeficientes}
+
+En regresión múltiple, cada $\beta_j$ se interpreta como el cambio esperado en $Y$ cuando $X_j$ aumenta en 1 unidad, \textbf{manteniendo constantes} las demás variables.
+
+\textbf{Ejemplo:}
+\[
+\hat{Y} = 50 + 1.2 X_1 + 0.8 X_2
+\]
+donde $Y$ = precio de casa (miles \$), $X_1$ = m$^2$, $X_2$ = número de habitaciones.
+
+\begin{itemize}
+    \item $\hat{\beta}_1 = 1.2$: Por cada m$^2$ adicional, el precio aumenta 1.2 mil \$, \textbf{para un número fijo de habitaciones}
+    \item $\hat{\beta}_2 = 0.8$: Por cada habitación adicional, el precio aumenta 0.8 mil \$, \textbf{para un tamaño fijo}
+\end{itemize}
+
+\subsection{$R^2$ ajustado}
+
+El $R^2$ siempre aumenta al agregar variables, aunque no aporten información. El \textbf{$R^2$ ajustado} penaliza la complejidad:
+
+\begin{equation}
+R^2_{\text{adj}} = 1 - \frac{\text{SCR}/(n - p - 1)}{\text{SCT}/(n - 1)} = 1 - (1 - R^2)\frac{n - 1}{n - p - 1}
+\end{equation}
+
+$R^2_{\text{adj}}$ puede disminuir si se agrega una variable irrelevante.
+
+\subsection{Test F global}
+
+Para probar si \textbf{al menos una} variable es útil:
+\[
+H_0: \beta_1 = \beta_2 = \cdots = \beta_p = 0 \quad \text{vs} \quad H_1: \text{al menos un } \beta_j \neq 0
+\]
+
+Estadístico:
+\begin{equation}
+F = \frac{\text{SCE}/p}{\text{SCR}/(n - p - 1)} \sim F_{p, n-p-1}
+\end{equation}
+
+Si $F > F_{p, n-p-1, \alpha}$, rechazamos $H_0$.
+
+\subsection{Tests t individuales}
+
+Para cada coeficiente $\beta_j$:
+\[
+H_0: \beta_j = 0 \quad \text{vs} \quad H_1: \beta_j \neq 0
+\]
+
+\begin{equation}
+t_j = \frac{\hat{\beta}_j}{\text{SE}(\hat{\beta}_j)} \sim t_{n-p-1}
+\end{equation}
+
+\textbf{Importante:} Un test t significativo indica que $X_j$ aporta información \textbf{dado que las demás variables ya están en el modelo}.
+
+\subsection{Multicolinealidad}
+
+\textbf{Definición:} Ocurre cuando dos o más predictores están altamente correlacionados.
+
+\textbf{Consecuencias:}
+\begin{itemize}
+    \item Estimaciones de $\beta_j$ inestables (alta varianza)
+    \item Interpretación de coeficientes difícil
+    \item Tests t individuales no significativos, pero test F sí
+\end{itemize}
+
+\textbf{Detección:}
+\begin{itemize}
+    \item \textbf{VIF (Factor de Inflación de la Varianza):}
+    \[
+    \text{VIF}_j = \frac{1}{1 - R^2_j}
+    \]
+    donde $R^2_j$ es el $R^2$ de la regresión de $X_j$ sobre las demás variables.
+    
+    \textbf{Regla práctica:} $\text{VIF} > 10$ indica multicolinealidad problemática
+\end{itemize}
+
+\textbf{Soluciones:}
+\begin{itemize}
+    \item Eliminar variables redundantes
+    \item Combinar variables correlacionadas
+    \item Usar regresión ridge o lasso (regularización)
+    \item Análisis de componentes principales
+\end{itemize}
+
+%=============================================================================
+\section{Selección de Variables}
+%=============================================================================
+
+\subsection{¿Por qué seleccionar variables?}
+
+\textbf{Ventajas de modelos más simples:}
+\begin{itemize}
+    \item Más interpretables
+    \item Menor riesgo de sobreajuste
+    \item Predicciones más estables
+    \item Menor costo computacional
+\end{itemize}
+
+\subsection{Criterios de selección}
+
+\textbf{1. AIC (Criterio de Información de Akaike):}
+\begin{equation}
+\text{AIC} = n \ln(\text{SCR}/n) + 2(p + 1)
+\end{equation}
+
+\textbf{2. BIC (Criterio de Información Bayesiano):}
+\begin{equation}
+\text{BIC} = n \ln(\text{SCR}/n) + \ln(n)(p + 1)
+\end{equation}
+
+BIC penaliza más la complejidad que AIC.
+
+\textbf{Regla:} Menor AIC o BIC $\Rightarrow$ mejor modelo
+
+\subsection{Métodos de selección}
+
+\textbf{1. Selección hacia adelante (Forward):}
+\begin{itemize}
+    \item Comenzar con el modelo vacío (solo intercepto)
+    \item Agregar la variable que más mejora el criterio
+    \item Repetir hasta que ninguna mejora el criterio
+\end{itemize}
+
+\textbf{2. Eliminación hacia atrás (Backward):}
+\begin{itemize}
+    \item Comenzar con el modelo completo (todas las variables)
+    \item Eliminar la variable menos significativa
+    \item Repetir hasta que todas sean significativas
+\end{itemize}
+
+\textbf{3. Selección por pasos (Stepwise):}
+\begin{itemize}
+    \item Combina forward y backward
+    \item En cada paso, puede agregar o eliminar variables
+\end{itemize}
+
+\textbf{Advertencia:} Estos métodos son heurísticos y pueden no encontrar el mejor modelo. Es recomendable combinarlos con conocimiento del dominio.
+
+%=============================================================================
+\section{Regresión Polinomial}
+%=============================================================================
+
+\subsection{Motivación}
+
+Cuando la relación entre $X$ e $Y$ no es lineal, podemos ajustar un polinomio:
+
+\begin{equation}
+Y_i = \beta_0 + \beta_1 X_i + \beta_2 X_i^2 + \cdots + \beta_d X_i^d + \epsilon_i
+\end{equation}
+
+donde $d$ es el grado del polinomio.
+
+\textbf{Nota:} Aunque la relación con $X$ no es lineal, el modelo sigue siendo \textbf{lineal en los parámetros} $\beta_j$, por lo que se puede usar MCO.
+
+\subsection{Implementación}
+
+Crear nuevas variables:
+\begin{itemize}
+    \item $X_1 = X$
+    \item $X_2 = X^2$
+    \item $X_3 = X^3$, etc.
+\end{itemize}
+
+Luego ajustar una regresión lineal múltiple estándar.
+
+\subsection{Selección del grado $d$}
+
+\textbf{Métodos:}
+\begin{itemize}
+    \item Validación cruzada
+    \item Criterios de información (AIC, BIC)
+    \item Análisis visual de ajuste
+\end{itemize}
+
+\textbf{Advertencia:} Polinomios de grado muy alto pueden sobreajustar los datos.
+
+%=============================================================================
+\section{Correlación}
+%=============================================================================
+
+\subsection{Correlación de Pearson}
+
+Mide la \textbf{fuerza y dirección} de la relación lineal entre dos variables $X$ e $Y$:
+
+\begin{equation}
+r_{XY} = \frac{\sum_{i=1}^{n}(X_i - \bar{X})(Y_i - \bar{Y})}{\sqrt{\sum_{i=1}^{n}(X_i - \bar{X})^2} \sqrt{\sum_{i=1}^{n}(Y_i - \bar{Y})^2}} = \frac{S_{XY}}{\sqrt{S_{XX}S_{YY}}}
+\end{equation}
+
+\textbf{Propiedades:}
+\begin{itemize}
+    \item $-1 \leq r_{XY} \leq 1$
+    \item $r_{XY} = 1$: correlación positiva perfecta
+    \item $r_{XY} = -1$: correlación negativa perfecta
+    \item $r_{XY} = 0$: no hay correlación lineal (pero puede haber relación no lineal)
+\end{itemize}
+
+\textbf{Interpretación:}
+\begin{itemize}
+    \item $|r| < 0.3$: correlación débil
+    \item $0.3 \leq |r| < 0.7$: correlación moderada
+    \item $|r| \geq 0.7$: correlación fuerte
+\end{itemize}
+
+\subsection{Test de significancia}
+
+Para probar $H_0: \rho = 0$ vs $H_1: \rho \neq 0$:
+
+\begin{equation}
+t = \frac{r \sqrt{n - 2}}{\sqrt{1 - r^2}} \sim t_{n-2}
+\end{equation}
+
+\textbf{Supuestos:}
+\begin{itemize}
+    \item $(X, Y)$ siguen una distribución normal bivariada
+    \item Relación lineal
+\end{itemize}
+
+\subsection{Correlación de Spearman}
+
+\textbf{Uso:} Cuando los datos no son normales o la relación es monótona pero no lineal.
+
+\textbf{Método:} Calcular Pearson sobre los \textbf{rangos} de $X$ e $Y$:
+
+\begin{equation}
+r_S = 1 - \frac{6 \sum_{i=1}^{n} d_i^2}{n(n^2 - 1)}
+\end{equation}
+
+donde $d_i$ es la diferencia entre los rangos de $X_i$ e $Y_i$.
+
+\textbf{Ventajas:}
+\begin{itemize}
+    \item Robusto a outliers
+    \item No requiere normalidad
+    \item Detecta relaciones monótonas no lineales
+\end{itemize}
+
+\subsection{Correlación no implica causalidad}
+
+\textbf{Importante:} Una correlación significativa entre $X$ e $Y$ NO implica que $X$ cause $Y$ (o viceversa).
+
+\textbf{Posibles explicaciones:}
+\begin{itemize}
+    \item $X$ causa $Y$
+    \item $Y$ causa $X$
+    \item Ambas están influenciadas por una tercera variable $Z$ (variable confusora)
+    \item Correlación espuria (coincidencia)
+\end{itemize}
+
+\textbf{Ejemplo clásico:} Alta correlación entre ventas de helados y ahogamientos. No es que los helados causen ahogamientos, sino que ambos aumentan en verano.
+
+%=============================================================================
+\section{Análisis de Covarianza (ANCOVA)}
+%=============================================================================
+
+\subsection{Definición y objetivo}
+
+ANCOVA combina ANOVA con regresión lineal. Permite comparar grupos (factor categórico) mientras se ajusta por variables continuas (covariables).
+
+\textbf{Modelo general:}
+\begin{equation}
+Y_{ij} = \mu + \alpha_i + \beta X_{ij} + \epsilon_{ij}
+\end{equation}
+
+donde:
+\begin{itemize}
+    \item $Y_{ij}$: variable respuesta para la $j$-ésima observación en el grupo $i$
+    \item $\alpha_i$: efecto del grupo $i$
+    \item $X_{ij}$: covariable continua
+    \item $\beta$: pendiente común (supuesto de pendientes paralelas)
+    \item $\epsilon_{ij} \sim N(0, \sigma^2)$
+\end{itemize}
+
+\subsection{¿Cuándo usar ANCOVA?}
+
+\textbf{Situaciones típicas:}
+\begin{itemize}
+    \item Comparar tratamientos ajustando por una medida basal (pre-test)
+    \item Reducir error experimental controlando por variables conocidas
+    \item Aumentar la potencia estadística
+\end{itemize}
+
+\textbf{Ejemplo:} Comparar tres dietas ($A$, $B$, $C$) sobre la pérdida de peso, ajustando por peso inicial.
+
+\subsection{Supuestos}
+
+Además de los supuestos de regresión lineal:
+
+\begin{enumerate}
+    \item \textbf{Independencia de la covariable y el tratamiento:} $X$ no debe estar influenciada por el grupo
+    \item \textbf{Pendientes paralelas (homogeneidad de regresión):} La relación entre $X$ e $Y$ es la misma en todos los grupos
+    \item \textbf{Linealidad:} La relación entre la covariable y la respuesta es lineal
+\end{enumerate}
+
+\subsection{Test de pendientes paralelas}
+
+Ajustar el modelo con interacción:
+\begin{equation}
+Y_{ij} = \mu + \alpha_i + \beta X_{ij} + (\alpha \beta)_i X_{ij} + \epsilon_{ij}
+\end{equation}
+
+\textbf{Hipótesis:}
+\[
+H_0: (\alpha\beta)_1 = (\alpha\beta)_2 = \cdots = 0 \quad \text{(pendientes iguales)}
+\]
+
+Si no rechazamos $H_0$, procedemos con ANCOVA. Si la rechazamos, las pendientes difieren y ANCOVA no es apropiado.
+
+\subsection{Interpretación de resultados}
+
+Después de ajustar por la covariable:
+\begin{itemize}
+    \item \textbf{Efecto de la covariable:} $\hat{\beta}$ cuantifica cuánto cambia $Y$ por unidad de $X$
+    \item \textbf{Efecto del grupo:} $\hat{\alpha}_i$ son las diferencias entre grupos \textbf{ajustadas} por $X$
+\end{itemize}
+
+\textbf{Ventaja principal:} ANCOVA reduce el error residual al explicar parte de la variabilidad con la covariable, aumentando la potencia para detectar diferencias entre grupos.
+
+%=============================================================================
+\section{Implementación en Python y R}
+%=============================================================================
+
+\subsection{Regresión lineal simple en Python}
+
+\begin{lstlisting}[language=Python, caption=Regresión lineal simple con statsmodels]
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+
+# Datos de ejemplo
+data = pd.DataFrame({
+    'X': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    'Y': [2.1, 4.3, 5.8, 8.2, 10.1, 11.8, 14.2, 15.9, 18.1, 20.3]
+})
+
+# Ajustar modelo
+model = ols('Y ~ X', data=data).fit()
+
+# Resumen del modelo
+print(model.summary())
+
+# Coeficientes
+print(f"Intercepto: {model.params['Intercept']:.3f}")
+print(f"Pendiente: {model.params['X']:.3f}")
+print(f"R^2: {model.rsquared:.3f}")
+
+# Grafico
+plt.figure(figsize=(8, 5))
+plt.scatter(data['X'], data['Y'], label='Datos')
+plt.plot(data['X'], model.fittedvalues, 'r-', label='Ajuste')
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.legend()
+plt.show()
+\end{lstlisting}
+
+\subsection{Diagnóstico en Python}
+
+\begin{lstlisting}[language=Python, caption=Gráficos de diagnóstico]
+import matplotlib.pyplot as plt
+import scipy.stats as stats
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# 1. Residuos vs Valores Ajustados
+axes[0, 0].scatter(model.fittedvalues, model.resid)
+axes[0, 0].axhline(0, color='red', linestyle='--')
+axes[0, 0].set_xlabel('Valores Ajustados')
+axes[0, 0].set_ylabel('Residuos')
+axes[0, 0].set_title('Residuos vs Ajustados')
+
+# 2. Q-Q Plot
+stats.probplot(model.resid, dist="norm", plot=axes[0, 1])
+axes[0, 1].set_title('Q-Q Plot')
+
+# 3. Scale-Location
+residuos_std = np.sqrt(np.abs(model.resid_pearson))
+axes[1, 0].scatter(model.fittedvalues, residuos_std)
+axes[1, 0].set_xlabel('Valores Ajustados')
+axes[1, 0].set_ylabel('Raiz(|Residuos Estand.|)')
+axes[1, 0].set_title('Scale-Location')
+
+# 4. Residuos vs Leverage
+influence = model.get_influence()
+leverage = influence.hat_matrix_diag
+axes[1, 1].scatter(leverage, model.resid_pearson)
+axes[1, 1].set_xlabel('Leverage')
+axes[1, 1].set_ylabel('Residuos Estandarizados')
+axes[1, 1].set_title('Residuos vs Leverage')
+
+plt.tight_layout()
+plt.show()
+\end{lstlisting}
+
+\subsection{Regresión múltiple en R}
+
+\begin{lstlisting}[language=R, caption=Regresión múltiple en R]
+# Cargar datos
+data(mtcars)
+
+# Ajustar modelo
+modelo <- lm(mpg ~ wt + hp + cyl, data = mtcars)
+
+# Resumen
+summary(modelo)
+
+# Coeficientes
+coef(modelo)
+
+# R^2 y R^2 ajustado
+summary(modelo)$r.squared
+summary(modelo)$adj.r.squared
+
+# ANOVA
+anova(modelo)
+
+# Intervalos de confianza
+confint(modelo)
+
+# Prediccion
+nuevos_datos <- data.frame(wt = 3.0, hp = 150, cyl = 6)
+predict(modelo, nuevos_datos, interval = "prediction")
+\end{lstlisting}
+
+\subsection{Selección de variables en R}
+
+\begin{lstlisting}[language=R, caption=Selección stepwise]
+# Modelo completo
+modelo_completo <- lm(mpg ~ ., data = mtcars)
+
+# Seleccion stepwise (ambas direcciones)
+modelo_step <- step(modelo_completo, direction = "both")
+
+# Resumen del modelo seleccionado
+summary(modelo_step)
+
+# AIC y BIC
+AIC(modelo_step)
+BIC(modelo_step)
+\end{lstlisting}
+
+\subsection{ANCOVA en Python}
+
+\begin{lstlisting}[language=Python, caption=ANCOVA con statsmodels]
+import pandas as pd
+from statsmodels.formula.api import ols
+from statsmodels.stats.anova import anova_lm
+
+# Datos de ejemplo: efecto de dieta sobre peso, ajustando por peso inicial
+data = pd.DataFrame({
+    'peso_final': [72, 68, 75, 70, 65, 78, 71, 69, 73, 67],
+    'peso_inicial': [80, 78, 85, 82, 75, 88, 81, 79, 84, 76],
+    'dieta': ['A', 'A', 'A', 'B', 'B', 'B', 'C', 'C', 'C', 'C']
+})
+
+# Modelo ANCOVA
+modelo_ancova = ols('peso_final ~ C(dieta) + peso_inicial', 
+                    data=data).fit()
+
+# Tabla ANOVA
+print(anova_lm(modelo_ancova, typ=2))
+
+# Resumen
+print(modelo_ancova.summary())
+
+# Test de pendientes paralelas (interaccion)
+modelo_interaccion = ols('peso_final ~ C(dieta) * peso_inicial', 
+                         data=data).fit()
+print(anova_lm(modelo_interaccion, typ=2))
+\end{lstlisting}
+
+%=============================================================================
+\section{Ejercicios Propuestos}
+%=============================================================================
+
+\subsection{Ejercicio 1: Regresión lineal simple}
+
+Se midió la altura ($X$, en cm) y el peso ($Y$, en kg) de 15 estudiantes. Los datos se resumen:
+\[
+\bar{X} = 170, \quad \bar{Y} = 68, \quad S_{XX} = 450, \quad S_{YY} = 280, \quad S_{XY} = 330
+\]
+
+\textbf{Tareas:}
+\begin{enumerate}
+    \item Calcular las estimaciones $\hat{\beta}_0$ y $\hat{\beta}_1$
+    \item Interpretar los coeficientes
+    \item Calcular $R^2$
+    \item Predecir el peso de un estudiante de 175 cm
+\end{enumerate}
+
+\subsection{Ejercicio 2: Diagnóstico}
+
+Ajustaste una regresión lineal y observaste en el gráfico de residuos vs ajustados un patrón en forma de embudo.
+
+\textbf{Preguntas:}
+\begin{enumerate}
+    \item ¿Qué supuesto se viola?
+    \item ¿Qué consecuencias tiene?
+    \item Proponer dos posibles soluciones
+\end{enumerate}
+
+\subsection{Ejercicio 3: Regresión múltiple}
+
+Se ajustó un modelo de regresión múltiple para predecir el precio de autos usados ($Y$) en función de:
+\begin{itemize}
+    \item $X_1$: antigüedad (años)
+    \item $X_2$: kilometraje (miles)
+    \item $X_3$: potencia del motor (HP)
+\end{itemize}
+
+El modelo ajustado es:
+\[
+\hat{Y} = 25000 - 1500 X_1 - 0.05 X_2 + 100 X_3
+\]
+
+\textbf{Tareas:}
+\begin{enumerate}
+    \item Interpretar cada coeficiente
+    \item Si un auto tiene 3 años, 50,000 km y 150 HP, ¿cuál es su precio estimado?
+    \item ¿Qué variable tiene mayor impacto absoluto en el precio?
+\end{enumerate}
+
+\subsection{Ejercicio 4: Multicolinealidad}
+
+Se ajustó un modelo con las variables: estatura ($X_1$), peso ($X_2$) y circunferencia de cintura ($X_3$) para predecir presión arterial. Los VIF son:
+\[
+\text{VIF}_1 = 2.3, \quad \text{VIF}_2 = 15.2, \quad \text{VIF}_3 = 14.8
+\]
+
+\textbf{Preguntas:}
+\begin{enumerate}
+    \item ¿Hay multicolinealidad? ¿Entre qué variables?
+    \item ¿Qué harías para solucionarlo?
+\end{enumerate}
+
+\subsection{Ejercicio 5: Correlación}
+
+Se calculó la correlación de Pearson entre horas de estudio ($X$) y calificación en un examen ($Y$) para 50 estudiantes, obteniendo $r = 0.72$.
+
+\textbf{Tareas:}
+\begin{enumerate}
+    \item Interpretar el valor de $r$
+    \item Realizar el test de significancia ($\alpha = 0.05$)
+    \item Calcular $R^2$ y explicar su significado
+    \item ¿Podemos concluir que estudiar más causa mejores notas? Justificar
+\end{enumerate}
+
+%=============================================================================
+\section{Referencias}
+%=============================================================================
+
+\begin{itemize}
+    \item Kutner, M. H., Nachtsheim, C. J., Neter, J., \& Li, W. (2005). \textit{Applied Linear Statistical Models} (5th ed.). McGraw-Hill/Irwin.
+    \item James, G., Witten, D., Hastie, T., \& Tibshirani, R. (2021). \textit{An Introduction to Statistical Learning with Applications in R} (2nd ed.). Springer.
+    \item Montgomery, D. C., Peck, E. A., \& Vining, G. G. (2012). \textit{Introduction to Linear Regression Analysis} (5th ed.). Wiley.
+    \item Fox, J. (2015). \textit{Applied Regression Analysis and Generalized Linear Models} (3rd ed.). SAGE Publications.
+    \item Faraway, J. J. (2014). \textit{Linear Models with R} (2nd ed.). CRC Press.
+\end{itemize}
+
+\end{document}

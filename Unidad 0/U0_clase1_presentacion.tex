@@ -1,0 +1,410 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning}
+
+% Tema
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Colores personalizados UNS
+\definecolor{unsazul}{RGB}{30,60,120}
+\setbeamercolor{structure}{fg=unsazul}
+\setbeamercolor{palette primary}{bg=unsazul,fg=white}
+\setbeamercolor{palette secondary}{bg=unsazul!80,fg=white}
+\setbeamercolor{palette tertiary}{bg=unsazul!60,fg=white}
+
+% Información del documento
+\title{Métodos de Análisis de Datos 1}
+\subtitle{Clase 1: El Ciclo de Análisis de Datos}
+\author{Universidad Nacional del Sur}
+\institute{}
+\date{}
+
+\begin{document}
+
+% Portada
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Contenidos
+\begin{frame}{Contenidos de hoy}
+\tableofcontents
+\end{frame}
+
+\section{Información del curso}
+
+\begin{frame}{Métodos de Análisis de Datos 1}
+\begin{block}{Información del curso}
+\begin{itemize}
+    \item \textbf{Modalidad:} Presencial
+    \item \textbf{Horario:} Lunes y miércoles
+    \item \textbf{Duración:} 30 clases (16 marzo - 3 julio)
+    \item \textbf{Herramientas:} Python, R, VS Code, Jupyter
+\end{itemize}
+\end{block}
+
+\begin{block}{Evaluación}
+\begin{itemize}
+    \item Sin parciales escritos
+    \item Entrega de Proyecto integrador al final del curso
+    \item Github personal para subir tareas y proyecto
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Objetivos del curso}
+Al finalizar el curso serán capaces de:
+
+\begin{itemize}
+    \item Aplicar el \textbf{ciclo completo} de análisis de datos
+    \item Utilizar \textbf{Python y R} para análisis de datos
+    \item Construir y evaluar \textbf{modelos} estadísticos y de ML
+    \item \textbf{Comunicar} hallazgos mediante visualizaciones y reportes
+    \item Trabajar con \textbf{datos reales} de diversas fuentes
+\end{itemize}
+\end{frame}
+
+\section{¿Qué es el análisis de datos?}
+
+\begin{frame}{¿Qué es el análisis de datos?}
+\begin{block}{Definición}
+El \textbf{análisis de datos} es el proceso de inspeccionar, limpiar, transformar y modelar datos con el objetivo de:
+\begin{itemize}
+    \item Descubrir información útil
+    \item Informar conclusiones
+    \item Apoyar la toma de decisiones
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{¿Qué es el análisis de datos?}
+\begin{block}{Definición}
+El \textbf{análisis de datos} es el proceso de inspeccionar, limpiar, transformar y modelar datos con el objetivo de:
+\begin{itemize}
+    \item Descubrir información útil
+    \item Informar conclusiones
+    \item Apoyar la toma de decisiones
+\end{itemize}
+\end{block}
+
+\begin{exampleblock}{Ejemplo}
+Una empresa de e-commerce quiere entender por qué bajaron las ventas:
+\begin{itemize}
+    \item ¿Qué productos tienen mayor abandono del carrito?
+    \item ¿Qué clientes tienen mayor probabilidad de comprar?
+    \item ¿Qué acciones aumentarían las ventas?
+\end{itemize}
+\end{exampleblock}
+\end{frame}
+
+\section{El ciclo de análisis de datos}
+
+\begin{frame}{El ciclo de análisis de datos}
+\begin{center}
+\begin{tikzpicture}[scale=0.8, every node/.style={scale=0.8}]
+    % Círculo central
+    \draw[thick] (0,0) circle (3cm);
+    
+    % Etapas (6 puntos en el círculo)
+    \foreach \angle/\num/\label in {
+        90/1/Obtencion,
+        30/2/Limpieza,
+        -30/3/Exploracion,
+        -90/4/Modelado,
+        -150/5/Prediccion,
+        150/6/Comunicacion
+    } {
+        \node[circle, fill=unsazul, text=white, minimum size=0.8cm] at (\angle:3cm) {\small\num};
+        \node[align=center] at (\angle:3.8cm) {\small\textbf{\label}};
+    }
+    
+    % Flechas circulares
+    \foreach \start/\toAngle in {90/30, 30/-30, -30/-90, -90/-150, -150/-210,-210/-269 } {
+        \draw[->, thick, unsazul] (\start:2.5cm) arc (\start:\toAngle:2.5cm);
+    }
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.3cm}
+
+El ciclo es iterativo: podemos volver a etapas anteriores
+\end{frame}
+
+
+
+\begin{frame}{Etapas del ciclo}
+\begin{enumerate}
+    \item \textbf{Obtención:} Acceder a datos (archivos, APIs, bases de datos, web scraping)
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Etapas del ciclo}
+\begin{enumerate}
+    \item \textbf{Obtención:} Acceder a datos (archivos, APIs, bases de datos, web scraping)
+    \item \textbf{Limpieza:} Corregir errores, tratar valores faltantes, transformar
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Etapas del ciclo}
+\begin{enumerate}
+    \item \textbf{Obtención:} Acceder a datos (archivos, APIs, bases de datos, web scraping)
+    \item \textbf{Limpieza:} Corregir errores, tratar valores faltantes, transformar
+    \item \textbf{Exploración:} Estadística descriptiva y visualizaciones
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Etapas del ciclo}
+\begin{enumerate}
+    \item \textbf{Obtención:} Acceder a datos (archivos, APIs, bases de datos, web scraping)
+    \item \textbf{Limpieza:} Corregir errores, tratar valores faltantes, transformar
+    \item \textbf{Exploración:} Estadística descriptiva y visualizaciones
+    \item \textbf{Modelado:} Construir modelos para responder preguntas
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Etapas del ciclo}
+\begin{enumerate}
+    \item \textbf{Obtención:} Acceder a datos (archivos, APIs, bases de datos, web scraping)
+    \item \textbf{Limpieza:} Corregir errores, tratar valores faltantes, transformar
+    \item \textbf{Exploración:} Estadística descriptiva y visualizaciones
+    \item \textbf{Modelado:} Construir modelos para responder preguntas
+    \item \textbf{Predicción:} Aplicar modelos a nuevos datos
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Etapas del ciclo}
+\begin{enumerate}
+    \item \textbf{Obtención:} Acceder a datos (archivos, APIs, bases de datos, web scraping)
+    \item \textbf{Limpieza:} Corregir errores, tratar valores faltantes, transformar
+    \item \textbf{Exploración:} Estadística descriptiva y visualizaciones
+    \item \textbf{Modelado:} Construir modelos para responder preguntas
+    \item \textbf{Predicción:} Aplicar modelos a nuevos datos
+    \item \textbf{Comunicación:} Presentar hallazgos de forma clara
+\end{enumerate}
+\end{frame}
+
+\section{Tipos de análisis}
+
+\begin{frame}{Tipos de análisis de datos}
+\begin{columns}[t]
+\column{0.48\textwidth}
+\begin{block}{Descriptivo}
+\textbf{¿Qué pasó?}\\
+Estadísticas resumidas y visualizaciones\\
+\textit{Ej: ``Las ventas fueron \$50,000''}
+\end{block}
+
+\begin{block}{Exploratorio (EDA)}
+\textbf{¿Qué patrones hay?}\\
+Buscar relaciones y tendencias\\
+\textit{Ej: ``Ventas bajan los fines de semana''}
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{Inferencial}
+\textbf{¿Podemos generalizar?}\\
+Inferencias con incertidumbre\\
+\textit{Ej: ``El descuento aumenta ventas 10-25\%''}
+\end{block}
+
+\begin{block}{Predictivo}
+\textbf{¿Qué pasará?}\\
+Modelos para el futuro\\
+\textit{Ej: ``Cliente X comprará con 78\% prob.''}
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Análisis causal}
+\begin{alertblock}{Causal: ¿Qué causó este resultado?}
+\begin{itemize}
+    \item Identifica relaciones de \textbf{causa-efecto}
+    \item Diferencia \textbf{correlación} de \textbf{causalidad}
+\end{itemize}
+\end{alertblock}
+
+\begin{exampleblock}{Ejemplo}
+``El aumento del precio \textbf{causó} una disminución del 12\% en la demanda''\\
+(controlando por estacionalidad y competencia)
+\end{exampleblock}
+
+\vspace{0.5cm}
+\begin{center}
+\Large
+\alert{Correlación $\neq$ Causalidad}
+\end{center}
+\end{frame}
+
+\section{Roles en ciencia de datos}
+
+\begin{frame}{Roles en ciencia de datos}
+\begin{itemize}
+    \item \textbf{Analista de datos}
+    \begin{itemize}
+        \item Análisis descriptivo y exploratorio
+        \item Reportes y dashboards
+        \item SQL, Excel, herramientas de BI
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Roles en ciencia de datos}
+\begin{itemize}
+    \item \textbf{Analista de datos}
+    \begin{itemize}
+        \item Análisis descriptivo y exploratorio
+        \item Reportes y dashboards
+        \item SQL, Excel, herramientas de BI
+    \end{itemize}
+    
+    \item \textbf{Científico de datos}
+    \begin{itemize}
+        \item Modelos predictivos, machine learning
+        \item Experimentación, A/B testing
+        \item Python, R, estadística avanzada
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Roles en ciencia de datos}
+\begin{itemize}
+    \item \textbf{Analista de datos}
+    \begin{itemize}
+        \item Análisis descriptivo y exploratorio
+        \item Reportes y dashboards
+        \item SQL, Excel, herramientas de BI
+    \end{itemize}
+    
+    \item \textbf{Científico de datos}
+    \begin{itemize}
+        \item Modelos predictivos, machine learning
+        \item Experimentación, A/B testing
+        \item Python, R, estadística avanzada
+    \end{itemize}
+    
+    \item \textbf{Ingeniero de datos}
+    \begin{itemize}
+        \item Infraestructura, pipelines, ETL
+        \item Bases de datos, data warehouses
+        \item SQL, Spark, Airflow
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Roles en ciencia de datos}
+\begin{itemize}
+    \item \textbf{Analista de datos}
+    \begin{itemize}
+        \item Análisis descriptivo y exploratorio
+        \item Reportes y dashboards
+        \item SQL, Excel, herramientas de BI
+    \end{itemize}
+    
+    \item \textbf{Científico de datos}
+    \begin{itemize}
+        \item Modelos predictivos, machine learning
+        \item Experimentación, A/B testing
+        \item Python, R, estadística avanzada
+    \end{itemize}
+    
+    \item \textbf{Ingeniero de datos}
+    \begin{itemize}
+        \item Infraestructura, pipelines, ETL
+        \item Bases de datos, data warehouses
+        \item SQL, Spark, Airflow
+    \end{itemize}
+    
+    \item \textbf{Ingeniero de ML}
+    \begin{itemize}
+        \item Modelos en producción
+        \item Escalabilidad, monitoring
+        \item MLOps, deployment
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\section{Configuración del entorno}
+
+\begin{frame}{Herramientas del curso}
+\begin{block}{Python + Anaconda}
+\begin{itemize}
+    \item Descarga: \texttt{anaconda.com}
+    \item Incluye: pandas, numpy, scikit-learn, matplotlib, seaborn
+    \item Gestores: \texttt{conda} y \texttt{pip}
+\end{itemize}
+\end{block}
+
+\begin{block}{R + RStudio}
+\begin{itemize}
+    \item R: \texttt{cran.r-project.org}
+    \item RStudio: \texttt{posit.co}
+    \item Librerías: tidyverse, ggplot2, caret
+\end{itemize}
+\end{block}
+
+\begin{block}{Visual Studio Code}
+\begin{itemize}
+    \item Descarga: \texttt{code.visualstudio.com}
+    \item Extensiones: Python, Jupyter, R
+    \item Interfaz principal para notebooks
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Git y GitHub}
+\begin{block}{Git}
+\begin{itemize}
+    \item Control de versiones local
+    \item Descarga: \texttt{git-scm.com}
+    \item Rastrea cambios, colaboración
+\end{itemize}
+\end{block}
+
+\begin{block}{GitHub}
+\begin{itemize}
+    \item Plataforma web para repositorios
+    \item Crear cuenta: \texttt{github.com}
+    \item Alojar código, colaborar, compartir
+\end{itemize}
+\end{block}
+
+\vspace{0.5em}
+
+\begin{alertblock}{Tarea para hoy}
+\begin{enumerate}
+    \item Instalar Anaconda (Python)
+    \item Instalar R y RStudio
+    \item Instalar VS Code + extensiones
+\end{enumerate}
+\end{alertblock}
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Resumen de la clase}
+\begin{itemize}
+    \item El análisis de datos sigue un \textbf{ciclo iterativo}
+    \item Diferentes tipos: descriptivo, exploratorio, inferencial, predictivo, causal
+    \item Diferentes roles: analista, científico, ingeniero de datos/ML
+    \item Herramientas: \textbf{Python, R, VS Code, Git, GitHub}
+\end{itemize}
+
+\vspace{1em}
+
+\begin{block}{Próxima clase}
+\begin{itemize}
+    \item Introducción a Jupyter notebooks
+    \item Sintaxis básica de Python y R
+    \item Buenas prácticas y reproducibilidad
+    \item Caso de estudio: dataset Iris
+\end{itemize}
+\end{block}
+\end{frame}
+
+
+\end{document}

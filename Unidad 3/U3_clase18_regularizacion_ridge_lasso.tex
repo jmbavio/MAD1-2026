@@ -1,0 +1,392 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{whale}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{pythonstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=pythonstyle}
+
+\title{Selección de Variables y Regresión Polinomial}
+\subtitle{Elegir el mejor modelo}
+\author{Métodos de Análisis de Datos 1}
+\institute{Universidad Nacional del Sur}
+\date{Unidad 3 - Clase 18}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{Contenidos}
+\tableofcontents
+\end{frame}
+
+\section{Selección de Variables}
+
+\begin{frame}{¿Por qué seleccionar variables?}
+Con muchas variables candidatas, ¿cuáles incluir?
+
+\vspace{0.3cm}
+\textbf{Tensión:}
+\begin{itemize}
+    \item Más variables $\Rightarrow$ mejor ajuste ($R^2$ más alto)
+    \item Pero: sobreajuste, interpretación difícil, multicolinealidad
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Ventajas de modelos simples:}
+\begin{enumerate}
+    \item Más interpretables
+    \item Mejor generalización (menor sobreajuste)
+    \item Menor costo computacional
+    \item Predicciones más estables
+\end{enumerate}
+
+\vspace{0.3cm}
+\textbf{Objetivo:} Encontrar el modelo más simple que explique bien los datos
+\end{frame}
+
+\begin{frame}{Criterios de selección}
+\textbf{AIC (Criterio de Información de Akaike):}
+\[
+\text{AIC} = n \ln\left(\frac{\text{SCR}}{n}\right) + 2(p+1)
+\]
+
+\textbf{BIC (Criterio Bayesiano):}
+\[
+\text{BIC} = n \ln\left(\frac{\text{SCR}}{n}\right) + \ln(n)(p+1)
+\]
+
+\vspace{0.5cm}
+\textbf{Interpretación:} Menor es mejor
+
+\vspace{0.3cm}
+\textbf{Diferencia:} BIC penaliza más la complejidad que AIC
+\begin{itemize}
+    \item AIC $\Rightarrow$ modelos más complejos
+    \item BIC $\Rightarrow$ modelos más simples (preferido para $n$ grande)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Métodos de búsqueda}
+\textbf{1. Best Subset (mejor subconjunto):}
+\begin{itemize}
+    \item Probar todos los modelos posibles: $2^p$
+    \item Elegir el de menor AIC/BIC
+    \item Computacionalmente costoso para $p > 15$
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{2. Forward (hacia adelante):}
+\begin{itemize}
+    \item Empezar con modelo vacío
+    \item Agregar la variable que más mejora el criterio
+    \item Repetir hasta que ninguna mejore
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{3. Backward (hacia atrás):}
+\begin{itemize}
+    \item Empezar con modelo completo
+    \item Eliminar la variable menos significativa
+    \item Repetir hasta que todas sean significativas
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Método Stepwise}
+\textbf{Stepwise (por pasos):} Combina forward y backward
+
+\vspace{0.3cm}
+\textbf{Algoritmo:}
+\begin{enumerate}
+    \item Empezar con modelo vacío (o completo)
+    \item En cada paso:
+    \begin{itemize}
+        \item Considerar agregar una variable (forward)
+        \item Considerar eliminar una variable (backward)
+    \end{itemize}
+    \item Elegir la acción que más mejora el criterio
+    \item Repetir hasta convergencia
+\end{enumerate}
+
+\vspace{0.5cm}
+\begin{alertblock}{Advertencia}
+Los métodos automáticos son heurísticos. No garantizan encontrar el mejor modelo. Siempre combinar con conocimiento del dominio.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Validación cruzada}
+\textbf{Problema:} AIC/BIC se calculan en los mismos datos usados para ajustar
+
+\vspace{0.3cm}
+\textbf{Solución:} Validación cruzada
+
+\vspace{0.3cm}
+\textbf{K-fold CV:}
+\begin{enumerate}
+    \item Dividir datos en $K$ partes (folds)
+    \item Para cada fold:
+    \begin{itemize}
+        \item Ajustar modelo en $K-1$ folds
+        \item Predecir en el fold restante
+        \item Calcular error
+    \end{itemize}
+    \item Error CV = promedio de los $K$ errores
+\end{enumerate}
+
+\vspace{0.3cm}
+\textbf{Común:} $K = 5$ o $K = 10$
+
+\vspace{0.3cm}
+\textbf{Ventaja:} Estima error de predicción en datos nuevos
+\end{frame}
+
+\section{Regresión Polinomial}
+
+\begin{frame}{¿Cuándo usar polinomios?}
+Cuando la relación entre $X$ e $Y$ no es lineal.
+
+\vspace{0.3cm}
+\textbf{Modelo polinomial de grado $d$:}
+\[
+Y = \beta_0 + \beta_1 X + \beta_2 X^2 + \cdots + \beta_d X^d + \epsilon
+\]
+
+\vspace{0.5cm}
+\textbf{Nota importante:} Aunque la relación con $X$ no es lineal, el modelo es \textbf{lineal en los parámetros} $\beta_j$. Por lo tanto:
+\begin{itemize}
+    \item Se puede usar MCO
+    \item Todas las técnicas de regresión múltiple aplican
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Implementación:} Crear variables $X_2 = X^2$, $X_3 = X^3$, etc., y ajustar regresión múltiple estándar.
+\end{frame}
+
+\begin{frame}{Grados comunes}
+\textbf{Grado 2 (cuadrática):}
+\[
+Y = \beta_0 + \beta_1 X + \beta_2 X^2 + \epsilon
+\]
+\begin{itemize}
+    \item Forma de U o U invertida
+    \item Un punto de inflexión
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Grado 3 (cúbica):}
+\[
+Y = \beta_0 + \beta_1 X + \beta_2 X^2 + \beta_3 X^3 + \epsilon
+\]
+\begin{itemize}
+    \item Forma de S
+    \item Dos puntos de inflexión
+\end{itemize}
+
+\vspace{0.5cm}
+\begin{alertblock}{Cuidado}
+Grados muy altos ($d > 4$) tienden a sobreajustar
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Selección del grado}
+¿Qué grado $d$ elegir?
+
+\vspace{0.3cm}
+\textbf{Métodos:}
+\begin{enumerate}
+    \item \textbf{Visualización:} Graficar ajustes para distintos $d$
+    \item \textbf{AIC/BIC:} Elegir $d$ con menor AIC/BIC
+    \item \textbf{Validación cruzada:} Elegir $d$ con menor error CV
+    \item \textbf{Test F jerárquico:} Comparar modelos anidados
+\end{enumerate}
+
+\vspace{0.5cm}
+\textbf{Recomendación:} Empezar simple ($d=2$) y aumentar solo si es necesario
+\end{frame}
+
+\begin{frame}{Interpretación de polinomios}
+\textbf{Problema:} Los coeficientes individuales son difíciles de interpretar
+
+\vspace{0.3cm}
+\textbf{Ejemplo:} $\hat{Y} = 10 + 3X - 0.5X^2$
+\begin{itemize}
+    \item $\beta_1 = 3$ no significa "por cada unidad de $X$, $Y$ aumenta 3"
+    \item El efecto de $X$ depende del valor de $X$ (por el término $X^2$)
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Mejor enfoque:}
+\begin{itemize}
+    \item Graficar la curva ajustada
+    \item Calcular efectos marginales para valores específicos de $X$
+    \item Identificar máximos/mínimos
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Máximos y mínimos}
+Para una cuadrática $Y = \beta_0 + \beta_1 X + \beta_2 X^2$:
+
+\vspace{0.3cm}
+\textbf{Punto crítico:}
+\[
+\frac{dY}{dX} = \beta_1 + 2\beta_2 X = 0 \quad \Rightarrow \quad X^* = -\frac{\beta_1}{2\beta_2}
+\]
+
+\vspace{0.3cm}
+\begin{itemize}
+    \item Si $\beta_2 < 0$ $\Rightarrow$ $X^*$ es un máximo
+    \item Si $\beta_2 > 0$ $\Rightarrow$ $X^*$ es un mínimo
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Ejemplo:} $\hat{Y} = 10 + 3X - 0.5X^2$
+\[
+X^* = -\frac{3}{2(-0.5)} = 3
+\]
+El precio máximo se alcanza en $X = 3$
+\end{frame}
+
+\section{Implementación}
+
+\begin{frame}[fragile]{Python: Selección stepwise}
+\begin{lstlisting}[language=Python]
+import statsmodels.api as sm
+
+# No hay stepwise nativo, pero se puede hacer manual
+# O usar libreria mlxtend
+from mlxtend.feature_selection import SequentialFeatureSelector as SFS
+from sklearn.linear_model import LinearRegression
+
+# Forward selection
+sfs = SFS(LinearRegression(), 
+          k_features='best',
+          forward=True, 
+          scoring='neg_mean_squared_error',
+          cv=5)
+
+sfs.fit(X, y)
+print(f"Variables seleccionadas: {sfs.k_feature_names_}")
+
+# O calcular AIC/BIC manualmente
+print(f"AIC: {modelo.aic:.2f}")
+print(f"BIC: {modelo.bic:.2f}")
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Python: Regresión polinomial}
+\begin{lstlisting}[language=Python]
+import numpy as np
+from sklearn.preprocessing import PolynomialFeatures
+
+# Crear features polinomiales
+poly = PolynomialFeatures(degree=2, include_bias=False)
+X_poly = poly.fit_transform(X)
+
+# Ajustar modelo
+modelo = LinearRegression().fit(X_poly, y)
+
+# O con statsmodels y formula
+from statsmodels.formula.api import ols
+modelo = ols('Y ~ X + I(X**2)', data=data).fit()
+
+# Para grado 3
+modelo = ols('Y ~ X + I(X**2) + I(X**3)', data=data).fit()
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{R: Selección stepwise}
+\begin{lstlisting}[language=R]
+# Modelo completo
+modelo_completo <- lm(Y ~ ., data = datos)
+
+# Stepwise (ambas direcciones)
+modelo_step <- step(modelo_completo, direction = "both")
+
+# Forward
+modelo_forward <- step(lm(Y ~ 1, data = datos),
+                       scope = list(lower = ~1, 
+                                    upper = modelo_completo),
+                       direction = "forward")
+
+# Backward
+modelo_backward <- step(modelo_completo, 
+                        direction = "backward")
+
+# Ver criterios
+AIC(modelo_step)
+BIC(modelo_step)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{R: Regresión polinomial}
+\begin{lstlisting}[language=R]
+# Grado 2
+modelo_poly2 <- lm(Y ~ X + I(X^2), data = datos)
+
+# Grado 3
+modelo_poly3 <- lm(Y ~ X + I(X^2) + I(X^3), data = datos)
+
+# O usar poly() que crea polinomios ortogonales
+modelo_ortho <- lm(Y ~ poly(X, degree = 3), data = datos)
+
+# Graficar
+x_seq <- seq(min(datos$X), max(datos$X), length.out = 100)
+y_pred <- predict(modelo_poly2, 
+                  newdata = data.frame(X = x_seq))
+
+plot(datos$X, datos$Y)
+lines(x_seq, y_pred, col = "red", lwd = 2)
+\end{lstlisting}
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Resumen}
+\textbf{Selección de variables:}
+\begin{itemize}
+    \item Criterios: AIC, BIC, validación cruzada
+    \item Métodos: best subset, forward, backward, stepwise
+    \item Siempre combinar con conocimiento del dominio
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Regresión polinomial:}
+\begin{itemize}
+    \item Para relaciones no lineales
+    \item Crear variables $X^2, X^3, \ldots$
+    \item Elegir grado con AIC/BIC/CV
+    \item Cuidado con sobreajuste (grados altos)
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Próxima clase:} Correlación y ANCOVA
+\end{frame}
+
+\end{document}

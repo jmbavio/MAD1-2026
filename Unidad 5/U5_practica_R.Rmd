@@ -1,0 +1,380 @@
+---
+title: "MAD1 - Unidad 5: Predicción y Comunicación de Resultados"
+subtitle: "Práctica en R"
+author: "Métodos de Análisis de Datos 1 - UNS"
+date: "Primer Semestre 2026"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Paquetes necesarios
+
+```{r}
+# Instalar si es necesario
+# install.packages(c("DALEX", "iml", "pdp", "vip"))
+
+library(caret)      # Modelado
+library(randomForest)
+library(DALEX)      # Interpretabilidad
+library(iml)        # LIME
+library(pdp)        # Partial Dependence Plots
+library(vip)        # Variable Importance Plots
+```
+
+---
+
+# 1. Serialización de Modelos
+
+## Entrenar modelo de ejemplo
+
+```{r}
+data(iris)
+set.seed(42)
+
+# Dividir datos
+trainIndex <- createDataPartition(iris$Species, p=0.8, list=FALSE)
+train <- iris[trainIndex, ]
+test <- iris[-trainIndex, ]
+
+# Entrenar Random Forest
+modelo <- randomForest(Species ~ ., data=train, ntree=100)
+```
+
+## Guardar modelo con saveRDS
+
+```{r}
+# Guardar
+saveRDS(modelo, "modelo_iris.rds")
+
+# Cargar
+modelo_cargado <- readRDS("modelo_iris.rds")
+
+# Verificar
+pred_original <- predict(modelo, test)
+pred_cargado <- predict(modelo_cargado, test)
+identical(pred_original, pred_cargado)
+```
+
+## Guardar pipeline completo
+
+```{r}
+# Crear lista con modelo y metadata
+pipeline <- list(
+  modelo = modelo,
+  features = colnames(train)[1:4],
+  version = "1.0.0",
+  fecha = Sys.Date(),
+  accuracy = mean(predict(modelo, test) == test$Species)
+)
+
+# Guardar
+saveRDS(pipeline, "pipeline_iris.rds")
+
+# Cargar y usar
+pipeline_cargado <- readRDS("pipeline_iris.rds")
+cat("Versión:", pipeline_cargado$version, "\n")
+cat("Accuracy:", pipeline_cargado$accuracy, "\n")
+```
+
+---
+
+# 2. Interpretabilidad con DALEX
+
+## Crear explainer
+
+```{r}
+# Preparar datos numéricos para DALEX
+X_test <- test[, 1:4]
+y_test <- test$Species
+
+# Crear explainer
+explainer <- DALEX::explain(
+  model = modelo,
+  data = X_test,
+  y = as.numeric(y_test),
+  label = "Random Forest"
+)
+```
+
+## Feature Importance
+
+```{r}
+# Permutation importance
+imp <- model_parts(explainer)
+plot(imp)
+```
+
+## Partial Dependence Plots
+
+```{r}
+# PDP para una variable
+pdp_sepal <- model_profile(explainer, variables = "Sepal.Length")
+plot(pdp_sepal)
+
+# PDP para múltiples variables
+pdp_all <- model_profile(explainer, 
+                         variables = c("Sepal.Length", "Petal.Length"))
+plot(pdp_all)
+```
+
+## SHAP-like con Break Down
+
+```{r}
+# Explicar una predicción individual (primera observación de test)
+bd <- predict_parts(explainer, new_observation = X_test[1, ])
+plot(bd)
+```
+
+---
+
+# 3. LIME con paquete iml
+
+```{r}
+# Crear predictor para iml
+predictor <- Predictor$new(
+  model = modelo,
+  data = X_test,
+  y = as.numeric(y_test)
+)
+
+# LIME para una instancia
+lime_exp <- LocalModel$new(
+  predictor,
+  x.interest = X_test[1, ],
+  k = 4  # Número de features
+)
+
+# Visualizar
+plot(lime_exp)
+```
+
+---
+
+# 4. Variable Importance con vip
+
+```{r}
+# Variable importance estándar
+vip(modelo, num_features = 4)
+
+# Permutation importance
+set.seed(42)
+vip(modelo, method = "permute", 
+    train = train[, 1:4], 
+    target = train$Species,
+    metric = "accuracy",
+    num_features = 4)
+```
+
+---
+
+# 5. Partial Dependence Plots con pdp
+
+```{r}
+# PDP individual
+pdp_obj <- partial(modelo, pred.var = "Petal.Length", 
+                   train = train, prob = TRUE)
+plotPartial(pdp_obj)
+
+# PDP con dos variables (interacción)
+pdp_int <- partial(modelo, 
+                   pred.var = c("Petal.Length", "Petal.Width"),
+                   train = train)
+plotPartial(pdp_int, levelplot = TRUE)
+```
+
+---
+
+# 6. R Markdown: Este Documento
+
+Este mismo documento es un ejemplo de R Markdown. Algunos tips:
+
+## Opciones de chunks útiles
+
+```{r ejemplo-opciones, eval=FALSE}
+# echo=FALSE: no mostrar código
+# eval=FALSE: mostrar código pero no ejecutar
+# include=FALSE: ejecutar pero no mostrar nada
+# fig.width=10, fig.height=6: tamaño de gráficos
+# cache=TRUE: cachear resultados (útil si cálculos lentos)
+```
+
+## Renderizar desde R
+
+```{r renderizar, eval=FALSE}
+# Renderizar a HTML
+rmarkdown::render("U5_practica_R.Rmd")
+
+# Renderizar a PDF (requiere LaTeX)
+rmarkdown::render("U5_practica_R.Rmd", output_format = "pdf_document")
+
+# Renderizar con parámetros
+rmarkdown::render("U5_practica_R.Rmd", 
+                  params = list(dataset = "otro_dataset.csv"))
+```
+
+## Reportes parametrizados
+
+Para crear reportes automatizables, agregar en el encabezado YAML:
+
+```
+---
+title: "Reporte Automático"
+params:
+  region: "Norte"
+  año: 2026
+---
+```
+
+Luego usar: `` `r params$region` `` en el texto.
+
+---
+
+# 7. Control de Versiones con Git
+
+**Comandos básicos desde terminal:**
+
+```bash
+# Inicializar repositorio
+git init
+
+# Ver estado
+git status
+
+# Agregar archivos
+git add U5_practica_R.Rmd
+
+# Commit
+git commit -m "Agregar notebook U5"
+
+# Subir a remoto
+git push origin main
+```
+
+**Desde RStudio:**
+- Tools → Version Control → Project Setup
+- Usar panel Git integrado
+
+---
+
+# 8. Gestión de Dependencias con renv
+
+```{r renv-ejemplo, eval=FALSE}
+# Inicializar proyecto con renv
+renv::init()
+
+# Snapshot (guardar estado actual de paquetes)
+renv::snapshot()
+
+# Restore (reinstalar desde snapshot)
+renv::restore()
+
+# Actualizar un paquete específico
+renv::install("ggplot2@3.4.0")
+```
+
+El archivo `renv.lock` guarda las versiones exactas de todos los paquetes.
+
+---
+
+# 9. Ejemplo: Reporte Completo de Modelo
+
+```{r reporte-completo}
+# 1. Entrenar modelo
+modelo_final <- randomForest(Species ~ ., data=train, ntree=200)
+
+# 2. Evaluar
+pred <- predict(modelo_final, test)
+accuracy <- mean(pred == test$Species)
+conf_matrix <- table(Predicted=pred, Actual=test$Species)
+
+cat("## Resultados del Modelo\n\n")
+cat("**Accuracy:**", round(accuracy, 3), "\n\n")
+cat("**Matriz de Confusión:**\n")
+print(conf_matrix)
+
+# 3. Interpretabilidad
+explainer_final <- DALEX::explain(modelo_final, 
+                                   data=X_test, 
+                                   y=as.numeric(y_test),
+                                   label="RF Final")
+
+imp_final <- model_parts(explainer_final)
+cat("\n**Feature Importance:**\n")
+plot(imp_final)
+
+# 4. Serializar
+pipeline_final <- list(
+  modelo = modelo_final,
+  accuracy = accuracy,
+  conf_matrix = conf_matrix,
+  version = "2.0.0",
+  fecha = Sys.Date()
+)
+saveRDS(pipeline_final, "pipeline_final.rds")
+
+cat("\n**Modelo guardado en:** pipeline_final.rds\n")
+```
+
+---
+
+# 10. Consideraciones Éticas
+
+## Análisis de Fairness
+
+```{r fairness-ejemplo, eval=FALSE}
+# Ejemplo: evaluar modelo por subgrupo
+
+# Supongamos que tenemos una variable sensible (e.g., género)
+# datos$genero <- factor(...)
+
+# Evaluar accuracy por subgrupo
+for (grupo in levels(datos$genero)) {
+  subset_datos <- datos[datos$genero == grupo, ]
+  pred_grupo <- predict(modelo, subset_datos)
+  acc_grupo <- mean(pred_grupo == subset_datos$target)
+  cat("Accuracy para", grupo, ":", acc_grupo, "\n")
+}
+
+# Si hay diferencias grandes, investigar:
+# - ¿Datos balanceados por grupo?
+# - ¿Features sesgadas?
+# - ¿Necesitamos ajustar umbrales por grupo?
+```
+
+## Documentación de Limitaciones
+
+Siempre documentar:
+- Supuestos del modelo
+- Limitaciones de los datos
+- Casos en los que el modelo NO debe usarse
+- Margen de error e incertidumbre
+- Sesgos conocidos
+
+---
+
+# Notas Finales
+
+**Flujo de trabajo recomendado:**
+
+1. Entrenar y validar modelo
+2. Serializar con metadata
+3. Interpretar decisiones (SHAP, LIME, PDP)
+4. Documentar en R Markdown
+5. Versionado con Git + renv
+6. Auditar fairness y sesgos
+7. Comunicar resultados apropiadamente
+
+**Recursos adicionales:**
+
+- DALEX: https://modeloriented.github.io/DALEX/
+- iml: https://christophm.github.io/iml/
+- R Markdown: https://rmarkdown.rstudio.com/
+- renv: https://rstudio.github.io/renv/

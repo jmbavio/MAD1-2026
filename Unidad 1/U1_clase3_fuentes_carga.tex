@@ -1,0 +1,523 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[es-ES]{babel}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Tema
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Colores personalizados
+\definecolor{unsazul}{RGB}{30, 60, 120}
+\definecolor{unsverde}{RGB}{0, 100, 0}
+
+\setbeamercolor{structure}{fg=unsazul}
+\setbeamercolor{palette primary}{bg=unsazul,fg=white}
+\setbeamercolor{palette secondary}{bg=unsazul!80,fg=white}
+\setbeamercolor{palette tertiary}{bg=unsazul!60,fg=white}
+
+% Configuración de listings
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{unsazul}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{unsverde},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+% Información del documento
+\title{Métodos de Análisis de Datos 1}
+\subtitle{Clase 3: Fuentes de Datos y Carga}
+\author{Universidad Nacional del Sur}
+\date{}
+
+\begin{document}
+
+% Portada
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Contenidos
+\begin{frame}{Contenidos de hoy}
+\tableofcontents
+\end{frame}
+
+\section{Fuentes de datos}
+
+\begin{frame}{¿De dónde vienen los datos?}
+Los datos pueden provenir de múltiples fuentes:
+
+\begin{columns}[t]
+\column{0.5\textwidth}
+\begin{block}{Archivos}
+\begin{itemize}
+    \item CSV, TSV
+    \item Excel (XLSX, XLS)
+    \item JSON
+    \item XML
+\end{itemize}
+\end{block}
+
+\begin{block}{Bases de datos}
+\begin{itemize}
+    \item SQLite
+    \item PostgreSQL
+    \item MySQL/MariaDB
+    \item SQL Server
+\end{itemize}
+\end{block}
+
+\column{0.5\textwidth}
+\begin{block}{APIs Web}
+\begin{itemize}
+    \item REST APIs
+    \item GraphQL
+    \item Autenticación (API keys)
+\end{itemize}
+\end{block}
+
+\begin{block}{Web Scraping}
+\begin{itemize}
+    \item HTML parsing
+    \item Extracción de tablas
+    \item BeautifulSoup, rvest
+\end{itemize}
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{CSV: El formato universal}
+\begin{block}{Comma-Separated Values}
+Valores separados por comas (o punto y coma, tabulaciones...)
+\end{block}
+
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Ventajas:}
+\begin{itemize}
+    \item Simple y ligero
+    \item Compatible con todo
+    \item Fácil de inspeccionar
+    \item Portable
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Desventajas:}
+\begin{itemize}
+    \item No preserva tipos
+    \item Problemas con delimitadores
+    \item Sin múltiples hojas
+    \item Sin compresión
+\end{itemize}
+\end{columns}
+
+\vspace{1em}
+\begin{exampleblock}{Ejemplo}
+\texttt{nombre,edad,ciudad}\\
+\texttt{Ana,25,Bahía Blanca}\\
+\texttt{Luis,30,Buenos Aires}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Bases de datos relacionales}
+\begin{block}{¿Por qué usar bases de datos?}
+\begin{itemize}
+    \item Datos grandes (GB/TB)
+    \item Consultas complejas
+    \item Múltiples usuarios simultáneos
+    \item Integridad y transacciones
+    \item Indexación y optimización
+\end{itemize}
+\end{block}
+
+\pause
+
+\begin{alertblock}{SQL: Structured Query Language}
+Lenguaje estándar para consultar bases de datos relacionales
+
+\texttt{SELECT * FROM ventas WHERE fecha >= '2024-01-01'}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{APIs: Acceso programático a datos}
+\begin{block}{Application Programming Interface}
+Permite acceder a datos de servicios web de forma estructurada
+\end{block}
+
+\begin{exampleblock}{Ejemplo: API del clima}
+\texttt{https://api.openweathermap.org/data/2.5/weather?}\\
+\texttt{q=BahiaBlanca\&appid=TU\_API\_KEY}
+
+Retorna JSON con temperatura, humedad, presión...
+\end{exampleblock}
+
+\pause
+
+\begin{block}{Ventajas}
+\begin{itemize}
+    \item Datos siempre actualizados
+    \item Formato estructurado (JSON)
+    \item Documentación oficial
+    \item Rate limits (controlan acceso)
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Web Scraping: Última opción}
+\begin{alertblock}{¿Cuándo usar web scraping?}
+Solo cuando NO hay API disponible
+\end{alertblock}
+
+\begin{block}{Proceso}
+\begin{enumerate}
+    \item Descargar HTML de la página
+    \item Inspeccionar estructura (DevTools)
+    \item Identificar selectores CSS/XPath
+    \item Extraer información
+    \item Limpiar y estructurar
+\end{enumerate}
+\end{block}
+
+\pause
+
+\begin{alertblock}{Consideraciones legales}
+\begin{itemize}
+    \item Revisar términos de servicio
+    \item Respetar robots.txt
+    \item Rate limiting (no saturar servidor)
+    \item Verificar si existe API oficial
+\end{itemize}
+\end{alertblock}
+\end{frame}
+
+\section{Carga de datos en Python}
+
+\begin{frame}[fragile]{Pandas: La herramienta principal}
+\begin{block}{Pandas}
+Librería principal para manipulación de datos en Python
+\end{block}
+
+\textbf{Cargar CSV:}
+\begin{lstlisting}[language=Python]
+import pandas as pd
+
+# Básico
+df = pd.read_csv('datos.csv')
+
+# Con opciones
+df = pd.read_csv(
+    'datos.csv',
+    sep=',',              # Delimitador
+    encoding='utf-8',     # Codificación
+    na_values=['NA', ''], # Valores NA
+    parse_dates=['fecha'] # Parsear fechas
+)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Otros formatos en Pandas}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Excel:}
+\begin{lstlisting}[language=Python]
+# Una hoja
+df = pd.read_excel(
+    'datos.xlsx',
+    sheet_name='Hoja1'
+)
+
+# Todas las hojas
+todas = pd.read_excel(
+    'datos.xlsx',
+    sheet_name=None
+)
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{JSON:}
+\begin{lstlisting}[language=Python]
+# JSON simple
+df = pd.read_json('datos.json')
+
+# JSON anidado
+import json
+with open('datos.json') as f:
+    data = json.load(f)
+df = pd.json_normalize(data)
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Conectar a bases de datos}
+\textbf{SQLite (local):}
+\begin{lstlisting}[language=Python]
+import sqlite3
+import pandas as pd
+
+conn = sqlite3.connect('base.db')
+
+query = "SELECT * FROM ventas WHERE fecha >= '2024-01-01'"
+df = pd.read_sql_query(query, conn)
+
+conn.close()
+\end{lstlisting}
+
+\pause
+
+\textbf{PostgreSQL/MySQL (con SQLAlchemy):}
+\begin{lstlisting}[language=Python]
+from sqlalchemy import create_engine
+
+engine = create_engine('postgresql://user:pass@localhost/db')
+df = pd.read_sql_query("SELECT * FROM tabla", engine)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Acceder a APIs en Python}
+\begin{lstlisting}[language=Python]
+import requests
+import pandas as pd
+
+# Request a API
+url = "https://api.ejemplo.com/datos"
+headers = {'Authorization': 'Bearer TU_TOKEN'}
+response = requests.get(url, headers=headers)
+
+# Verificar que fue exitoso
+if response.status_code == 200:
+    data = response.json()
+    df = pd.DataFrame(data)
+else:
+    print(f"Error: {response.status_code}")
+\end{lstlisting}
+
+\begin{alertblock}{Códigos HTTP importantes}
+200 = OK | 401 = No autorizado | 404 = No encontrado | 500 = Error del servidor
+\end{alertblock}
+\end{frame}
+
+\section{Carga de datos en R}
+
+\begin{frame}[fragile]{Tidyverse: Ecosistema de R}
+\begin{block}{readr}
+Parte de tidyverse, carga rápida y eficiente
+\end{block}
+
+\textbf{Cargar CSV:}
+\begin{lstlisting}[language=R]
+library(readr)
+
+# Básico
+df <- read_csv('datos.csv')
+
+# Con opciones
+df <- read_csv(
+  'datos.csv',
+  col_types = cols(
+    edad = col_integer(),
+    fecha = col_date(format = "%Y-%m-%d")
+  ),
+  na = c("NA", "", "N/A")
+)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Otros formatos en R}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Excel:}
+\begin{lstlisting}[language=R]
+library(readxl)
+
+# Una hoja
+df <- read_excel(
+  'datos.xlsx',
+  sheet = 'Hoja1'
+)
+
+# Ver hojas
+excel_sheets('datos.xlsx')
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{JSON:}
+\begin{lstlisting}[language=R]
+library(jsonlite)
+
+# Cargar JSON
+data <- fromJSON('datos.json')
+
+# A data frame
+df <- as.data.frame(data)
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Conectar a bases de datos en R}
+\textbf{SQLite:}
+\begin{lstlisting}[language=R]
+library(DBI)
+library(RSQLite)
+
+conn <- dbConnect(RSQLite::SQLite(), "base.db")
+df <- dbGetQuery(conn, "SELECT * FROM ventas")
+dbDisconnect(conn)
+\end{lstlisting}
+
+\pause
+
+\textbf{PostgreSQL:}
+\begin{lstlisting}[language=R]
+library(RPostgres)
+
+conn <- dbConnect(
+  RPostgres::Postgres(),
+  dbname = 'mi_base',
+  host = 'localhost',
+  user = 'usuario',
+  password = 'clave'
+)
+
+df <- dbGetQuery(conn, "SELECT * FROM tabla")
+dbDisconnect(conn)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Acceder a APIs en R}
+\begin{lstlisting}[language=R]
+library(httr)
+library(jsonlite)
+
+# Request
+url <- "https://api.ejemplo.com/datos"
+response <- GET(url, 
+                add_headers(Authorization = "Bearer TOKEN"))
+
+# Verificar status
+if (status_code(response) == 200) {
+  data <- content(response, as = "text")
+  df <- fromJSON(data)
+} else {
+  print(paste("Error:", status_code(response)))
+}
+\end{lstlisting}
+\end{frame}
+
+\section{Exploración inicial}
+
+\begin{frame}[fragile]{Siempre explorar después de cargar}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Dimensiones
+df.shape  # (filas, cols)
+
+# Primeras filas
+df.head()
+
+# Info general
+df.info()
+
+# Estadísticas
+df.describe()
+
+# Columnas
+df.columns
+
+# Tipos
+df.dtypes
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Dimensiones
+dim(df)
+
+# Primeras filas
+head(df)
+
+# Estructura
+str(df)
+
+# Estadísticas
+summary(df)
+
+# Columnas
+names(df)
+
+# Tipos
+sapply(df, class)
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Checklist post-carga}
+Después de cargar datos, SIEMPRE verificar:
+
+\begin{enumerate}
+    \item ✓ \textbf{Dimensiones correctas:} ¿Tiene sentido el número de filas y columnas?
+    \item ✓ \textbf{Tipos de datos:} ¿Las columnas tienen el tipo correcto?
+    \item ✓ \textbf{Valores faltantes:} ¿Hay NAs? ¿Cuántos?
+    \item ✓ \textbf{Nombres de columnas:} ¿Son claros y consistentes?
+    \item ✓ \textbf{Primeras y últimas filas:} ¿Los datos se ven bien?
+    \item ✓ \textbf{Rangos:} ¿Los valores están en rangos esperados?
+\end{enumerate}
+
+\vspace{1em}
+\begin{alertblock}{Regla de oro}
+\textbf{Nunca confíes en los datos crudos.} Siempre verificar antes de analizar.
+\end{alertblock}
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Resumen de la clase}
+\begin{itemize}
+    \item Los datos vienen de \textbf{múltiples fuentes}: archivos, DBs, APIs, web
+    \item \textbf{CSV} es universal pero tiene limitaciones
+    \item Las \textbf{bases de datos} son ideales para datos grandes y consultas complejas
+    \item Las \textbf{APIs} proveen datos estructurados y actualizados
+    \item El \textbf{web scraping} es último recurso (considerar legalidad)
+    \item \textbf{Pandas (Python)} y \textbf{readr/tidyverse (R)} son las herramientas principales
+    \item \textbf{Siempre explorar} después de cargar datos
+\end{itemize}
+
+\vspace{1em}
+
+\begin{block}{Próxima clase}
+\textbf{Calidad de datos:} valores faltantes, duplicados, inconsistencias
+\end{block}
+\end{frame}
+
+\begin{frame}{Tarea}
+\begin{enumerate}
+    \item Descargar un dataset en formato CSV (ej: de Kaggle)
+    \item Cargarlo en Python y R
+    \item Hacer exploración inicial en ambos lenguajes
+    \item Documentar en un notebook:
+    \begin{itemize}
+        \item Dimensiones
+        \item Tipos de datos
+        \item Primeras 10 filas
+        \item Estadísticas descriptivas
+        \item ¿Hay valores faltantes?
+    \end{itemize}
+    \item Subir notebook a GitHub
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[standout]
+\Huge ¿Preguntas?
+\end{frame}
+
+\end{document}

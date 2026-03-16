@@ -1,0 +1,699 @@
+---
+title: "Métodos de Análisis de Datos 1"
+subtitle: "Unidad 1: Obtención y Preparación de Datos - Práctica"
+author: "Universidad Nacional del Sur"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6
+)
+```
+
+---
+
+# Contenido
+
+Este notebook cubre:
+
+1. **Carga de datos** desde diferentes fuentes
+2. **Calidad de datos**: valores faltantes, duplicados, inconsistencias
+3. **Transformación**: tipos, variables derivadas, codificación
+4. **Normalización y estandarización**
+5. **Discretización (binning)**
+6. **Integración de datos** (joins)
+7. **APIs REST**
+8. **Tidy data y reshape**
+
+---
+
+# Paso 1: Carga de Datos
+
+```{r librerias}
+# Cargar librerías
+library(tidyverse)
+library(lubridate)
+library(caret)
+library(naniar)
+library(httr)
+library(jsonlite)
+
+# Fijar semilla
+set.seed(42)
+
+cat("Librerías cargadas correctamente\n")
+```
+
+## Crear dataset de ejemplo
+
+Vamos a crear un dataset sintético que simula datos de empleados.
+
+```{r crear-dataset}
+# Crear dataset
+n <- 200
+
+empleados <- tibble(
+  id = 1:n,
+  nombre = paste0('Empleado_', 1:n),
+  edad = sample(22:64, n, replace = TRUE),
+  departamento = sample(c('IT', 'Ventas', 'RRHH', 'Finanzas', 'Marketing'), 
+                       n, replace = TRUE),
+  salario = sample(30000:119999, n, replace = TRUE),
+  fecha_ingreso = seq(as.Date('2015-01-01'), by = '7 days', length.out = n),
+  educacion = sample(c('secundaria', 'universitaria', 'posgrado'), 
+                    n, replace = TRUE, prob = c(0.2, 0.6, 0.2))
+)
+
+# Introducir problemas de calidad
+
+# 1. Valores faltantes
+na_indices_edad <- sample(1:nrow(empleados), 15)
+na_indices_salario <- sample(1:nrow(empleados), 10)
+empleados$edad[na_indices_edad] <- NA
+empleados$salario[na_indices_salario] <- NA
+
+# 2. Duplicados
+empleados <- bind_rows(empleados, empleados[c(5, 10, 15), ])
+
+# 3. Inconsistencias en texto
+empleados$departamento[20:25] <- tolower(empleados$departamento[20:25])
+empleados$departamento[30:32] <- '  IT  '  # Con espacios
+
+# 4. Valores fuera de rango
+empleados$edad[40] <- -5
+empleados$edad[41] <- 150
+empleados$salario[50] <- -10000
+
+cat("Dataset creado:", nrow(empleados), "filas,", ncol(empleados), "columnas\n")
+head(empleados, 10)
+```
+
+## Exploración inicial
+
+```{r exploracion}
+# Estructura
+cat("Estructura del dataset:\n")
+str(empleados)
+```
+
+```{r estadisticas}
+# Resumen estadístico
+cat("\nEstadísticas descriptivas:\n")
+summary(empleados)
+```
+
+```{r primeras-ultimas}
+# Primeras filas
+cat("Primeras 5 filas:\n")
+head(empleados)
+
+cat("\nÚltimas 5 filas:\n")
+tail(empleados)
+```
+
+---
+
+# Paso 2: Calidad de Datos
+
+## 2.1 Valores Faltantes
+
+```{r detectar-na}
+# Detectar valores faltantes
+cat("Valores faltantes por columna:\n")
+missing <- colSums(is.na(empleados))
+missing_pct <- (missing / nrow(empleados)) * 100
+
+missing_df <- data.frame(
+  Total = missing,
+  Porcentaje = missing_pct
+)
+
+print(missing_df[missing_df$Total > 0, ])
+```
+
+```{r visualizar-na, fig.width=10, fig.height=6}
+# Visualizar patrón de missingness
+vis_miss(empleados)
+```
+
+### Estrategia de imputación
+
+- **Edad**: Imputar con mediana
+- **Salario**: Imputar con media por departamento
+
+```{r imputar}
+# Copiar dataset
+df <- empleados
+
+# Imputar edad con mediana
+edad_mediana <- median(df$edad, na.rm = TRUE)
+df$edad[is.na(df$edad)] <- edad_mediana
+cat("Edad: imputado", sum(is.na(empleados$edad)), 
+    "valores con mediana =", edad_mediana, "\n")
+
+# Imputar salario con media por departamento
+df <- df %>%
+  group_by(departamento) %>%
+  mutate(salario = ifelse(is.na(salario), 
+                         mean(salario, na.rm = TRUE), 
+                         salario)) %>%
+  ungroup()
+
+cat("Salario: imputado con media por departamento\n")
+
+# Verificar
+cat("\nValores faltantes después de imputación:", sum(is.na(df)), "\n")
+```
+
+## 2.2 Duplicados
+
+```{r detectar-duplicados}
+# Detectar duplicados
+duplicados <- duplicated(df)
+cat("Número de filas duplicadas:", sum(duplicados), "\n")
+
+# Ver duplicados
+if (sum(duplicados) > 0) {
+  cat("\nFilas duplicadas:\n")
+  print(df[duplicados, ])
+}
+```
+
+```{r eliminar-duplicados}
+# Eliminar duplicados
+df <- distinct(df)
+cat("Dataset después de eliminar duplicados:", nrow(df), "filas\n")
+```
+
+## 2.3 Inconsistencias
+
+```{r valores-unicos}
+# Verificar valores únicos en departamento
+cat("Valores únicos en departamento:\n")
+table(df$departamento)
+```
+
+```{r estandarizar-texto}
+# Estandarizar texto
+df <- df %>%
+  mutate(departamento = str_trim(departamento) %>% str_to_upper())
+
+cat("\nDespués de estandarización:\n")
+table(df$departamento)
+```
+
+```{r detectar-rangos}
+# Detectar valores fuera de rango
+cat("Estadísticas de edad:\n")
+cat("Min:", min(df$edad, na.rm = TRUE), "Max:", max(df$edad, na.rm = TRUE), "\n")
+
+cat("\nEstadísticas de salario:\n")
+cat("Min:", min(df$salario, na.rm = TRUE), "Max:", max(df$salario, na.rm = TRUE), "\n")
+
+# Detectar anormales
+edad_invalida <- df$edad < 18 | df$edad > 100
+salario_invalido <- df$salario < 0
+
+cat("\nEdades inválidas:", sum(edad_invalida, na.rm = TRUE), "\n")
+cat("Salarios inválidos:", sum(salario_invalido, na.rm = TRUE), "\n")
+```
+
+```{r corregir-rangos}
+# Corregir valores fuera de rango
+df <- df %>%
+  mutate(
+    edad = ifelse(edad < 18 | edad > 100, NA, edad),
+    salario = ifelse(salario < 0, NA, salario)
+  )
+
+# Imputar nuevamente
+df <- df %>%
+  mutate(
+    edad = ifelse(is.na(edad), median(edad, na.rm = TRUE), edad),
+    salario = ifelse(is.na(salario), mean(salario, na.rm = TRUE), salario)
+  )
+
+cat("Valores inválidos corregidos\n")
+cat("Edad - Min:", min(df$edad), "Max:", max(df$edad), "\n")
+cat("Salario - Min:", min(df$salario), "Max:", max(df$salario), "\n")
+```
+
+---
+
+# Paso 3: Transformación de Datos
+
+## 3.1 Verificar y convertir tipos
+
+```{r verificar-tipos}
+# Tipos actuales
+cat("Tipos de datos:\n")
+sapply(df, class)
+```
+
+```{r convertir-tipos}
+# Convertir tipos
+df <- df %>%
+  mutate(
+    id = as.character(id),
+    edad = as.integer(edad),
+    departamento = as.factor(departamento),
+    educacion = factor(educacion, 
+                      levels = c('secundaria', 'universitaria', 'posgrado'),
+                      ordered = TRUE)
+  )
+
+cat("\nTipos después de conversión:\n")
+sapply(df, class)
+```
+
+## 3.2 Crear variables derivadas
+
+```{r variables-derivadas}
+df <- df %>%
+  mutate(
+    # Componentes de fecha
+    año_ingreso = year(fecha_ingreso),
+    mes_ingreso = month(fecha_ingreso),
+    dia_semana_ingreso = wday(fecha_ingreso),
+    
+    # Antigüedad
+    antiguedad_años = as.numeric(difftime(Sys.Date(), fecha_ingreso, units = "days")) / 365.25,
+    
+    # Categoría de edad
+    categoria_edad = cut(edad, 
+                        breaks = c(0, 30, 45, 65),
+                        labels = c('joven', 'mediana_edad', 'senior')),
+    
+    # Salario por hora
+    salario_por_hora = salario / (40 * 52),
+    
+    # Es senior?
+    es_senior = antiguedad_años > 5
+  )
+
+cat("Variables derivadas creadas\n")
+df %>% 
+  select(nombre, edad, categoria_edad, antiguedad_años, es_senior) %>% 
+  head()
+```
+
+## 3.3 Codificación de variables categóricas
+
+```{r label-encoding}
+# Label encoding para educación (ordinal)
+df <- df %>%
+  mutate(educacion_encoded = as.numeric(educacion))
+
+cat("Label encoding para educación:\n")
+df %>% 
+  select(educacion, educacion_encoded) %>% 
+  distinct() %>%
+  arrange(educacion_encoded)
+```
+
+```{r one-hot-encoding}
+# One-hot encoding para departamento (nominal)
+dummies <- dummyVars(" ~ departamento", data = df)
+df_encoded <- bind_cols(
+  df,
+  as_tibble(predict(dummies, newdata = df))
+)
+
+cat("\nOne-hot encoding para departamento:\n")
+cat("Columnas agregadas:", 
+    names(df_encoded)[grepl("^departamento", names(df_encoded))], "\n")
+cat("Dimensiones:", nrow(df), "x", ncol(df), "→", 
+    nrow(df_encoded), "x", ncol(df_encoded), "\n")
+```
+
+---
+
+# Paso 4: Normalización y Estandarización
+
+```{r preparar-escalado}
+# Columnas numéricas
+numeric_cols <- c('edad', 'salario', 'antiguedad_años')
+```
+
+## 4.1 Min-Max Scaling
+
+```{r minmax}
+# Aplicar Min-Max
+preproc_minmax <- preProcess(df[, numeric_cols], method = "range")
+df_minmax <- df
+df_minmax[, numeric_cols] <- predict(preproc_minmax, df[, numeric_cols])
+
+cat("Antes de Min-Max:\n")
+summary(df[, numeric_cols])
+
+cat("\nDespués de Min-Max:\n")
+summary(df_minmax[, numeric_cols])
+```
+
+```{r visualizar-minmax, fig.width=15, fig.height=8}
+# Visualizar distribuciones
+library(gridExtra)
+
+plots <- list()
+for (col in numeric_cols) {
+  # Original
+  p1 <- ggplot(df, aes_string(x = col)) +
+    geom_histogram(bins = 20, fill = "steelblue", color = "black", alpha = 0.7) +
+    labs(title = paste(col, "- Original"), x = "Valor", y = "Frecuencia") +
+    theme_minimal()
+  
+  # Normalizado
+  p2 <- ggplot(df_minmax, aes_string(x = col)) +
+    geom_histogram(bins = 20, fill = "orange", color = "black", alpha = 0.7) +
+    labs(title = paste(col, "- Min-Max [0,1]"), x = "Valor", y = "Frecuencia") +
+    theme_minimal()
+  
+  plots[[length(plots) + 1]] <- p1
+  plots[[length(plots) + 1]] <- p2
+}
+
+do.call(grid.arrange, c(plots, ncol = 3))
+```
+
+## 4.2 Standardization (Z-score)
+
+```{r standardization}
+# Aplicar Standardization
+preproc_std <- preProcess(df[, numeric_cols], method = c("center", "scale"))
+df_std <- df
+df_std[, numeric_cols] <- predict(preproc_std, df[, numeric_cols])
+
+cat("Después de Standardization:\n")
+summary(df_std[, numeric_cols])
+cat("\nNota: Media ~0, Std ~1\n")
+```
+
+---
+
+# Paso 5: Discretización (Binning)
+
+```{r bins-ancho}
+# Bins de igual ancho
+df <- df %>%
+  mutate(salario_bins_ancho = cut(salario,
+                                   breaks = 5,
+                                   labels = c('muy_bajo', 'bajo', 'medio', 
+                                             'alto', 'muy_alto')))
+
+cat("Bins de igual ancho (salario):\n")
+table(df$salario_bins_ancho)
+```
+
+```{r bins-custom}
+# Bins personalizados
+df <- df %>%
+  mutate(salario_bins_custom = cut(salario,
+                                    breaks = c(0, 40000, 60000, 80000, 120000),
+                                    labels = c('entrada', 'junior', 'mid', 'senior')))
+
+cat("\nBins personalizados (salario):\n")
+table(df$salario_bins_custom)
+```
+
+```{r cuartiles}
+# Cuartiles
+df <- df %>%
+  mutate(salario_cuartiles = cut(salario,
+                                  breaks = quantile(salario, probs = seq(0, 1, 0.25)),
+                                  labels = c('Q1', 'Q2', 'Q3', 'Q4'),
+                                  include.lowest = TRUE))
+
+cat("\nCuartiles (salario):\n")
+table(df$salario_cuartiles)
+cat("\nNota: Cada cuartil tiene aproximadamente el mismo número de observaciones\n")
+```
+
+```{r visualizar-bins, fig.width=15, fig.height=4}
+# Visualizar binning
+p1 <- ggplot(df, aes(x = salario_bins_ancho)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Bins de Igual Ancho", y = "Frecuencia") +
+  theme_minimal()
+
+p2 <- ggplot(df, aes(x = salario_bins_custom)) +
+  geom_bar(fill = "orange") +
+  labs(title = "Bins Personalizados", y = "Frecuencia") +
+  theme_minimal()
+
+p3 <- ggplot(df, aes(x = salario_cuartiles)) +
+  geom_bar(fill = "green") +
+  labs(title = "Cuartiles (Igual Frecuencia)", y = "Frecuencia") +
+  theme_minimal()
+
+grid.arrange(p1, p2, p3, ncol = 3)
+```
+
+---
+
+# Paso 6: Integración de Datos
+
+Crear tabla de evaluaciones y combinar con empleados.
+
+```{r crear-evaluaciones}
+# Tabla de evaluaciones
+set.seed(42)
+
+ids_evaluados <- sample(df$id, 150, replace = FALSE)
+
+evaluaciones <- tibble(
+  empleado_id = ids_evaluados,
+  puntaje = sample(1:5, 150, replace = TRUE),
+  fecha_evaluacion = seq(as.Date('2024-01-01'), by = '1 day', length.out = 150),
+  comentarios = sample(c('Buen desempeño', 'Necesita mejorar'), 
+                      150, replace = TRUE)
+)
+
+cat("Tabla de evaluaciones:\n")
+head(evaluaciones)
+cat("\nShape:", nrow(evaluaciones), "x", ncol(evaluaciones), "\n")
+```
+
+## 6.1 Inner Join
+
+```{r inner-join}
+# Inner join
+df_inner <- inner_join(df, evaluaciones, by = c("id" = "empleado_id"))
+
+cat("Inner join:", nrow(df_inner), "filas\n")
+cat("Original empleados:", nrow(df), "Evaluaciones:", nrow(evaluaciones), "\n")
+cat("Resultado: solo empleados que tienen evaluación\n")
+```
+
+## 6.2 Left Join
+
+```{r left-join}
+# Left join
+df_left <- left_join(df, evaluaciones, by = c("id" = "empleado_id"))
+
+cat("Left join:", nrow(df_left), "filas\n")
+cat("\nEmpleados sin evaluación:", sum(is.na(df_left$puntaje)), "\n")
+cat("Empleados con evaluación:", sum(!is.na(df_left$puntaje)), "\n")
+```
+
+```{r sin-evaluacion}
+# Ver empleados sin evaluación
+sin_evaluacion <- df_left %>% 
+  filter(is.na(puntaje)) %>%
+  select(nombre, departamento, puntaje)
+
+cat("Empleados sin evaluación (primeros 5):\n")
+head(sin_evaluacion, 5)
+```
+
+---
+
+# Paso 7: Acceso a APIs REST
+
+Usar API pública JSONPlaceholder.
+
+```{r api-get}
+# GET request
+url <- "https://jsonplaceholder.typicode.com/users"
+response <- GET(url)
+
+if (status_code(response) == 200) {
+  usuarios <- content(response, as = "text")
+  df_usuarios <- fromJSON(usuarios)
+  
+  cat("Usuarios obtenidos de la API:\n")
+  df_usuarios %>% 
+    select(id, name, email, phone) %>% 
+    head()
+}
+```
+
+```{r api-params}
+# GET con parámetros
+url_posts <- "https://jsonplaceholder.typicode.com/posts"
+response <- GET(url_posts, query = list(userId = 1))
+
+if (status_code(response) == 200) {
+  posts <- content(response, as = "text")
+  df_posts <- fromJSON(posts)
+  
+  cat("\nPosts del usuario 1:", nrow(df_posts), "posts\n")
+  df_posts %>% 
+    select(id, title) %>% 
+    head()
+}
+```
+
+```{r api-post}
+# POST request
+nuevo_post <- list(
+  title = 'Mi nuevo post desde R',
+  body = 'Este es el contenido de mi post',
+  userId = 1
+)
+
+response <- POST(url_posts, body = nuevo_post, encode = "json")
+
+if (status_code(response) == 201) {
+  cat("\nPost creado exitosamente:\n")
+  print(content(response))
+}
+```
+
+---
+
+# Paso 8: Tidy Data y Reshape
+
+## 8.1 Wide → Long (Pivot Longer)
+
+```{r crear-wide}
+# Dataset wide
+ventas_wide <- tibble(
+  producto = c('A', 'B', 'C'),
+  `2022` = c(100, 150, 200),
+  `2023` = c(120, 180, 210),
+  `2024` = c(140, 200, 230)
+)
+
+cat("Dataset WIDE (cada año es una columna):\n")
+ventas_wide
+```
+
+```{r pivot-longer}
+# Pivot longer: Wide → Long
+ventas_long <- ventas_wide %>%
+  pivot_longer(
+    cols = c(`2022`, `2023`, `2024`),
+    names_to = "año",
+    values_to = "ventas"
+  )
+
+cat("\nDataset LONG (tidy):\n")
+ventas_long
+```
+
+## 8.2 Long → Wide (Pivot Wider)
+
+```{r pivot-wider}
+# Pivot wider: Long → Wide
+ventas_wide_again <- ventas_long %>%
+  pivot_wider(
+    names_from = año,
+    values_from = ventas
+  )
+
+cat("Dataset convertido de LONG a WIDE nuevamente:\n")
+ventas_wide_again
+```
+
+```{r visualizar-long, fig.width=10, fig.height=6}
+# Visualizar: Long es mejor para gráficos
+ggplot(ventas_long, aes(x = año, y = ventas, color = producto, group = producto)) +
+  geom_line(size = 1) +
+  geom_point(size = 3) +
+  labs(
+    title = "Ventas por Producto y Año (desde datos LONG/tidy)",
+    x = "Año",
+    y = "Ventas",
+    color = "Producto"
+  ) +
+  theme_minimal()
+```
+
+---
+
+# Resumen y Conclusiones
+
+En este notebook practicamos:
+
+## Clase 3: Fuentes de Datos y Carga
+- ✓ Creación de datasets sintéticos
+- ✓ Exploración inicial: `str()`, `summary()`, `head()`
+
+## Clase 4: Calidad de Datos
+- ✓ Detección de valores faltantes con `is.na()`
+- ✓ Imputación simple (mediana) y por grupo (media por departamento)
+- ✓ Detección y eliminación de duplicados con `distinct()`
+- ✓ Estandarización de texto con `str_trim()` y `str_to_upper()`
+- ✓ Corrección de valores fuera de rango
+
+## Clase 5: Transformación
+- ✓ Conversión de tipos: `as.numeric()`, `factor()`
+- ✓ Variables derivadas con `mutate()`: fechas, operaciones aritméticas
+- ✓ Label encoding con `as.numeric(factor())`
+- ✓ One-hot encoding con `dummyVars()` de caret
+
+## Clase 6: Normalización e Integración
+- ✓ Min-Max scaling con `preProcess(method = "range")`
+- ✓ Standardization con `preProcess(method = c("center", "scale"))`
+- ✓ Discretización: `cut()` (igual ancho, personalizado, cuartiles)
+- ✓ Joins: `inner_join()`, `left_join()`
+
+## Clase 7: APIs y Tidy Data
+- ✓ GET requests con `GET()`
+- ✓ POST requests con `POST()`
+- ✓ Wide → Long con `pivot_longer()`
+- ✓ Long → Wide con `pivot_wider()`
+
+## Buenas Prácticas Aplicadas
+- ✓ Semilla fijada para reproducibilidad
+- ✓ Uso del pipe `%>%` para código claro
+- ✓ Verificación en cada paso
+- ✓ Visualizaciones con ggplot2
+- ✓ Código documentado
+
+---
+
+# Ejercicios Propuestos
+
+1. **Explorar otros datasets:**
+   - Usar datasets de paquetes como `datasets`, `ggplot2`
+   - Aplicar pipeline completo de preparación
+
+2. **APIs:**
+   - Usar API con autenticación
+   - Combinar datos de múltiples endpoints
+   - Manejar paginación
+
+3. **Imputación avanzada:**
+   - Probar `mice` package
+   - Comparar múltiples métodos de imputación
+
+4. **Feature engineering:**
+   - Crear interacciones entre variables
+   - Transformaciones log, sqrt, Box-Cox
+   - Ratios y proporciones
+
+5. **Tidyverse avanzado:**
+   - Usar `across()` para operaciones múltiples
+   - Crear funciones personalizadas
+   - Pipeline complejo con múltiples transformaciones

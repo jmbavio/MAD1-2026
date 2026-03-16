@@ -1,0 +1,236 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{whale}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+\title{Métodos de Análisis de Datos 1}
+\subtitle{Clase 11: Análisis Bivariado}
+\author{Depto.\ de Matemática -- UNS}
+\institute{Universidad Nacional del Sur}
+\date{1er Cuatrimestre 2026}
+
+\AtBeginSection[]{
+  \begin{frame}{Contenidos}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenidos}
+  \tableofcontents
+\end{frame}
+
+%=============================================================
+\section{Introducción al análisis bivariado}
+%=============================================================
+
+\begin{frame}{¿Qué es el análisis bivariado?}
+  \begin{block}{Objetivo}
+    Estudiar la relación o asociación entre \textbf{dos variables} medidas sobre las mismas unidades.
+  \end{block}
+  \bigskip
+  \begin{center}
+    \begin{tabular}{lll}
+      \toprule
+      \textbf{Variable 1} & \textbf{Variable 2} & \textbf{Herramienta} \\
+      \midrule
+      Cuantitativa & Cuantitativa & Scatter plot, correlación, regresión \\
+      Cualitativa & Cualitativa & Tabla de contingencia, $\chi^2$ \\
+      Cualitativa & Cuantitativa & Boxplot por grupos, ANOVA \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  \bigskip
+  \begin{alertblock}{Cuidado}
+    \textbf{Asociación no implica causalidad}. Siempre interpretar en contexto.
+  \end{alertblock}
+\end{frame}
+
+%=============================================================
+\section{Variables cuantitativas: correlación}
+%=============================================================
+
+\begin{frame}{Gráfico de dispersión (scatter plot)}
+  \begin{itemize}
+    \item Representación de pares $(x_i, y_i)$ en el plano cartesiano.
+    \item Permite detectar:
+      \begin{itemize}
+        \item Dirección de la relación: positiva, negativa, ninguna.
+        \item Forma: lineal, curvilínea.
+        \item Fuerza: dispersión alrededor de la tendencia.
+        \item Outliers bivariados: puntos aislados del patrón general.
+      \end{itemize}
+    \item Se puede agregar una \textbf{línea de tendencia} (regresión simple) para visualizar la relación lineal.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Correlación de Pearson}
+  \begin{block}{Coeficiente de correlación de Pearson ($r$)}
+    \[
+      r = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}
+               {\sqrt{\sum_{i=1}^n (x_i - \bar{x})^2 \cdot \sum_{i=1}^n (y_i - \bar{y})^2}}
+    \]
+  \end{block}
+  \begin{itemize}
+    \item $-1 \le r \le 1$.
+    \item $r = 1$: correlación lineal perfecta positiva.
+    \item $r = -1$: correlación lineal perfecta negativa.
+    \item $r = 0$: sin correlación lineal (puede haber relación no lineal).
+    \item \textbf{Supuestos}: normalidad bivariada, relación lineal, sin outliers influyentes.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Interpretación del coeficiente $r$}
+  \begin{center}
+    \begin{tabular}{cc}
+      \toprule
+      \textbf{Valor de $|r|$} & \textbf{Interpretación} \\
+      \midrule
+      $0.00 - 0.19$ & Correlación muy débil \\
+      $0.20 - 0.39$ & Correlación débil \\
+      $0.40 - 0.59$ & Correlación moderada \\
+      $0.60 - 0.79$ & Correlación fuerte \\
+      $0.80 - 1.00$ & Correlación muy fuerte \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  \bigskip
+  \begin{alertblock}{Significación estadística}
+    Con $n$ grande, correlaciones pequeñas pueden ser estadísticamente significativas pero no prácticamante relevantes. Siempre reportar $r$ y su $p$-valor juntos.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Correlación de Spearman}
+  \begin{block}{Coeficiente $\rho$ de Spearman}
+    \[
+      \rho = 1 - \frac{6 \sum_{i=1}^n d_i^2}{n(n^2-1)}
+    \]
+    donde $d_i = \text{rango}(x_i) - \text{rango}(y_i)$.
+  \end{block}
+  \bigskip
+  \textbf{Ventajas sobre Pearson:}
+  \begin{itemize}
+    \item No asume normalidad ni linealidad: mide asociación monótona.
+    \item \textbf{Robusta} frente a outliers.
+    \item Aplicable a variables ordinales.
+  \end{itemize}
+  \bigskip
+  \begin{exampleblock}{Recomendación}
+    Usar Spearman cuando los supuestos de Pearson no se cumplen o con variables ordinales.
+  \end{exampleblock}
+\end{frame}
+
+%=============================================================
+\section{Variables cualitativas: tablas de contingencia}
+%=============================================================
+
+\begin{frame}{Tabla de contingencia}
+  Para dos variables categóricas $A$ (con $r$ categorías) y $B$ (con $c$ categorías):
+  \[
+    \begin{array}{c|cccc|c}
+      & B_1 & B_2 & \cdots & B_c & \text{Total} \\
+      \hline
+      A_1 & n_{11} & n_{12} & \cdots & n_{1c} & n_{1\cdot} \\
+      A_2 & n_{21} & n_{22} & \cdots & n_{2c} & n_{2\cdot} \\
+      \vdots & & & & & \vdots \\
+      A_r & n_{r1} & n_{r2} & \cdots & n_{rc} & n_{r\cdot} \\
+      \hline
+      \text{Total} & n_{\cdot 1} & n_{\cdot 2} & \cdots & n_{\cdot c} & n \\
+    \end{array}
+  \]
+  \begin{itemize}
+    \item $n_{ij}$: frecuencia observada en celda $(i,j)$.
+    \item Frecuencias \textbf{marginales}: $n_{i\cdot}$ (fila) y $n_{\cdot j}$ (columna).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Test de independencia $\chi^2$}
+  \begin{block}{Hipótesis}
+    $H_0$: las variables $A$ y $B$ son independientes. \quad $H_1$: hay asociación.
+  \end{block}
+  \begin{block}{Estadístico}
+    \[
+      \chi^2 = \sum_{i,j} \frac{(O_{ij} - E_{ij})^2}{E_{ij}}, \quad
+      E_{ij} = \frac{n_{i\cdot} \cdot n_{\cdot j}}{n}
+    \]
+    Bajo $H_0$: $\chi^2 \sim \chi^2_{(r-1)(c-1)}$.
+  \end{block}
+  \begin{alertblock}{Condición de validez}
+    Las frecuencias esperadas $E_{ij} \ge 5$ en al menos el 80\% de las celdas. Si no se cumple: combinar categorías o usar test exacto de Fisher.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Medidas de asociación para variables categóricas}
+  \begin{center}
+    \begin{tabular}{lll}
+      \toprule
+      \textbf{Medida} & \textbf{Aplicación} & \textbf{Rango} \\
+      \midrule
+      V de Cramér & Nominal $\times$ nominal & $[0, 1]$ \\
+      Phi ($\phi$) & Tablas $2\times2$ & $[0, 1]$ \\
+      Gamma de Goodman & Ordinal $\times$ ordinal & $[-1, 1]$ \\
+      $\tau_b$ de Kendall & Ordinal $\times$ ordinal & $[-1, 1]$ \\
+      OR (Odds Ratio) & Tablas $2\times 2$ & $(0, +\infty)$ \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  \bigskip
+  \begin{exampleblock}{V de Cramér}
+    $V = \sqrt{\chi^2 / (n \cdot \min(r-1, c-1))}$. Interpretación: 0 = sin asociación, 1 = asociación perfecta.
+  \end{exampleblock}
+\end{frame}
+
+%=============================================================
+\section{Cuantitativa vs.\ cualitativa}
+%=============================================================
+
+\begin{frame}{Comparación de grupos}
+  \textbf{Variable cuantitativa por grupos (variable cualitativa):}
+  \bigskip
+  \begin{itemize}
+    \item \textbf{Boxplot por grupos}: comparar distribución de $Y$ para cada nivel de $X$.
+    \item \textbf{Estadísticos por grupo}: media, mediana, DE para cada categoría.
+    \item \textbf{Tests estadísticos}:
+      \begin{itemize}
+        \item 2 grupos, normalidad: test $t$ de Student.
+        \item 2 grupos, no normal: Wilcoxon-Mann-Whitney.
+        \item $k$ grupos, normalidad: ANOVA (se verá en U3).
+        \item $k$ grupos, no normal: Kruskal-Wallis.
+      \end{itemize}
+  \end{itemize}
+  \bigskip
+  \begin{alertblock}{Siempre verificar primero}
+    Normalidad dentro de cada grupo (Shapiro-Wilk) y homocedasticidad (test de Levene o Bartlett) antes de usar tests paramétricos.
+  \end{alertblock}
+\end{frame}
+
+%=============================================================
+\section{Resumen}
+%=============================================================
+
+\begin{frame}{Resumen de la clase}
+  \begin{block}{Análisis bivariado}
+    \begin{itemize}
+      \item Cuant.-Cuant.: scatter plot, Pearson, Spearman.
+      \item Cual.-Cual.: tabla de contingencia, $\chi^2$, V de Cramér.
+      \item Cual.-Cuant.: boxplot por grupos, tests de comparación.
+    \end{itemize}
+  \end{block}
+  \bigskip
+  \begin{block}{Próximas clases}
+    Clase 12: Visualización con Python — \texttt{matplotlib}, \texttt{seaborn}, buenas prácticas. \\
+    Clase 13: Visualización con R — \texttt{ggplot2} y el sistema de capas.
+  \end{block}
+\end{frame}
+
+\end{document}

@@ -1,0 +1,425 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Tema
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Colores personalizados
+\definecolor{unsazul}{RGB}{30,60,120}
+\definecolor{unsverde}{RGB}{0,100,0}
+
+\setbeamercolor{structure}{fg=unsazul}
+\setbeamercolor{palette primary}{bg=unsazul,fg=white}
+\setbeamercolor{palette secondary}{bg=unsazul!80,fg=white}
+\setbeamercolor{palette tertiary}{bg=unsazul!60,fg=white}
+
+% Configuración de listings (código)
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{unsazul}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{unsverde},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+% Información del documento
+\title{Métodos de Análisis de Datos 1}
+\subtitle{Clase 2: Notebooks y Buenas Prácticas}
+\author{Universidad Nacional del Sur}
+\date{}
+
+\begin{document}
+
+% Portada
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Contenidos
+\begin{frame}{Contenidos de hoy}
+\tableofcontents
+\end{frame}
+
+\section{Jupyter Notebooks}
+
+\begin{frame}{¿Qué son los Jupyter Notebooks?}
+\begin{block}{Definición}
+Documentos \textbf{interactivos} que combinan:
+\begin{itemize}
+    \item Código ejecutable (Python, R, Julia...)
+    \item Texto narrativo (Markdown, LaTeX)
+    \item Visualizaciones (gráficos, tablas)
+    \item Resultados (outputs)
+\end{itemize}
+\end{block}
+
+\pause
+
+\begin{exampleblock}{¿Por qué notebooks?}
+\begin{itemize}
+    \item Facilitan la exploración interactiva
+    \item Documentan el proceso de análisis
+    \item Permiten compartir resultados reproducibles
+\end{itemize}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Estructura de un notebook}
+\begin{block}{Celdas de código}
+\begin{itemize}
+    \item Ejecutan código (Python, R, etc.)
+    \item Muestran resultados inmediatamente
+    \item Pueden generar gráficos y tablas
+\end{itemize}
+\end{block}
+
+\begin{block}{Celdas Markdown}
+\begin{itemize}
+    \item Texto formateado (negritas, cursivas, listas)
+    \item Títulos y secciones
+    \item Ecuaciones matemáticas con \LaTeX
+    \item Imágenes y links
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Atajos de teclado útiles}
+\begin{block}{Modo comando (Esc)}
+\begin{itemize}
+    \item \texttt{A}: Insertar celda arriba
+    \item \texttt{B}: Insertar celda abajo
+    \item \texttt{D D}: Borrar celda
+    \item \texttt{M}: Convertir a Markdown
+    \item \texttt{Y}: Convertir a código
+\end{itemize}
+\end{block}
+
+\begin{block}{Modo edición (Enter)}
+\begin{itemize}
+    \item \texttt{Shift + Enter}: Ejecutar y avanzar
+    \item \texttt{Ctrl + Enter}: Ejecutar sin avanzar
+    \item \texttt{Tab}: Autocompletar
+\end{itemize}
+\end{block}
+\end{frame}
+
+\section{Sintaxis básica de Python}
+
+\begin{frame}[fragile]{Python: Variables y tipos de datos}
+\begin{lstlisting}[language=Python]
+# Variables y tipos basicos
+x = 10              # int
+y = 3.14            # float
+nombre = "Ana"      # str
+activo = True       # bool
+
+# Listas
+numeros = [1, 2, 3, 4, 5]
+mezclado = [1, "dos", 3.0, True]
+
+# Diccionarios
+persona = {
+    "nombre": "Ana",
+    "edad": 25,
+    "ciudad": "Bahia Blanca"
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Python: Control de flujo}
+\begin{lstlisting}[language=Python]
+# Condicionales
+if x > 5:
+    print("Mayor a 5")
+elif x == 5:
+    print("Igual a 5")
+else:
+    print("Menor a 5")
+
+# Bucles
+for i in range(5):
+    print(i)
+
+# List comprehension
+cuadrados = [x**2 for x in range(10)]
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Python: Funciones}
+\begin{lstlisting}[language=Python]
+# Funcion simple
+def saludar(nombre):
+    return f"Hola, {nombre}!"
+
+# Funcion con argumentos por defecto
+def potencia(base, exponente=2):
+    return base ** exponente
+
+# Lambda (funciones anonimas)
+cuadrado = lambda x: x**2
+
+# Ejemplo de uso
+resultado = potencia(3)      # 9
+resultado = potencia(3, 3)   # 27
+\end{lstlisting}
+\end{frame}
+
+\section{Sintaxis básica de R}
+
+\begin{frame}[fragile]{R: Variables y estructuras}
+\begin{lstlisting}[language=R]
+# Variables
+x <- 10
+y <- 3.14
+nombre <- "Ana"
+
+# Vectores
+numeros <- c(1, 2, 3, 4, 5)
+secuencia <- 1:10
+
+# Listas
+persona <- list(
+    nombre = "Ana",
+    edad = 25,
+    ciudad = "Bahia Blanca"
+)
+
+# Data frames
+df <- data.frame(
+    x = 1:5,
+    y = c(2, 4, 6, 8, 10)
+)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{R: Funciones}
+\begin{lstlisting}[language=R]
+# Funcion simple
+saludar <- function(nombre) {
+    paste("Hola,", nombre, "!")
+}
+
+# Funcion con argumentos por defecto
+potencia <- function(base, exponente = 2) {
+    base ^ exponente
+}
+
+# Funcion apply (vectorizada)
+cuadrados <- sapply(1:10, function(x) x^2)
+
+# Ejemplo de uso
+resultado <- potencia(3)      # 9
+resultado <- potencia(3, 3)   # 27
+\end{lstlisting}
+\end{frame}
+
+\section{Buenas prácticas}
+
+\begin{frame}{Buenas prácticas de programación}
+\begin{block}{Código limpio}
+\begin{itemize}
+    \item Nombres descriptivos de variables
+    \item Comentarios claros y concisos
+    \item Indentación consistente
+    \item Funciones pequeñas y enfocadas
+\end{itemize}
+\end{block}
+
+\begin{block}{Reproducibilidad}
+\begin{itemize}
+    \item Documentar dependencias y versiones
+    \item Usar semillas aleatorias (\texttt{random.seed()}, \texttt{set.seed()})
+    \item Guardar outputs intermedios
+    \item Registrar parámetros de experimentos
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Organización de proyectos}
+\begin{block}{Estructura recomendada}
+\begin{itemize}
+    \item \texttt{data/}: Datos crudos y procesados
+    \item \texttt{notebooks/}: Jupyter notebooks
+    \item \texttt{src/}: Código fuente (módulos y funciones)
+    \item \texttt{outputs/}: Resultados, gráficos, reportes
+    \item \texttt{README.md}: Descripción del proyecto
+    \item \texttt{requirements.txt} o \texttt{environment.yml}
+\end{itemize}
+\end{block}
+
+\begin{alertblock}{Importante}
+\textbf{Nunca} subir datos sensibles o credenciales a GitHub
+\end{alertblock}
+\end{frame}
+
+\section{Git y GitHub}
+
+\begin{frame}[fragile]{Git: Control de versiones}
+\begin{block}{Comandos básicos}
+\begin{lstlisting}[language=bash]
+# Inicializar repositorio
+git init
+
+# Agregar archivos al staging
+git add archivo.py
+git add .
+
+# Commit (guardar cambios)
+git commit -m "Mensaje descriptivo"
+
+# Ver estado
+git status
+
+# Ver historial
+git log
+\end{lstlisting}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{GitHub: Colaboración}
+\begin{block}{Comandos para trabajo remoto}
+\begin{lstlisting}[language=bash]
+# Clonar repositorio
+git clone https://github.com/usuario/repo.git
+
+# Subir cambios
+git push origin main
+
+# Bajar cambios
+git pull origin main
+
+# Crear rama
+git branch nueva-funcionalidad
+git checkout nueva-funcionalidad
+\end{lstlisting}
+\end{block}
+
+\begin{exampleblock}{Flujo de trabajo típico}
+\texttt{git pull} → modificar → \texttt{git add} → \texttt{git commit} → \texttt{git push}
+\end{exampleblock}
+\end{frame}
+
+\section{R Markdown}
+
+\begin{frame}[fragile]{R Markdown: Reportes reproducibles}
+\begin{block}{Estructura}
+\begin{lstlisting}
+---
+title: "Mi Analisis"
+author: "Tu Nombre"
+date: "2026-03-16"
+output: html_document
+---
+
+# Introduccion
+
+Este es texto normal en Markdown.
+
+```{r}
+# Este es codigo R
+x <- 1:10
+mean(x)
+```
+
+El promedio es `r mean(x)`.
+\end{lstlisting}
+\end{block}
+
+\small
+El código entre \texttt{```\{r\}} se ejecuta al generar el reporte
+\end{frame}
+
+\section{Caso de estudio}
+
+\begin{frame}{Caso: Dataset Iris}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\begin{block}{Descripción}
+\begin{itemize}
+    \item 150 flores de iris
+    \item 3 especies diferentes
+    \item 4 medidas por flor:
+    \begin{itemize}
+        \item Largo de sépalo
+        \item Ancho de sépalo
+        \item Largo de pétalo
+        \item Ancho de pétalo
+    \end{itemize}
+\end{itemize}
+\end{block}
+
+\column{0.5\textwidth}
+\begin{block}{Objetivo}
+Recorrer todo el ciclo:
+\begin{enumerate}
+    \item Cargar datos
+    \item Explorar
+    \item Visualizar
+    \item Modelo simple
+    \item Interpretar
+\end{enumerate}
+\end{block}
+\end{columns}
+
+\vspace{1em}
+
+\begin{alertblock}{En el notebook de práctica}
+Veremos el caso completo implementado en Python y R
+\end{alertblock}
+\end{frame}
+
+\section{Resumen}
+
+\begin{frame}{Resumen de la clase}
+\begin{itemize}
+    \item \textbf{Jupyter notebooks}: combinan código, texto y visualizaciones
+    \item \textbf{Python y R}: sintaxis básica, variables, funciones
+    \item \textbf{Buenas prácticas}: código limpio, reproducibilidad, organización
+    \item \textbf{Git y GitHub}: control de versiones, colaboración
+    \item \textbf{R Markdown}: reportes reproducibles en R
+\end{itemize}
+
+\vspace{1em}
+
+\begin{block}{Próxima clase (Unidad 1)}
+\begin{itemize}
+    \item Fuentes de datos
+    \item Carga de datos en Python y R
+    \item Exploración inicial
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Tarea para la próxima clase}
+\begin{enumerate}
+    \item Completar instalación de herramientas
+    \item Crear cuenta en GitHub y primer repositorio
+    \item Configurar Git localmente
+    \item Hacer el notebook de práctica de U0
+    \item Subir el notebook al repositorio
+\end{enumerate}
+
+\vspace{1em}
+
+\begin{alertblock}{Importante}
+El notebook de práctica está disponible en el campus virtual
+\end{alertblock}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+\Huge ¿Preguntas?
+\end{center}
+\end{frame}
+
+\end{document}

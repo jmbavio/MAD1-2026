@@ -1,0 +1,677 @@
+---
+title: "Métodos de Análisis de Datos 1"
+subtitle: "Unidad 0: Introducción al Análisis de Datos - Práctica"
+author: "Universidad Nacional del Sur"
+output:
+  html_notebook:
+    toc: true
+    toc_float: true
+    theme: cosmo
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6
+)
+```
+
+---
+
+# Guía de Instalación y Configuración
+
+Esta sección te guiará en la instalación de las herramientas necesarias para el curso.
+
+## 1. Instalación de Visual Studio Code
+
+**Visual Studio Code** (VS Code) es el editor que usaremos durante todo el curso.
+
+### Pasos:
+
+1. **Descargar VS Code:**
+   - Ir a: https://code.visualstudio.com/
+   - Descargar la versión para tu sistema operativo (Windows, macOS, Linux)
+   
+2. **Instalar:**
+   - Ejecutar el instalador descargado
+   - En Windows: marcar la opción "Add to PATH" durante la instalación
+   - Seguir las instrucciones del instalador
+
+3. **Verificar instalación:**
+   - Abrir VS Code
+   - Debería aparecer la pantalla de bienvenida
+
+---
+
+## 2. Instalación de Python con Anaconda
+
+**Anaconda** es una distribución de Python que incluye las librerías científicas más importantes.
+
+### Pasos:
+
+1. **Descargar Anaconda:**
+   - Ir a: https://www.anaconda.com/products/distribution
+   - Descargar la versión más reciente (Python 3.11 o superior)
+   
+2. **Instalar:**
+   - Ejecutar el instalador
+   - **Importante en Windows:** Marcar "Add Anaconda to my PATH environment variable" (aunque diga que no es recomendado)
+   - Completar la instalación
+
+3. **Verificar instalación:**
+   - Abrir una terminal/command prompt
+   - Ejecutar: `python --version`
+   - Debería mostrar algo como: `Python 3.11.x`
+   - Ejecutar: `conda --version`
+   - Debería mostrar la versión de conda
+
+### Librerías incluidas en Anaconda:
+- `numpy`: Computación numérica
+- `pandas`: Manipulación de datos
+- `matplotlib`: Visualizaciones básicas
+- `seaborn`: Visualizaciones estadísticas
+- `scikit-learn`: Machine learning
+- `jupyter`: Notebooks interactivos
+
+---
+
+## 3. Instalación de R y RStudio
+
+### Instalar R:
+
+1. **Descargar R:**
+   - Ir a: https://cran.r-project.org/
+   - Seleccionar tu sistema operativo
+   - Descargar e instalar la versión más reciente (R 4.3 o superior)
+
+2. **Verificar instalación:**
+   - Abrir R desde el menú de inicio
+   - En la consola, ejecutar: `version`
+   - Debería mostrar la versión de R instalada
+
+### Instalar RStudio:
+
+1. **Descargar RStudio Desktop:**
+   - Ir a: https://posit.co/download/rstudio-desktop/
+   - Descargar la versión gratuita
+   - Instalar
+
+2. **Verificar instalación:**
+   - Abrir RStudio
+   - Debería abrir con la interfaz de 4 paneles
+
+### Instalar paquetes necesarios:
+
+```{r install-packages, eval=FALSE}
+# Instalar tidyverse (colección de paquetes para análisis de datos)
+install.packages("tidyverse")
+
+# Instalar otros paquetes útiles
+install.packages(c(
+  "caret",          # Machine learning
+  "rpart",          # Árboles de decisión
+  "rpart.plot",     # Visualización de árboles
+  "corrplot",       # Visualización de correlaciones
+  "GGally",         # Extensión de ggplot2
+  "knitr",          # Reportes
+  "rmarkdown"       # R Markdown
+))
+
+# Verificar instalación
+library(tidyverse)
+print("¡Paquetes instalados correctamente!")
+```
+
+---
+
+## 4. Configuración de VS Code para R
+
+### Instalar la extensión de R:
+
+1. **Abrir VS Code**
+2. **Ir a Extensions** (`Ctrl+Shift+X`)
+3. **Buscar:** "R"
+4. **Instalar:** R (de REditorSupport)
+
+### Instalar el paquete languageserver en R:
+
+Esto habilita autocompletado y ayuda en VS Code.
+
+```{r install-languageserver, eval=FALSE}
+install.packages("languageserver")
+```
+
+### Configurar el path de R en VS Code:
+
+1. En VS Code: `Ctrl+,` (abrir configuración)
+2. Buscar: "r.rpath"
+3. Configurar la ruta donde está instalado R:
+   - Windows: `C:/Program Files/R/R-4.3.x/bin/R.exe`
+   - macOS: `/usr/local/bin/R`
+   - Linux: `/usr/bin/R`
+
+### Trabajar con archivos R en VS Code:
+
+1. **Crear archivo:** `test.R`
+2. **Escribir:** `print("Hola R")`
+3. **Ejecutar:**
+   - Seleccionar la línea
+   - `Ctrl+Enter` (envía el código a la terminal de R)
+
+### Trabajar con R Markdown en VS Code:
+
+1. **Crear archivo:** `test.Rmd`
+2. VS Code puede previsualizar y ejecutar chunks de código
+3. Para renderizar a HTML/PDF:
+   ```{r render-example, eval=FALSE}
+   rmarkdown::render("test.Rmd")
+   ```
+
+---
+
+## 5. Usar Python desde VS Code
+
+Aunque este notebook es de R, también necesitarás trabajar con Python.
+
+### Configurar Python en VS Code:
+
+1. **Instalar extensiones:**
+   - Python (de Microsoft)
+   - Jupyter (de Microsoft)
+
+2. **Verificar:**
+   - Crear archivo: `test.py`
+   - Escribir: `print("Hola Python")`
+   - Click derecho → "Run Python File in Terminal"
+
+---
+
+## 6. Git y GitHub
+
+### Instalar Git:
+
+1. **Descargar Git:**
+   - Ir a: https://git-scm.com/
+   - Descargar para tu sistema operativo
+   - Instalar (dejar opciones por defecto)
+
+2. **Configurar Git:**
+   - Abrir terminal en VS Code (`Ctrl+``)
+   - Ejecutar:
+   ```bash
+   git config --global user.name "Tu Nombre"
+   git config --global user.email "tu@email.com"
+   ```
+
+3. **Verificar:**
+   ```bash
+   git --version
+   ```
+
+### Crear cuenta en GitHub:
+
+1. Ir a: https://github.com/
+2. Click en "Sign up"
+3. Completar el formulario de registro
+4. Verificar email
+
+### Crear tu primer repositorio:
+
+1. **En GitHub:**
+   - Click en "+" (esquina superior derecha)
+   - "New repository"
+   - Nombre: `metodos-analisis-datos-1`
+   - Descripción: "Prácticas del curso MAD1 - UNS 2026"
+   - Marcar "Add a README file"
+   - Click "Create repository"
+
+2. **Clonar a tu máquina:**
+   - Copiar la URL del repositorio (botón verde "Code")
+   - En VS Code: `Ctrl+Shift+P` → "Git: Clone"
+   - Pegar la URL
+   - Elegir carpeta donde guardar
+
+---
+
+# Práctica: Caso de Estudio con el Dataset Iris
+
+Ahora que tenemos todo configurado, vamos a hacer un análisis completo del dataset Iris siguiendo el ciclo de análisis de datos.
+
+## Paso 1: Obtención de Datos
+
+El dataset Iris está incluido en R, así que lo cargamos directamente.
+
+```{r cargar-librerias}
+# Cargar librerías necesarias
+library(tidyverse)    # Para manipulación y visualización
+library(caret)        # Para machine learning
+library(rpart)        # Para árboles de decisión
+library(rpart.plot)   # Para visualizar árboles
+library(corrplot)     # Para visualizar correlaciones
+library(GGally)       # Para pair plots
+
+# Fijar semilla para reproducibilidad
+set.seed(42)
+
+cat("Librerías cargadas correctamente\n")
+```
+
+```{r cargar-datos}
+# Cargar dataset Iris (viene incluido en R)
+data(iris)
+
+# Convertir a tibble (formato tidyverse)
+iris_df <- as_tibble(iris)
+
+cat("Dataset cargado exitosamente\n")
+cat("Dimensiones:", nrow(iris_df), "filas x", ncol(iris_df), "columnas\n")
+```
+
+---
+
+## Paso 2: Exploración Inicial
+
+```{r ver-datos}
+# Ver las primeras filas
+cat("Primeras 6 filas del dataset:\n")
+head(iris_df)
+```
+
+```{r estructura}
+# Estructura del dataset
+cat("\nEstructura del dataset:\n")
+str(iris_df)
+```
+
+```{r resumen}
+# Estadísticas descriptivas
+cat("\nEstadísticas descriptivas:\n")
+summary(iris_df)
+```
+
+```{r valores-faltantes}
+# Verificar valores faltantes
+cat("\nValores faltantes por columna:\n")
+colSums(is.na(iris_df))
+cat("\n¡No hay valores faltantes!\n")
+```
+
+```{r distribucion-especies}
+# Distribución de especies
+cat("\nDistribución de especies:\n")
+table(iris_df$Species)
+cat("\nEl dataset está balanceado: 50 ejemplos de cada especie\n")
+```
+
+---
+
+## Paso 3: Limpieza de Datos
+
+En este caso, los datos ya están limpios. Verificamos duplicados por completitud.
+
+```{r verificar-duplicados}
+# Verificar duplicados
+duplicados <- sum(duplicated(iris_df))
+cat("Número de filas duplicadas:", duplicados, "\n")
+```
+
+---
+
+## Paso 4: Análisis Exploratorio de Datos (EDA)
+
+### Estadística descriptiva por especie
+
+```{r estadisticas-por-especie}
+# Estadísticas agrupadas por especie
+iris_df %>%
+  group_by(Species) %>%
+  summarise(
+    across(where(is.numeric), 
+           list(mean = mean, sd = sd, min = min, max = max),
+           .names = "{.col}_{.fn}")
+  )
+```
+
+### Visualizaciones univariadas
+
+```{r histogramas, fig.width=12, fig.height=10}
+# Histogramas de todas las variables
+iris_df %>%
+  pivot_longer(cols = -Species, names_to = "variable", values_to = "valor") %>%
+  ggplot(aes(x = valor)) +
+  geom_histogram(bins = 20, fill = "steelblue", color = "black", alpha = 0.7) +
+  facet_wrap(~ variable, scales = "free", ncol = 2) +
+  labs(
+    title = "Distribución de características",
+    x = "Valor",
+    y = "Frecuencia"
+  ) +
+  theme_minimal()
+```
+
+```{r boxplots, fig.width=14, fig.height=10}
+# Boxplots por especie
+iris_df %>%
+  pivot_longer(cols = -Species, names_to = "variable", values_to = "valor") %>%
+  ggplot(aes(x = Species, y = valor, fill = Species)) +
+  geom_boxplot(alpha = 0.7) +
+  facet_wrap(~ variable, scales = "free_y", ncol = 2) +
+  labs(
+    title = "Distribución de características por especie",
+    x = "Especie",
+    y = "Valor"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+### Análisis bivariado
+
+```{r matriz-correlacion, fig.width=10, fig.height=8}
+# Matriz de correlación
+correlation_matrix <- iris_df %>%
+  select(where(is.numeric)) %>%
+  cor()
+
+corrplot(
+  correlation_matrix,
+  method = "color",
+  type = "upper",
+  addCoef.col = "black",
+  tl.col = "black",
+  tl.srt = 45,
+  title = "Matriz de Correlación",
+  mar = c(0, 0, 2, 0)
+)
+
+cat("\nObservaciones:\n")
+cat("- Petal.Length y Petal.Width tienen alta correlación (0.96)\n")
+cat("- Sepal.Length también correlaciona fuerte con Petal.Length y Petal.Width\n")
+```
+
+```{r pairplot, fig.width=12, fig.height=10}
+# Pair plot
+ggpairs(
+  iris_df,
+  columns = 1:4,
+  mapping = aes(color = Species, alpha = 0.6),
+  upper = list(continuous = wrap("cor", size = 3)),
+  lower = list(continuous = wrap("points", alpha = 0.5, size = 1)),
+  diag = list(continuous = wrap("densityDiag", alpha = 0.5)),
+  title = "Pair Plot del Dataset Iris"
+) +
+  theme_minimal()
+
+cat("\nObservaciones del pair plot:\n")
+cat("- Setosa se separa claramente del resto\n")
+cat("- Versicolor y virginica tienen cierto solapamiento\n")
+cat("- Petal.Length y Petal.Width son las más discriminativas\n")
+```
+
+### Detección de outliers
+
+```{r detectar-outliers}
+# Función para detectar outliers usando IQR
+detectar_outliers_iqr <- function(data, column) {
+  Q1 <- quantile(data[[column]], 0.25)
+  Q3 <- quantile(data[[column]], 0.75)
+  IQR_val <- Q3 - Q1
+  lower_bound <- Q1 - 1.5 * IQR_val
+  upper_bound <- Q3 + 1.5 * IQR_val
+  
+  outliers <- data %>%
+    filter(.data[[column]] < lower_bound | .data[[column]] > upper_bound)
+  
+  return(outliers)
+}
+
+# Detectar outliers para cada variable numérica
+cat("Detección de outliers por característica:\n\n")
+numeric_cols <- names(iris_df)[sapply(iris_df, is.numeric)]
+
+for (col in numeric_cols) {
+  outliers <- detectar_outliers_iqr(iris_df, col)
+  cat(col, ":", nrow(outliers), "outliers detectados\n")
+}
+
+cat("\nNota: Los outliers detectados no son necesariamente errores,\n")
+cat("pueden ser variabilidad natural de los datos.\n")
+```
+
+---
+
+## Paso 5: Modelado
+
+Vamos a construir un modelo simple de clasificación para predecir la especie.
+
+```{r preparar-datos}
+# Dividir en train y test (80-20)
+trainIndex <- createDataPartition(
+  iris_df$Species,
+  p = 0.8,
+  list = FALSE,
+  times = 1
+)
+
+train_data <- iris_df[trainIndex, ]
+test_data <- iris_df[-trainIndex, ]
+
+cat("Tamaño del conjunto de entrenamiento:", nrow(train_data), "ejemplos\n")
+cat("Tamaño del conjunto de prueba:", nrow(test_data), "ejemplos\n")
+```
+
+```{r entrenar-modelo}
+# Entrenar un árbol de decisión
+modelo <- rpart(
+  Species ~ .,
+  data = train_data,
+  method = "class",
+  control = rpart.control(maxdepth = 3)
+)
+
+cat("Modelo entrenado exitosamente\n")
+```
+
+```{r visualizar-arbol, fig.width=12, fig.height=8}
+# Visualizar el árbol de decisión
+rpart.plot(
+  modelo,
+  main = "Árbol de Decisión - Clasificación de Iris",
+  extra = 104,
+  box.palette = "RdYlGn",
+  shadow.col = "gray",
+  nn = TRUE
+)
+```
+
+---
+
+## Paso 6: Evaluación del Modelo
+
+```{r predicciones}
+# Hacer predicciones
+pred_train <- predict(modelo, train_data, type = "class")
+pred_test <- predict(modelo, test_data, type = "class")
+
+# Calcular accuracy
+acc_train <- mean(pred_train == train_data$Species)
+acc_test <- mean(pred_test == test_data$Species)
+
+cat("Accuracy en entrenamiento:", sprintf("%.2f%%", acc_train * 100), "\n")
+cat("Accuracy en prueba:", sprintf("%.2f%%", acc_test * 100), "\n")
+```
+
+```{r matriz-confusion}
+# Matriz de confusión
+cm <- confusionMatrix(pred_test, test_data$Species)
+print(cm)
+```
+
+```{r visualizar-confusion, fig.width=8, fig.height=6}
+# Visualizar matriz de confusión
+cm_table <- as.data.frame(cm$table)
+
+ggplot(cm_table, aes(x = Reference, y = Prediction, fill = Freq)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = Freq), size = 6, fontface = "bold") +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  labs(
+    title = "Matriz de Confusión",
+    x = "Valor Real",
+    y = "Predicción"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+```{r importancia-variables}
+# Importancia de variables
+importancia <- as.data.frame(modelo$variable.importance)
+importancia$Variable <- rownames(importancia)
+names(importancia)[1] <- "Importancia"
+importancia <- importancia %>%
+  arrange(desc(Importancia))
+
+print("Importancia de características:")
+print(importancia)
+```
+
+```{r plot-importancia, fig.width=10, fig.height=6}
+# Visualizar importancia
+ggplot(importancia, aes(x = reorder(Variable, Importancia), y = Importancia)) +
+  geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) +
+  coord_flip() +
+  labs(
+    title = "Importancia de Características",
+    x = "Característica",
+    y = "Importancia"
+  ) +
+  theme_minimal()
+```
+
+---
+
+## Paso 7: Predicción con nuevos datos
+
+```{r nueva-prediccion}
+# Crear un nuevo ejemplo (valores inventados)
+nueva_flor <- data.frame(
+  Sepal.Length = 5.1,
+  Sepal.Width = 3.5,
+  Petal.Length = 1.4,
+  Petal.Width = 0.2
+)
+
+# Predecir
+prediccion <- predict(modelo, nueva_flor, type = "class")
+probabilidades <- predict(modelo, nueva_flor, type = "prob")
+
+cat("Nueva flor:\n")
+cat("  Sepal.Length:", nueva_flor$Sepal.Length, "cm\n")
+cat("  Sepal.Width: ", nueva_flor$Sepal.Width, "cm\n")
+cat("  Petal.Length:", nueva_flor$Petal.Length, "cm\n")
+cat("  Petal.Width: ", nueva_flor$Petal.Width, "cm\n")
+cat("\nEspecie predicha:", as.character(prediccion), "\n")
+cat("\nProbabilidades:\n")
+for (i in 1:ncol(probabilidades)) {
+  cat(" ", colnames(probabilidades)[i], ":", 
+      sprintf("%.2f%%", probabilidades[1, i] * 100), "\n")
+}
+```
+
+---
+
+## Paso 8: Comunicación de Resultados
+
+### Resumen del análisis:
+
+1. **Dataset:** 150 flores de iris de 3 especies diferentes (50 de cada una)
+
+2. **Características medidas:** Largo y ancho de sépalos y pétalos
+
+3. **Hallazgos clave:**
+   - El dataset está balanceado y no tiene valores faltantes
+   - Petal.Length y Petal.Width tienen la mayor correlación (0.96)
+   - La especie *setosa* se separa claramente del resto
+   - *Versicolor* y *virginica* tienen cierto solapamiento
+
+4. **Modelo:**
+   - Árbol de decisión con profundidad máxima de 3
+   - Accuracy en test: ~97%
+   - Las características más importantes son Petal.Width y Petal.Length
+
+5. **Conclusión:**
+   - Es posible clasificar especies de iris con alta precisión usando medidas simples
+   - Un modelo simple (árbol de decisión poco profundo) es suficiente
+   - Las dimensiones de los pétalos son más informativas que las de los sépalos
+
+---
+
+## Ejercicios Propuestos
+
+1. **Experimentar con otros modelos:**
+   - Probar con `randomForest` del paquete `randomForest`
+   - Probar con `knn3` de `caret`
+   - Comparar los resultados
+
+2. **Análisis de dos especies:**
+   - Filtrar el dataset para incluir solo *versicolor* y *virginica*
+   - Entrenar un modelo solo con estas dos especies
+   - ¿Mejora o empeora el accuracy?
+
+3. **Validación cruzada:**
+   - Usar `trainControl` de `caret` para hacer validación cruzada
+   - Comparar resultados con el split simple train/test
+
+4. **Feature engineering:**
+   - Crear nuevas variables (ej: ratio Petal.Length/Petal.Width)
+   - Entrenar modelo con estas nuevas variables
+   - ¿Mejora el modelo?
+
+5. **Exportar resultados:**
+   - Guardar el modelo entrenado con `saveRDS()`
+   - Generar un reporte HTML con este R Markdown
+   - Subir a GitHub
+
+---
+
+## Buenas Prácticas Aplicadas en este Notebook
+
+✓ **Código organizado:** Dividido en chunks con títulos claros
+
+✓ **Semilla fijada:** `set.seed(42)` para reproducibilidad
+
+✓ **Comentarios útiles:** Explican el por qué, no solo el qué
+
+✓ **Visualizaciones claras:** Con títulos, etiquetas y temas consistentes
+
+✓ **Uso de tidyverse:** Código claro y legible con pipes (`%>%`)
+
+✓ **Nombres descriptivos:** Variables con nombres significativos
+
+✓ **Verificaciones:** Chequeo de valores faltantes, duplicados, dimensiones
+
+✓ **Interpretación:** Conclusiones escritas en lenguaje natural
+
+---
+
+## Próximos Pasos
+
+1. **Renderizar este R Markdown a HTML:**
+   ```{r render-html, eval=FALSE}
+   rmarkdown::render("U0_clases1y2_practica_R.Rmd")
+   ```
+
+2. **Subir este archivo a tu repositorio de GitHub**
+
+3. **Completar los ejercicios propuestos**
+
+4. **Experimentar con el código**
+
+5. **Prepararse para la Unidad 1:** Obtención y preparación de datos
+
+**¡Felicitaciones por completar tu primer análisis de datos en R!**

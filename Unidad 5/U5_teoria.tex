@@ -1,0 +1,1361 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-minimal]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+% Configuración de colores
+\definecolor{unsblue}{RGB}{30,60,120}
+\definecolor{codegray}{RGB}{240,240,240}
+
+% Configuración de títulos
+\titleformat{\section}{\Large\bfseries\color{unsblue}}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries\color{unsblue}}{\thesubsection}{1em}{}
+
+% Configuración de código
+\lstset{
+    backgroundcolor=\color{codegray},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    xleftmargin=1cm,
+    xrightmargin=1cm,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red}
+}
+
+% Encabezado y pie de página
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Métodos de Análisis de Datos 1}
+\fancyhead[R]{Unidad 5}
+\fancyfoot[C]{\thepage}
+
+\title{\textbf{Métodos de Análisis de Datos 1}\\
+\Large Unidad 5: Predicción y Comunicación de Resultados\\
+\large Teoría Completa}
+\author{Departamento de Matemática\\Universidad Nacional del Sur}
+\date{Primer Semestre 2026}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introducción}
+
+La Unidad 5 cierra el ciclo completo de análisis de datos abordando aspectos cruciales que conectan el trabajo técnico con su aplicación práctica y comunicación efectiva. Hasta ahora hemos aprendido a obtener, limpiar, explorar y modelar datos. En esta unidad nos enfocamos en:
+
+\begin{itemize}
+\item Llevar modelos desde el desarrollo hasta producción
+\item Interpretar y explicar las decisiones de modelos complejos
+\item Comunicar resultados de manera efectiva a diferentes audiencias
+\item Crear reportes reproducibles y documentación de calidad
+\item Considerar las implicaciones éticas del análisis de datos
+\end{itemize}
+
+Estos aspectos son frecuentemente subestimados en cursos introductorios, pero son fundamentales para el éxito profesional en ciencia de datos.
+
+\section{Ciclo de Vida de Modelos en Producción}
+
+\subsection{Fases del Ciclo de Vida}
+
+El desarrollo de un modelo de machine learning no termina cuando obtenemos buenas métricas en el conjunto de validación. El ciclo completo incluye:
+
+\subsubsection{1. Desarrollo e Investigación}
+
+\begin{itemize}
+\item \textbf{Exploración de datos:} análisis exploratorio, identificación de patrones, detección de problemas de calidad
+\item \textbf{Ingeniería de features:} creación, selección y transformación de variables
+\item \textbf{Experimentación:} probar diferentes algoritmos, hiperparámetros y estrategias
+\item \textbf{Validación:} evaluación rigurosa con datos no vistos, análisis de errores
+\end{itemize}
+
+\textbf{Herramientas típicas:} Jupyter notebooks, VS Code, bibliotecas de ML (scikit-learn, statsmodels)
+
+\subsubsection{2. Deployment (Puesta en Producción)}
+
+Una vez que tenemos un modelo que cumple los requisitos de rendimiento y negocio, debemos ponerlo a disposición de usuarios o sistemas. Esto implica:
+
+\begin{itemize}
+\item \textbf{Serialización:} guardar el modelo entrenado en un formato que pueda ser cargado posteriormente
+\item \textbf{Creación de API:} exponer el modelo mediante endpoints REST para que otros sistemas lo consuman
+\item \textbf{Containerización:} empaquetar modelo y dependencias (Docker) para garantizar reproducibilidad
+\item \textbf{Integración:} conectar el modelo con bases de datos, pipelines de datos, sistemas empresariales
+\end{itemize}
+
+\textbf{Ejemplo de flujo:}
+\begin{enumerate}
+\item Entrenar modelo en notebook
+\item Serializar modelo con pickle/joblib
+\item Crear aplicación Flask/FastAPI que carga el modelo
+\item Dockerizar la aplicación
+\item Deployar en servidor/cloud (AWS, Azure, GCP)
+\end{enumerate}
+
+\subsubsection{3. Monitoreo}
+
+Los modelos en producción deben ser monitoreados continuamente para detectar:
+
+\begin{itemize}
+\item \textbf{Degradación del rendimiento:} las métricas (accuracy, AUC, etc.) pueden empeorar con el tiempo
+\item \textbf{Data drift:} cambios en la distribución de las variables de entrada
+\item \textbf{Concept drift:} cambios en la relación entre predictores y variable objetivo
+\item \textbf{Problemas técnicos:} tiempos de respuesta, errores, disponibilidad
+\end{itemize}
+
+\textbf{Métricas a monitorear:}
+\begin{itemize}
+\item Performance del modelo (accuracy, precision, recall, AUC)
+\item Distribución de predicciones
+\item Distribución de features de entrada
+\item Latencia (tiempo de respuesta)
+\item Tasa de errores
+\end{itemize}
+
+\subsubsection{4. Reentrenamiento y Versionado}
+
+Cuando detectamos degradación o disponemos de nuevos datos, debemos reentrenar:
+
+\begin{itemize}
+\item \textbf{Reentrenamiento programado:} automático cada cierto tiempo (diario, semanal, mensual)
+\item \textbf{Reentrenamiento disparado:} cuando las métricas caen por debajo de un umbral
+\item \textbf{Versionado de modelos:} mantener registro de versiones, poder hacer rollback
+\item \textbf{A/B testing:} comparar modelo nuevo vs antiguo en producción antes de reemplazo completo
+\end{itemize}
+
+\textbf{Herramientas de versionado:} MLflow, DVC, Neptune.ai, Weights \& Biases
+
+\subsection{Data Drift y Concept Drift}
+
+\subsubsection{Data Drift}
+
+Cambio en la distribución de las variables de entrada $P(X)$. Por ejemplo:
+
+\begin{itemize}
+\item Un modelo de scoring crediticio entrenado pre-pandemia puede recibir solicitudes con perfiles muy diferentes post-pandemia
+\item Variables demográficas cambian con el tiempo (edad, ingresos)
+\item Cambios estacionales en datos de ventas
+\end{itemize}
+
+\textbf{Detección:}
+\begin{itemize}
+\item Comparar distribuciones entre train y producción (test de Kolmogorov-Smirnov, chi-cuadrado)
+\item Monitorear estadísticos descriptivos (media, varianza) de cada feature
+\item Visualizaciones: histogramas comparativos, Q-Q plots
+\end{itemize}
+
+\subsubsection{Concept Drift}
+
+Cambio en la relación entre predictores y objetivo $P(Y|X)$. El concepto que el modelo aprendió ya no es válido. Ejemplos:
+
+\begin{itemize}
+\item Un modelo de predicción de ventas entrenado en un mercado estable puede fallar si cambian las regulaciones
+\item Detección de fraude: los estafadores adaptan sus métodos
+\item Recomendaciones: las preferencias de usuarios cambian con el tiempo
+\end{itemize}
+
+\textbf{Detección:}
+\begin{itemize}
+\item Monitorear performance en producción (accuracy, precision, recall)
+\item Comparar predicciones vs valores reales cuando estén disponibles
+\item Alertas cuando métricas caen por debajo de umbrales
+\end{itemize}
+
+\subsection{Consideraciones de Deployment}
+
+\subsubsection{Escalabilidad}
+
+\begin{itemize}
+\item \textbf{Latencia:} tiempo de respuesta debe ser aceptable (usualmente $<$ 100ms para aplicaciones interactivas)
+\item \textbf{Throughput:} cantidad de predicciones por segundo
+\item \textbf{Batch vs real-time:} ¿predicciones individuales o en lote?
+\item \textbf{Trade-offs:} modelos más complejos pueden ser más precisos pero más lentos
+\end{itemize}
+
+\subsubsection{Mantenibilidad}
+
+\begin{itemize}
+\item \textbf{Documentación:} del modelo, features, dependencias, proceso de entrenamiento
+\item \textbf{Testing:} tests unitarios para preprocesamiento, validaciones de entrada/salida
+\item \textbf{Logging:} registrar predicciones, inputs, errores para debugging
+\item \textbf{Reproducibilidad:} control de versiones de código, datos, modelo
+\end{itemize}
+
+\section{Serialización de Modelos}
+
+La serialización es el proceso de convertir un objeto Python (como un modelo entrenado) en un formato que puede ser almacenado en disco y posteriormente recargado.
+
+\subsection{Formatos de Serialización}
+
+\subsubsection{pickle}
+
+Formato estándar de Python para serialización de objetos.
+
+\textbf{Ventajas:}
+\begin{itemize}
+\item Nativo de Python, no requiere librerías adicionales
+\item Puede serializar casi cualquier objeto Python
+\item Simple de usar
+\end{itemize}
+
+\textbf{Desventajas:}
+\begin{itemize}
+\item Específico de Python (no portable a otros lenguajes)
+\item Vulnerabilidades de seguridad: no cargar pickles de fuentes no confiables
+\item Puede haber incompatibilidades entre versiones de librerías
+\end{itemize}
+
+\textbf{Ejemplo:}
+\begin{lstlisting}[language=Python]
+import pickle
+from sklearn.linear_model import LogisticRegression
+
+# Entrenar modelo
+modelo = LogisticRegression()
+modelo.fit(X_train, y_train)
+
+# Guardar
+with open('modelo.pkl', 'wb') as f:
+    pickle.dump(modelo, f)
+
+# Cargar
+with open('modelo.pkl', 'rb') as f:
+    modelo_cargado = pickle.load(f)
+
+# Usar
+predicciones = modelo_cargado.predict(X_test)
+\end{lstlisting}
+
+\subsubsection{joblib}
+
+Optimización de pickle para objetos grandes con arrays NumPy (común en modelos de ML).
+
+\textbf{Ventajas:}
+\begin{itemize}
+\item Más eficiente que pickle para modelos grandes
+\item Compresión automática
+\item API simple compatible con pickle
+\end{itemize}
+
+\textbf{Ejemplo:}
+\begin{lstlisting}[language=Python]
+from joblib import dump, load
+
+# Guardar
+dump(modelo, 'modelo.joblib')
+
+# Cargar
+modelo_cargado = load('modelo.joblib')
+\end{lstlisting}
+
+\subsubsection{ONNX (Open Neural Network Exchange)}
+
+Formato abierto e interoperable para modelos de ML, especialmente redes neuronales.
+
+\textbf{Ventajas:}
+\begin{itemize}
+\item Portable entre frameworks (PyTorch, TensorFlow, scikit-learn)
+\item Portable entre lenguajes (Python, C++, Java, JavaScript)
+\item Optimizado para inferencia rápida
+\end{itemize}
+
+\textbf{Desventajas:}
+\begin{itemize}
+\item Más complejo de configurar
+\item No todos los modelos de scikit-learn son convertibles fácilmente
+\end{itemize}
+
+\textbf{Ejemplo con scikit-learn:}
+\begin{lstlisting}[language=Python]
+from skl2onnx import convert_sklearn
+from skl2onnx.common.data_types import FloatTensorType
+
+# Definir tipo de input
+initial_type = [('float_input', FloatTensorType([None, X_train.shape[1]]))]
+
+# Convertir
+onx = convert_sklearn(modelo, initial_types=initial_type)
+
+# Guardar
+with open("modelo.onnx", "wb") as f:
+    f.write(onx.SerializeToString())
+\end{lstlisting}
+
+\subsection{Buenas Prácticas de Serialización}
+
+\begin{enumerate}
+\item \textbf{Guardar todo el pipeline:} no solo el modelo, sino también preprocesadores (scalers, encoders)
+\item \textbf{Versionado:} incluir versión del modelo y de librerías en el nombre del archivo
+\item \textbf{Metadata:} guardar información adicional (fecha de entrenamiento, métricas, features utilizadas)
+\item \textbf{Testing post-carga:} verificar que el modelo cargado produce las mismas predicciones
+\item \textbf{Compresión:} para modelos grandes, usar compresión (joblib lo hace automáticamente)
+\end{enumerate}
+
+\textbf{Ejemplo de serialización completa:}
+\begin{lstlisting}[language=Python]
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from joblib import dump
+import json
+from datetime import datetime
+
+# Crear pipeline completo
+pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
+])
+
+# Entrenar
+pipeline.fit(X_train, y_train)
+
+# Evaluar
+accuracy = pipeline.score(X_test, y_test)
+
+# Guardar pipeline
+dump(pipeline, 'pipeline_v1.0.0.joblib')
+
+# Guardar metadata
+metadata = {
+    'version': '1.0.0',
+    'timestamp': datetime.now().isoformat(),
+    'accuracy': accuracy,
+    'features': list(X_train.columns),
+    'sklearn_version': sklearn.__version__
+}
+
+with open('pipeline_v1.0.0_metadata.json', 'w') as f:
+    json.dump(metadata, f, indent=2)
+\end{lstlisting}
+
+\section{Interpretabilidad de Modelos}
+
+La interpretabilidad se refiere a la capacidad de entender y explicar cómo un modelo toma sus decisiones. Es crucial por:
+
+\begin{itemize}
+\item \textbf{Confianza:} usuarios confían más en modelos que pueden explicar
+\item \textbf{Debugging:} identificar errores y sesgos en el modelo
+\item \textbf{Cumplimiento regulatorio:} en algunos dominios (finanzas, salud) es obligatorio poder explicar decisiones
+\item \textbf{Mejora del modelo:} entender qué aprende el modelo ayuda a mejorar features
+\end{itemize}
+
+\subsection{Modelos Interpretables vs Caja Negra}
+
+\subsubsection{Modelos Inherentemente Interpretables}
+
+\textbf{Regresión Lineal/Logística:}
+\begin{itemize}
+\item Coeficientes indican dirección y magnitud del efecto de cada variable
+\item Fácil de entender: ``un aumento de 1 unidad en $X_1$ resulta en un cambio de $\beta_1$ en $Y$''
+\end{itemize}
+
+\textbf{Árboles de Decisión:}
+\begin{itemize}
+\item Estructura visual clara: reglas if-then
+\item Fácil de explicar a no técnicos
+\item Limitación: árboles profundos pierden interpretabilidad
+\end{itemize}
+
+\subsubsection{Modelos de Caja Negra}
+
+\textbf{Random Forest, Gradient Boosting:}
+\begin{itemize}
+\item Combinan múltiples árboles (decenas a miles)
+\item No hay una regla simple de interpretación
+\item Necesitan métodos post-hoc para interpretación
+\end{itemize}
+
+\textbf{Redes Neuronales:}
+\begin{itemize}
+\item Millones de parámetros
+\item Transformaciones no lineales complejas
+\item Extremadamente difíciles de interpretar directamente
+\end{itemize}
+
+\textbf{SVM con kernels no lineales:}
+\begin{itemize}
+\item Operan en espacios de alta dimensión
+\item Vectores de soporte no son directamente interpretables
+\end{itemize}
+
+\subsection{Trade-off Interpretabilidad vs Performance}
+
+En general existe un trade-off:
+\begin{itemize}
+\item Modelos simples (regresión lineal, árboles pequeños) son fáciles de interpretar pero pueden tener menor performance
+\item Modelos complejos (random forest, redes neuronales) tienen mejor performance pero son más difíciles de interpretar
+\end{itemize}
+
+\textbf{Estrategia recomendada:}
+\begin{enumerate}
+\item Comenzar con modelos simples e interpretables (baseline)
+\item Si el performance no es suficiente, probar modelos más complejos
+\item Usar técnicas de interpretabilidad (SHAP, LIME) para explicar modelos complejos
+\item Documentar claramente los trade-offs
+\end{enumerate}
+
+\subsection{SHAP (SHapley Additive exPlanations)}
+
+SHAP es un método unificado para explicar las salidas de modelos de machine learning, basado en valores de Shapley de la teoría de juegos cooperativos.
+
+\subsubsection{Idea Principal}
+
+Para cada predicción, SHAP calcula la contribución de cada feature al valor predicho. Formalmente:
+
+$$f(x) = \phi_0 + \sum_{i=1}^{p} \phi_i$$
+
+donde:
+\begin{itemize}
+\item $f(x)$ es la predicción del modelo para la instancia $x$
+\item $\phi_0$ es el valor base (predicción promedio del modelo)
+\item $\phi_i$ es la contribución de la feature $i$ (valor SHAP)
+\end{itemize}
+
+\textbf{Propiedades deseables que cumple SHAP:}
+\begin{itemize}
+\item \textbf{Local accuracy:} la suma de contribuciones reproduce la predicción
+\item \textbf{Missingness:} features ausentes no contribuyen
+\item \textbf{Consistency:} si un modelo cambia para depender más de una feature, su contribución aumenta
+\end{itemize}
+
+\subsubsection{Interpretación de SHAP Values}
+
+\begin{itemize}
+\item Valores positivos: la feature empuja la predicción hacia arriba
+\item Valores negativos: la feature empuja la predicción hacia abajo
+\item Magnitud: importancia de la contribución
+\end{itemize}
+
+\subsubsection{Tipos de Gráficos SHAP}
+
+\textbf{1. Force Plot:} visualiza cómo cada feature contribuye a una predicción individual
+
+\textbf{2. Summary Plot:} muestra la distribución de SHAP values para cada feature en todo el dataset
+\begin{itemize}
+\item Eje vertical: features ordenadas por importancia
+\item Eje horizontal: valor SHAP (impacto en predicción)
+\item Color: valor de la feature (alto/bajo)
+\end{itemize}
+
+\textbf{3. Dependence Plot:} muestra la relación entre el valor de una feature y su SHAP value
+
+\textbf{4. Waterfall Plot:} descomposición aditiva de una predicción individual
+
+\subsubsection{Uso en Python}
+
+\begin{lstlisting}[language=Python]
+import shap
+from sklearn.ensemble import RandomForestClassifier
+
+# Entrenar modelo
+modelo = RandomForestClassifier()
+modelo.fit(X_train, y_train)
+
+# Crear explainer
+explainer = shap.TreeExplainer(modelo)
+
+# Calcular SHAP values
+shap_values = explainer.shap_values(X_test)
+
+# Visualizar
+# Summary plot (global)
+shap.summary_plot(shap_values[1], X_test)
+
+# Force plot (individual, primera instancia)
+shap.force_plot(explainer.expected_value[1], 
+                shap_values[1][0], 
+                X_test.iloc[0])
+
+# Dependence plot
+shap.dependence_plot("feature_name", shap_values[1], X_test)
+\end{lstlisting}
+
+\subsection{LIME (Local Interpretable Model-agnostic Explanations)}
+
+LIME explica predicciones individuales aproximando localmente el modelo con un modelo interpretable simple.
+
+\subsubsection{Idea Principal}
+
+Para explicar una predicción:
+\begin{enumerate}
+\item Generar perturbaciones (variaciones) del punto a explicar
+\item Obtener predicciones del modelo original para estas perturbaciones
+\item Entrenar un modelo interpretable simple (e.g., regresión lineal) en las perturbaciones, ponderando más las cercanas al punto original
+\item El modelo simple aproxima localmente el comportamiento del modelo complejo
+\end{enumerate}
+
+\textbf{Analogía:} es como aproximar una función compleja no lineal con una recta tangente en un punto específico.
+
+\subsubsection{Ventajas de LIME}
+
+\begin{itemize}
+\item \textbf{Model-agnostic:} funciona con cualquier modelo de caja negra
+\item \textbf{Explicaciones locales:} se enfoca en una predicción específica
+\item \textbf{Interpretable:} usa modelos lineales como explicadores
+\end{itemize}
+
+\subsubsection{Desventajas de LIME}
+
+\begin{itemize}
+\item \textbf{Inestabilidad:} pequeños cambios en el punto pueden cambiar mucho la explicación
+\item \textbf{Dependencia de hiperparámetros:} tamaño de vecindad, kernel
+\item \textbf{No garantiza propiedades globales:} solo válido localmente
+\end{itemize}
+
+\subsubsection{Uso en Python}
+
+\begin{lstlisting}[language=Python]
+import lime
+import lime.lime_tabular
+
+# Crear explainer
+explainer = lime.lime_tabular.LimeTabularExplainer(
+    X_train.values,
+    feature_names=X_train.columns,
+    class_names=['Clase 0', 'Clase 1'],
+    mode='classification'
+)
+
+# Explicar una instancia
+i = 0  # índice de la instancia
+exp = explainer.explain_instance(
+    X_test.values[i], 
+    modelo.predict_proba,
+    num_features=10
+)
+
+# Visualizar
+exp.show_in_notebook()
+
+# O como gráfico
+exp.as_pyplot_figure()
+\end{lstlisting}
+
+\subsection{Partial Dependence Plots (PDP)}
+
+Los PDP muestran el efecto marginal de una feature sobre la predicción, manteniendo las demás constantes.
+
+\subsubsection{Cálculo}
+
+Para una feature $X_j$:
+$$PD_{X_j}(x_j) = \mathbb{E}_{X_{-j}}[f(x_j, X_{-j})] = \frac{1}{n}\sum_{i=1}^{n}f(x_j, x_{-j}^{(i)})$$
+
+Es decir, fijamos $X_j$ en un valor $x_j$, promediamos las predicciones sobre todos los valores observados de las demás features.
+
+\subsubsection{Interpretación}
+
+\begin{itemize}
+\item Eje horizontal: valores de la feature
+\item Eje vertical: predicción promedio
+\item La curva muestra cómo cambia la predicción al variar la feature
+\item Pendiente positiva: relación positiva
+\item Pendiente negativa: relación negativa
+\item Curva plana: la feature no afecta la predicción
+\end{itemize}
+
+\subsubsection{Limitaciones}
+
+\begin{itemize}
+\item \textbf{Supuesto de independencia:} asume que las features son independientes (raramente cierto)
+\item \textbf{No captura interacciones:} promedia sobre todas las combinaciones
+\item \textbf{Puede ser engañoso:} si hay interacciones fuertes
+\end{itemize}
+
+\textbf{Solución para interacciones:} Individual Conditional Expectation (ICE) plots, que muestran el efecto para cada instancia individualmente.
+
+\subsubsection{Uso en Python}
+
+\begin{lstlisting}[language=Python]
+from sklearn.inspection import PartialDependenceDisplay
+
+# PDP para una feature
+fig, ax = plt.subplots(figsize=(10, 6))
+PartialDependenceDisplay.from_estimator(
+    modelo, X_train, 
+    features=['feature_name'],
+    ax=ax
+)
+plt.show()
+
+# PDP para múltiples features
+fig, ax = plt.subplots(figsize=(12, 4))
+PartialDependenceDisplay.from_estimator(
+    modelo, X_train, 
+    features=['feature1', 'feature2', ('feature1', 'feature2')],
+    ax=ax
+)
+plt.show()
+\end{lstlisting}
+
+\subsection{Feature Importance}
+
+Mide la importancia relativa de cada feature para el modelo.
+
+\subsubsection{Importancia en Árboles y Random Forest}
+
+Para modelos basados en árboles, la importancia se calcula como la disminución promedio en impureza (Gini o entropía) causada por cada feature.
+
+\textbf{Ventajas:}
+\begin{itemize}
+\item Rápida de calcular
+\item Incorporada en scikit-learn
+\end{itemize}
+
+\textbf{Desventajas:}
+\begin{itemize}
+\item Sesgada hacia features con alta cardinalidad
+\item No distingue correlación de causalidad
+\end{itemize}
+
+\begin{lstlisting}[language=Python]
+# Obtener importancias
+importances = modelo.feature_importances_
+
+# Visualizar
+indices = np.argsort(importances)[::-1]
+plt.figure(figsize=(10, 6))
+plt.bar(range(X_train.shape[1]), importances[indices])
+plt.xticks(range(X_train.shape[1]), 
+           X_train.columns[indices], 
+           rotation=90)
+plt.title("Feature Importances")
+plt.tight_layout()
+plt.show()
+\end{lstlisting}
+
+\subsubsection{Permutation Importance}
+
+Mide el aumento en el error del modelo cuando se permutan aleatoriamente los valores de una feature (rompiendo su relación con el objetivo).
+
+\textbf{Ventajas:}
+\begin{itemize}
+\item Model-agnostic
+\item No sesgada por cardinalidad
+\item Refleja importancia real para predicción
+\end{itemize}
+
+\textbf{Desventajas:}
+\begin{itemize}
+\item Más lenta de calcular
+\item Puede ser confusa con features correlacionadas
+\end{itemize}
+
+\begin{lstlisting}[language=Python]
+from sklearn.inspection import permutation_importance
+
+# Calcular
+perm_importance = permutation_importance(
+    modelo, X_test, y_test,
+    n_repeats=10, random_state=42
+)
+
+# Visualizar
+sorted_idx = perm_importance.importances_mean.argsort()[::-1]
+plt.figure(figsize=(10, 6))
+plt.boxplot(perm_importance.importances[sorted_idx].T,
+            labels=X_test.columns[sorted_idx],
+            vert=False)
+plt.xlabel("Decrease in accuracy")
+plt.tight_layout()
+plt.show()
+\end{lstlisting}
+
+\section{Comunicación de Resultados}
+
+La comunicación efectiva es tan importante como el análisis técnico. Los mejores modelos son inútiles si no podemos comunicar sus hallazgos de manera clara y convincente.
+
+\subsection{Principios de Comunicación Efectiva}
+
+\subsubsection{1. Conocer a la Audiencia}
+
+\textbf{Audiencia técnica (científicos de datos, ingenieros):}
+\begin{itemize}
+\item Puede incluir detalles técnicos (hiperparámetros, métricas específicas)
+\item Aprecian gráficos de diagnóstico (residuos, curvas ROC)
+\item Interesados en reproducibilidad y metodología
+\end{itemize}
+
+\textbf{Audiencia de negocio (gerentes, ejecutivos):}
+\begin{itemize}
+\item Enfoque en impacto, ROI, decisiones accionables
+\item Visualizaciones simples y claras
+\item Lenguaje no técnico, evitar jerga
+\item Destacar resultados clave y recomendaciones
+\end{itemize}
+
+\textbf{Audiencia mixta:}
+\begin{itemize}
+\item Resumen ejecutivo al inicio
+\item Detalles técnicos en apéndices
+\item Gráficos intuitivos con explicaciones breves
+\end{itemize}
+
+\subsubsection{2. Estructura Clara}
+
+\textbf{Reporte típico:}
+\begin{enumerate}
+\item \textbf{Resumen ejecutivo (1 página):} problema, metodología, resultados clave, recomendaciones
+\item \textbf{Introducción:} contexto, objetivos, preguntas de investigación
+\item \textbf{Datos:} fuentes, tamaño, calidad, limitaciones
+\item \textbf{Metodología:} análisis exploratorio, features, modelos probados, validación
+\item \textbf{Resultados:} métricas, comparaciones, hallazgos principales
+\item \textbf{Conclusiones:} interpretación, implicaciones, recomendaciones
+\item \textbf{Limitaciones:} supuestos, sesgos, incertidumbre
+\item \textbf{Próximos pasos:} mejoras futuras, áreas de investigación
+\item \textbf{Apéndices:} detalles técnicos, código, tablas completas
+\end{enumerate}
+
+\subsubsection{3. Visualizaciones Efectivas}
+
+\textbf{Principios:}
+\begin{itemize}
+\item \textbf{Simplicidad:} un gráfico, un mensaje
+\item \textbf{Claridad:} ejes etiquetados, leyendas, títulos descriptivos
+\item \textbf{Honestidad:} no distorsionar (escalas apropiadas, barras desde cero)
+\item \textbf{Accesibilidad:} colores apropiados para daltónicos, tamaño de fuente legible
+\item \textbf{Consistencia:} mismo estilo a lo largo del reporte
+\end{itemize}
+
+\textbf{Elegir el gráfico apropiado:}
+\begin{itemize}
+\item Comparación de categorías: barras, columnas
+\item Evolución temporal: líneas
+\item Distribución: histogramas, boxplots, violines
+\item Relación entre dos variables: scatter plots
+\item Proporciones: pie charts (usar con moderación), treemaps
+\item Múltiples variables: heatmaps, parallel coordinates
+\end{itemize}
+
+\subsubsection{4. Narrar una Historia}
+
+Los datos por sí solos no son convincentes. Necesitamos construir una narrativa:
+
+\begin{itemize}
+\item \textbf{Contexto:} ¿por qué es importante este análisis?
+\item \textbf{Problema:} ¿qué pregunta estamos respondiendo?
+\item \textbf{Viaje:} ¿qué descubrimos en el camino?
+\item \textbf{Clímax:} hallazgo principal
+\item \textbf{Resolución:} ¿qué debemos hacer con esta información?
+\end{itemize}
+
+\textbf{Técnicas narrativas:}
+\begin{itemize}
+\item Comenzar con un ejemplo concreto o anécdota
+\item Usar analogías para conceptos complejos
+\item Anticipar y responder objeciones
+\item Terminar con un llamado a la acción claro
+\end{itemize}
+
+\subsection{Reportar Incertidumbre}
+
+Todo modelo tiene incertidumbre. Es crucial comunicarla honestamente:
+
+\begin{itemize}
+\item \textbf{Intervalos de confianza:} no solo puntos estimados
+\item \textbf{Errores de predicción:} RMSE, MAE contextualizados
+\item \textbf{Limitaciones de los datos:} sesgos de muestreo, datos faltantes
+\item \textbf{Supuestos del modelo:} qué asumimos y qué tan razonables son
+\end{itemize}
+
+\textbf{Ejemplo de buena práctica:}
+
+``El modelo predice una tasa de churn del 15\% con un intervalo de confianza del 95\% de [12\%, 18\%]. Esta estimación asume que el comportamiento futuro de los clientes será similar al histórico. Cambios en el mercado o en nuestros productos podrían afectar esta predicción.''
+
+\subsection{Lenguaje Claro y Preciso}
+
+\textbf{Evitar:}
+\begin{itemize}
+\item Jerga innecesaria (``hiperplano de máximo margen'')
+\item Siglas no definidas (AUC, RMSE sin explicar)
+\item Lenguaje vago (``el modelo funciona bien'')
+\item Causalidad cuando solo hay correlación (``X causa Y'')
+\end{itemize}
+
+\textbf{Preferir:}
+\begin{itemize}
+\item Términos simples y descriptivos
+\item Definiciones breves en primera mención
+\item Cuantificación precisa (``el modelo clasifica correctamente el 85\% de los casos'')
+\item Lenguaje asociativo (``X está asociado con Y'', ``X predice Y'')
+\end{itemize}
+
+\section{Reportes Reproducibles}
+
+La reproducibilidad es fundamental en ciencia de datos. Un análisis reproducible puede ser ejecutado por otra persona y obtener los mismos resultados.
+
+\subsection{Jupyter Notebooks}
+
+Jupyter combina código, visualizaciones y narrativa en un solo documento interactivo.
+
+\subsubsection{Ventajas}
+
+\begin{itemize}
+\item \textbf{Interactividad:} ejecutar código celda por celda
+\item \textbf{Integración:} código, texto (Markdown), ecuaciones (LaTeX), imágenes
+\item \textbf{Compartible:} formato JSON, puede versionarse con git
+\item \textbf{Exportable:} HTML, PDF, presentaciones
+\item \textbf{Popular:} ampliamente usado en industria y academia
+\end{itemize}
+
+\subsubsection{Buenas Prácticas}
+
+\begin{enumerate}
+\item \textbf{Orden lógico:} celdas ejecutables de arriba a abajo secuencialmente
+\item \textbf{Restart \& Run All:} asegurarse que el notebook funcione desde cero
+\item \textbf{Markdown generoso:} explicar qué hace cada sección
+\item \textbf{Visualizaciones inline:} configurar \texttt{\%matplotlib inline}
+\item \textbf{Control de versiones:} hacer commits frecuentes
+\item \textbf{Evitar outputs grandes:} limpiar antes de commitear
+\item \textbf{Gestión de dependencias:} incluir requirements.txt o environment.yml
+\end{enumerate}
+
+\subsubsection{Estructura Recomendada}
+
+\begin{enumerate}
+\item \textbf{Título y resumen:} qué hace este notebook
+\item \textbf{Imports:} todas las librerías al inicio
+\item \textbf{Configuración:} seeds, parámetros, paths
+\item \textbf{Carga de datos:} con verificaciones básicas
+\item \textbf{Exploración:} análisis exploratorio
+\item \textbf{Preprocesamiento:} limpieza, transformaciones
+\item \textbf{Modelado:} entrenamiento, validación
+\item \textbf{Evaluación:} métricas, gráficos
+\item \textbf{Conclusiones:} hallazgos principales
+\item \textbf{Próximos pasos:} mejoras futuras
+\end{enumerate}
+
+\subsubsection{Exportación}
+
+\textbf{HTML (recomendado para compartir):}
+\begin{lstlisting}[language=bash]
+jupyter nbconvert --to html notebook.ipynb
+\end{lstlisting}
+
+\textbf{PDF (requiere LaTeX instalado):}
+\begin{lstlisting}[language=bash]
+jupyter nbconvert --to pdf notebook.ipynb
+\end{lstlisting}
+
+\textbf{Presentación (slides con reveal.js):}
+\begin{lstlisting}[language=bash]
+jupyter nbconvert --to slides notebook.ipynb --post serve
+\end{lstlisting}
+
+\subsection{R Markdown}
+
+R Markdown permite combinar código R, narrativa y análisis en documentos reproducibles.
+
+\subsubsection{Estructura}
+
+Un archivo .Rmd tiene tres componentes:
+
+\textbf{1. Encabezado YAML:} metadatos y opciones
+\begin{lstlisting}
+---
+title: "Análisis de Ventas Q1 2026"
+author: "José Bavio"
+date: "2026-03-05"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+---
+\end{lstlisting}
+
+\textbf{2. Texto Markdown:} narrativa, explicaciones
+
+\textbf{3. Chunks de código R:} entre \texttt{\`{}\`{}\`\{r\}} y \texttt{\`{}\`{}\`}
+
+\subsubsection{Opciones de Chunks}
+
+Controlan cómo se ejecuta y muestra el código:
+
+\begin{itemize}
+\item \texttt{echo=FALSE}: no mostrar código, solo output
+\item \texttt{eval=FALSE}: mostrar código pero no ejecutar
+\item \texttt{include=FALSE}: ejecutar pero no mostrar nada
+\item \texttt{message=FALSE, warning=FALSE}: suprimir mensajes
+\item \texttt{fig.width=8, fig.height=6}: tamaño de gráficos
+\item \texttt{cache=TRUE}: cachear resultados (útil para cálculos lentos)
+\end{itemize}
+
+\subsubsection{Formatos de Salida}
+
+\textbf{HTML (interactivo, con gráficos dinámicos):}
+\begin{lstlisting}
+output: html_document
+\end{lstlisting}
+
+\textbf{PDF (vía LaTeX):}
+\begin{lstlisting}
+output: pdf_document
+\end{lstlisting}
+
+\textbf{Word:}
+\begin{lstlisting}
+output: word_document
+\end{lstlisting}
+
+\textbf{Presentaciones:}
+\begin{lstlisting}
+output: 
+  ioslides_presentation  # Google IO style
+  slidy_presentation     # W3C style
+  beamer_presentation    # LaTeX Beamer
+\end{lstlisting}
+
+\subsubsection{Parámetros}
+
+R Markdown permite crear reportes parametrizados:
+
+\begin{lstlisting}
+---
+title: "Reporte de Ventas"
+params:
+  region: "Norte"
+  año: 2026
+---
+
+## Ventas en `r params$region` - `r params$año`
+
+```{r}
+datos_filtrados <- datos %>%
+  filter(region == params$region, año == params$año)
+```
+\end{lstlisting}
+
+Renderizar con parámetros diferentes:
+\begin{lstlisting}[language=R]
+rmarkdown::render("reporte.Rmd", 
+                  params = list(region = "Sur", año = 2025))
+\end{lstlisting}
+
+Esto permite automatizar reportes para diferentes regiones, períodos, etc.
+
+\subsection{Control de Versiones}
+
+Git es esencial para reproducibilidad:
+
+\begin{itemize}
+\item \textbf{Historial completo:} registra todos los cambios
+\item \textbf{Colaboración:} múltiples personas trabajando simultáneamente
+\item \textbf{Branching:} experimentar sin afectar código principal
+\item \textbf{Rollback:} volver a versiones anteriores
+\end{itemize}
+
+\textbf{Workflow básico:}
+\begin{lstlisting}[language=bash]
+# Inicializar repositorio
+git init
+
+# Agregar archivos
+git add notebook.ipynb
+
+# Commit
+git commit -m "Agregar análisis exploratorio"
+
+# Subir a remoto (GitHub, GitLab)
+git push origin main
+\end{lstlisting}
+
+\textbf{.gitignore para data science:}
+\begin{lstlisting}
+# Datos
+data/
+*.csv
+*.xlsx
+
+# Modelos entrenados
+*.pkl
+*.joblib
+*.h5
+
+# Notebooks con outputs
+.ipynb_checkpoints/
+
+# Entornos virtuales
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+\end{lstlisting}
+
+\subsection{Gestión de Dependencias}
+
+Documentar qué librerías y versiones se usaron:
+
+\textbf{Python - requirements.txt:}
+\begin{lstlisting}
+pandas==2.0.1
+numpy==1.24.3
+scikit-learn==1.2.2
+matplotlib==3.7.1
+seaborn==0.12.2
+\end{lstlisting}
+
+Generar automáticamente:
+\begin{lstlisting}[language=bash]
+pip freeze > requirements.txt
+\end{lstlisting}
+
+Instalar desde requirements:
+\begin{lstlisting}[language=bash]
+pip install -r requirements.txt
+\end{lstlisting}
+
+\textbf{Python - conda environment.yml:}
+\begin{lstlisting}
+name: mad1
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pandas=2.0.1
+  - scikit-learn=1.2.2
+  - matplotlib=3.7.1
+\end{lstlisting}
+
+\textbf{R - renv:}
+\begin{lstlisting}[language=R]
+# Inicializar
+renv::init()
+
+# Snapshot (guardar estado actual)
+renv::snapshot()
+
+# Restore (reinstalar desde snapshot)
+renv::restore()
+\end{lstlisting}
+
+\section{Ética en Análisis de Datos}
+
+El análisis de datos tiene poder para afectar vidas. Con este poder viene responsabilidad.
+
+\subsection{Sesgo en Datos y Modelos}
+
+\subsubsection{Fuentes de Sesgo}
+
+\textbf{1. Sesgo de Selección:}
+\begin{itemize}
+\item Datos no representativos de la población objetivo
+\item Ejemplo: entrenar modelo de contratación con datos históricos sesgados
+\end{itemize}
+
+\textbf{2. Sesgo de Medición:}
+\begin{itemize}
+\item Errores sistemáticos en cómo se recolectan los datos
+\item Ejemplo: encuestas telefónicas excluyen a quienes no tienen teléfono
+\end{itemize}
+
+\textbf{3. Sesgo Algorítmico:}
+\begin{itemize}
+\item El algoritmo amplifica sesgos existentes
+\item Ejemplo: sistema de recomendación que refuerza burbujas de filtro
+\end{itemize}
+
+\textbf{4. Sesgo de Confirmación:}
+\begin{itemize}
+\item Analistas buscan/interpretan datos de manera que confirme sus creencias
+\item Ejemplo: cherry-picking resultados favorables
+\end{itemize}
+
+\subsubsection{Consecuencias del Sesgo}
+
+\begin{itemize}
+\item \textbf{Discriminación:} decisiones injustas contra grupos protegidos
+\item \textbf{Profecía autocumplida:} modelo sesgado perpetúa desigualdad
+\item \textbf{Pérdida de confianza:} en sistemas algorítmicos
+\item \textbf{Daño legal:} violación de leyes anti-discriminación
+\end{itemize}
+
+\textbf{Caso de estudio:} COMPAS (Correctional Offender Management Profiling for Alternative Sanctions)
+
+Un sistema de evaluación de riesgo de reincidencia usado en el sistema judicial de EEUU fue encontrado con sesgo racial: predecía falsamente alta reincidencia para acusados afroamericanos.
+
+\subsubsection{Mitigación de Sesgo}
+
+\begin{enumerate}
+\item \textbf{Auditoría de datos:} 
+\begin{itemize}
+\item ¿Los datos son representativos?
+\item ¿Hay subrepresentación de algún grupo?
+\item ¿Cómo se recolectaron los datos?
+\end{itemize}
+
+\item \textbf{Análisis de equidad (fairness):}
+\begin{itemize}
+\item Métricas de equidad: disparate impact, equalized odds
+\item Evaluar performance por subgrupo (género, raza, edad)
+\item Detectar diferencias sistemáticas
+\end{itemize}
+
+\item \textbf{Técnicas de mitigación:}
+\begin{itemize}
+\item Pre-procesamiento: rebalancear datos, eliminar variables sensibles
+\item In-processing: regularización de fairness, adversarial debiasing
+\item Post-procesamiento: ajustar umbrales por grupo
+\end{itemize}
+
+\item \textbf{Diversidad en equipos:}
+\begin{itemize}
+\item Perspectivas diversas ayudan a identificar sesgos
+\item Incluir stakeholders afectados en el proceso
+\end{itemize}
+
+\item \textbf{Transparencia y documentación:}
+\begin{itemize}
+\item Documentar limitaciones conocidas
+\item Datasheets for datasets, Model Cards
+\end{itemize}
+\end{enumerate}
+
+\subsection{Fairness y Discriminación Algorítmica}
+
+Existen múltiples definiciones de fairness, a menudo incompatibles entre sí:
+
+\subsubsection{1. Demographic Parity (Paridad Demográfica)}
+
+El modelo predice la misma proporción de resultados positivos para todos los grupos:
+$$P(\hat{Y}=1 | A=a) = P(\hat{Y}=1 | A=b)$$
+
+donde $A$ es el atributo sensible (raza, género).
+
+\textbf{Ejemplo:} mismo porcentaje de hombres y mujeres aprobados para un crédito.
+
+\subsubsection{2. Equalized Odds}
+
+Las tasas de verdaderos positivos y falsos positivos son iguales entre grupos:
+$$P(\hat{Y}=1 | Y=1, A=a) = P(\hat{Y}=1 | Y=1, A=b)$$
+$$P(\hat{Y}=1 | Y=0, A=a) = P(\hat{Y}=1 | Y=0, A=b)$$
+
+\textbf{Ejemplo:} el modelo identifica correctamente a candidatos cualificados y no cualificados por igual en ambos grupos.
+
+\subsubsection{3. Predictive Parity}
+
+El valor predictivo positivo es igual entre grupos:
+$$P(Y=1 | \hat{Y}=1, A=a) = P(Y=1 | \hat{Y}=1, A=b)$$
+
+\textbf{Ejemplo:} entre quienes el modelo predice reincidencia, el porcentaje que realmente reincide es el mismo en ambos grupos.
+
+\subsubsection{Tensiones entre Definiciones}
+
+En general, no es posible satisfacer múltiples definiciones simultáneamente. Debemos elegir basándonos en el contexto:
+
+\begin{itemize}
+\item \textbf{Contratación:} demographic parity puede ser apropiada (cuotas)
+\item \textbf{Justicia penal:} equalized odds (evitar discriminación en precisión)
+\item \textbf{Medicina:} predictive parity (confianza en diagnósticos)
+\end{itemize}
+
+\subsection{Privacidad y Protección de Datos}
+
+\subsubsection{Principios}
+
+\begin{enumerate}
+\item \textbf{Minimización de datos:} recolectar solo lo necesario
+\item \textbf{Propósito específico:} usar datos solo para lo autorizado
+\item \textbf{Consentimiento informado:} las personas deben saber qué se recolecta y cómo se usa
+\item \textbf{Transparencia:} derecho a saber qué datos se tienen
+\item \textbf{Derecho al olvido:} poder eliminar datos personales
+\item \textbf{Seguridad:} proteger datos contra acceso no autorizado
+\end{enumerate}
+
+\subsubsection{Regulaciones}
+
+\textbf{GDPR (General Data Protection Regulation, Unión Europea):}
+\begin{itemize}
+\item Protección de datos personales de ciudadanos UE
+\item Consentimiento explícito requerido
+\item Derecho a explicación de decisiones algorítmicas
+\item Multas severas por incumplimiento
+\end{itemize}
+
+\textbf{CCPA (California Consumer Privacy Act):}
+\begin{itemize}
+\item Derechos de consumidores sobre sus datos
+\item Opt-out de venta de datos
+\item Transparencia en recolección y uso
+\end{itemize}
+
+\textbf{Argentina - Ley 25.326 de Protección de Datos Personales:}
+\begin{itemize}
+\item Regula tratamiento de datos personales
+\item Consentimiento del titular
+\item Derecho de acceso, rectificación y supresión
+\end{itemize}
+
+\subsubsection{Técnicas de Privacidad}
+
+\textbf{1. Anonimización:}
+\begin{itemize}
+\item Eliminar identificadores directos (nombre, DNI, dirección)
+\item Problema: reidentificación mediante quasi-identificadores
+\end{itemize}
+
+\textbf{2. K-anonimity:}
+\begin{itemize}
+\item Cada registro es indistinguible de al menos $k-1$ otros
+\item Generalización y supresión de atributos
+\end{itemize}
+
+\textbf{3. Differential Privacy:}
+\begin{itemize}
+\item Agregar ruido aleatorio a los resultados
+\item Garantía matemática de privacidad individual
+\item Trade-off entre privacidad y utilidad
+\end{itemize}
+
+\textbf{4. Federated Learning:}
+\begin{itemize}
+\item Entrenar modelos sin centralizar datos
+\item Datos permanecen en dispositivos locales
+\item Solo se comparten actualizaciones del modelo
+\end{itemize}
+
+\subsection{Responsabilidad en Uso de Modelos Predictivos}
+
+\subsubsection{Limitaciones y Comunicación}
+
+\begin{itemize}
+\item \textbf{Documentar supuestos:} qué condiciones deben cumplirse para que el modelo funcione
+\item \textbf{Reportar incertidumbre:} intervalos de confianza, márgenes de error
+\item \textbf{Advertir sobre mal uso:} para qué NO debe usarse el modelo
+\item \textbf{Actualización periódica:} modelos se vuelven obsoletos
+\end{itemize}
+
+\subsubsection{Decisiones Humanas vs Algorítmicas}
+
+\textbf{Cuándo usar algoritmos:}
+\begin{itemize}
+\item Decisiones repetitivas, alto volumen
+\item Criterios objetivos claramente definidos
+\item Datos de alta calidad disponibles
+\item Consecuencias moderadas de errores
+\end{itemize}
+
+\textbf{Cuándo mantener humanos en el loop:}
+\begin{itemize}
+\item Decisiones con alto impacto individual (salud, justicia)
+\item Contextos complejos que requieren juicio
+\item Situaciones novedosas no vistas en entrenamiento
+\item Casos donde explicación y empatía son importantes
+\end{itemize}
+
+\textbf{Enfoque recomendado:} ``Human-in-the-loop''
+\begin{itemize}
+\item Modelo hace recomendación
+\item Humano toma decisión final
+\item Humano puede anular al modelo con justificación
+\item Feedback de decisiones humanas mejora modelo
+\end{itemize}
+
+\subsubsection{Auditoría y Rendición de Cuentas}
+
+\begin{itemize}
+\item \textbf{Auditorías regulares:} revisar performance, sesgo, errores
+\item \textbf{Trazabilidad:} registrar decisiones y sus justificaciones
+\item \textbf{Responsables identificados:} quién responde por el sistema
+\item \textbf{Mecanismos de apelación:} las personas deben poder disputar decisiones
+\item \textbf{Evaluaciones de impacto:} antes del despliegue, evaluar riesgos
+\end{itemize}
+
+\subsection{Consideraciones Éticas en Proyectos}
+
+\subsubsection{Preguntas a Hacerse}
+
+Antes de empezar un proyecto de análisis de datos:
+
+\begin{enumerate}
+\item \textbf{¿Tenemos derecho a estos datos?} ¿Hubo consentimiento informado?
+\item \textbf{¿Para qué se usarán los resultados?} ¿Podría usarse para propósitos dañinos?
+\item \textbf{¿Quién se beneficia y quién podría ser perjudicado?}
+\item \textbf{¿Los datos son representativos?} ¿Hay sesgos conocidos?
+\item \textbf{¿Qué tan confiables son las predicciones?} ¿Cuál es el margen de error?
+\item \textbf{¿Hay alternativas no algorítmicas?} ¿Son preferibles?
+\item \textbf{¿Quién será responsable si algo sale mal?}
+\item \textbf{¿Podemos explicar las decisiones?} ¿A quién, cómo?
+\end{enumerate}
+
+\subsubsection{Red Flags Éticas}
+
+Señales de alerta que indican problemas éticos potenciales:
+
+\begin{itemize}
+\item Cliente solicita ``eliminar variables sensibles pero mantener performance''
+\item Objetivos vagos o cambiantes (``solo queremos ver qué encontramos'')
+\item Presión para reportar solo resultados favorables
+\item Falta de transparencia sobre uso final
+\item Datos obtenidos de manera cuestionable
+\item Stakeholders afectados no consultados
+\item Consecuencias de error asimétricas (falsos negativos mucho peores que falsos positivos, o viceversa)
+\end{itemize}
+
+\subsection{Código de Ética}
+
+Organizaciones profesionales han desarrollado códigos de ética:
+
+\textbf{ACM Code of Ethics (Association for Computing Machinery):}
+\begin{itemize}
+\item Contribuir al bienestar humano y social
+\item Evitar daño
+\item Ser honesto y confiable
+\item Ser justo y no discriminar
+\item Respetar privacidad
+\item Honrar confidencialidad
+\end{itemize}
+
+\textbf{Principios a seguir como científicos de datos:}
+\begin{enumerate}
+\item \textbf{Integridad:} reportar hallazgos honestamente, incluso si no son favorables
+\item \textbf{Transparencia:} documentar limitaciones, supuestos, incertidumbres
+\item \textbf{Responsabilidad:} considerar impacto potencial de nuestro trabajo
+\item \textbf{Equidad:} esforzarse por crear sistemas justos y no discriminatorios
+\item \textbf{Privacidad:} proteger datos personales y respetar consentimiento
+\item \textbf{Competencia:} reconocer límites de nuestra expertise, buscar ayuda cuando sea necesario
+\item \textbf{Beneficencia:} buscar que nuestro trabajo beneficie a la sociedad
+\end{enumerate}
+
+\section{Resumen}
+
+La Unidad 5 completa el ciclo de análisis de datos enfocándose en aspectos cruciales pero frecuentemente descuidados:
+
+\begin{itemize}
+\item \textbf{Ciclo de vida en producción:} llevar modelos desde desarrollo hasta deployment, monitoreo y reentrenamiento
+\item \textbf{Serialización:} guardar y cargar modelos con pickle, joblib, ONNX
+\item \textbf{Interpretabilidad:} explicar decisiones de modelos complejos con SHAP, LIME, PDP
+\item \textbf{Comunicación:} transmitir hallazgos de manera efectiva a audiencias técnicas y no técnicas
+\item \textbf{Reportes reproducibles:} Jupyter notebooks y R Markdown para documentación ejecutable
+\item \textbf{Ética:} reconocer y mitigar sesgos, proteger privacidad, ser responsables en el uso de datos
+\end{itemize}
+
+Estos aspectos son fundamentales para el éxito profesional. Un modelo técnicamente perfecto es inútil si no puede desplegarse, explicarse o comunicarse adecuadamente. Y un análisis brillante puede causar daño si no se consideran sus implicaciones éticas.
+
+Como científicos de datos, tenemos la responsabilidad de:
+\begin{itemize}
+\item Crear modelos que funcionen en el mundo real, no solo en notebooks
+\item Explicar nuestros hallazgos de manera clara y honesta
+\item Documentar nuestro trabajo para que otros puedan reproducirlo y auditarlo
+\item Considerar el impacto de nuestras decisiones técnicas en las personas
+\item Abogar por el uso ético de datos y algoritmos
+\end{itemize}
+
+La ciencia de datos es poder. Usemos ese poder sabiamente.
+
+\end{document}

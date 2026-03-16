@@ -1,0 +1,26 @@
+\frametitle{R Markdown: Reportes reproducibles}
+\begin{block}{Estructura}
+\begin{lstlisting}
+---
+title: "Mi Analisis"
+author: "Tu Nombre"
+date: "2026-03-16"
+output: html_document
+---
+
+# Introduccion
+
+Este es texto normal en Markdown.
+
+```{r}
+# Este es codigo R
+x <- 1:10
+mean(x)
+```
+
+El promedio es `r mean(x)`.
+\end{lstlisting}
+\end{block}
+
+\small
+El código entre \texttt{```\{r\}} se ejecuta al generar el reporte

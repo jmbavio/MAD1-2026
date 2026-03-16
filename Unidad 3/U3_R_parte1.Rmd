@@ -1,0 +1,141 @@
+---
+title: "U3 Parte 1: Regresión Lineal Simple"
+subtitle: "Clases 14-15 | Métodos de Análisis de Datos 1"
+author: "Universidad Nacional del Sur"
+date: "Primer Semestre 2026"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, 
+                      fig.width = 10, fig.height = 6)
+```
+
+# Introducción
+
+Este notebook cubre:
+- Regresión lineal simple
+- Estimación por MCO
+- Inferencia (tests, IC)
+- Predicción
+
+```{r librerias}
+library(tidyverse)
+library(ggplot2)
+set.seed(42)
+```
+
+# 1. Datos y Visualización
+
+```{r datos}
+set.seed(123)
+n <- 50
+datos <- data.frame(
+  horas = runif(n, 1, 10)
+) %>%
+  mutate(calificacion = 40 + 5*horas + rnorm(n, 0, 5))
+
+head(datos)
+```
+
+```{r viz}
+ggplot(datos, aes(x = horas, y = calificacion)) +
+  geom_point(alpha = 0.6, size = 3) +
+  labs(title = "Horas de Estudio vs Calificación",
+       x = "Horas", y = "Calificación") +
+  theme_minimal()
+```
+
+# 2. Modelo de Regresión
+
+```{r modelo}
+modelo <- lm(calificacion ~ horas, data = datos)
+summary(modelo)
+```
+
+## Componentes clave
+
+```{r componentes}
+cat("Intercepto:", coef(modelo)[1], "\n")
+cat("Pendiente:", coef(modelo)[2], "\n")
+cat("R²:", summary(modelo)$r.squared, "\n")
+cat("R² ajustado:", summary(modelo)$adj.r.squared, "\n")
+cat("AIC:", AIC(modelo), "\n")
+cat("BIC:", BIC(modelo), "\n")
+```
+
+## Visualizar ajuste
+
+```{r ajuste}
+ggplot(datos, aes(x = horas, y = calificacion)) +
+  geom_point(alpha = 0.6, size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(title = "Regresión Lineal Simple") +
+  theme_minimal()
+```
+
+# 3. Inferencia
+
+## Intervalos de confianza
+
+```{r ic_coef}
+confint(modelo, level = 0.95)
+```
+
+## ANOVA del modelo
+
+```{r anova}
+anova(modelo)
+```
+
+# 4. Predicción
+
+```{r prediccion}
+nuevos <- data.frame(horas = c(3, 5, 7))
+
+# Puntual
+predict(modelo, nuevos)
+
+# IC para la media
+predict(modelo, nuevos, interval = "confidence")
+
+# Intervalo de predicción
+predict(modelo, nuevos, interval = "prediction")
+```
+
+```{r viz_pred}
+x_seq <- seq(1, 10, length.out = 100)
+pred_conf <- predict(modelo, data.frame(horas = x_seq), interval = "confidence")
+pred_pred <- predict(modelo, data.frame(horas = x_seq), interval = "prediction")
+
+datos_pred <- data.frame(
+  horas = x_seq,
+  fit = pred_conf[, "fit"],
+  conf_lwr = pred_conf[, "lwr"],
+  conf_upr = pred_conf[, "upr"],
+  pred_lwr = pred_pred[, "lwr"],
+  pred_upr = pred_pred[, "upr"]
+)
+
+ggplot(datos, aes(x = horas, y = calificacion)) +
+  geom_point(alpha = 0.6) +
+  geom_line(data = datos_pred, aes(y = fit), color = "blue", linewidth = 1) +
+  geom_ribbon(data = datos_pred, aes(ymin = conf_lwr, ymax = conf_upr), 
+              alpha = 0.3, fill = "blue") +
+  geom_ribbon(data = datos_pred, aes(ymin = pred_lwr, ymax = pred_upr), 
+              alpha = 0.2, fill = "red") +
+  labs(title = "Intervalos de Confianza y Predicción") +
+  theme_minimal()
+```
+
+# Ejercicios
+
+1. Ajustar un modelo con otros datos
+2. Interpretar coeficientes
+3. Calcular predicciones manualmente
+4. Comparar IC vs IP
