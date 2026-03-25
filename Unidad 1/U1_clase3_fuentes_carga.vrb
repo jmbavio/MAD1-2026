@@ -1,0 +1,46 @@
+\frametitle{Siempre explorar después de cargar}
+\begin{columns}[t]
+\column{0.5\textwidth}
+\textbf{Python:}
+\begin{lstlisting}[language=Python]
+# Dimensiones
+df.shape  # (filas, cols)
+
+# Primeras filas
+df.head()
+
+# Info general
+df.info()
+
+# Estadísticas
+df.describe()
+
+# Columnas
+df.columns
+
+# Tipos
+df.dtypes
+\end{lstlisting}
+
+\column{0.5\textwidth}
+\textbf{R:}
+\begin{lstlisting}[language=R]
+# Dimensiones
+dim(df)
+
+# Primeras filas
+head(df)
+
+# Estructura
+str(df)
+
+# Estadísticas
+summary(df)
+
+# Columnas
+names(df)
+
+# Tipos
+sapply(df, class)
+\end{lstlisting}
+\end{columns}

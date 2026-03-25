@@ -312,6 +312,7 @@ git checkout nueva-funcionalidad
 \section{R Markdown}
 
 \begin{frame}[fragile]{R Markdown: Reportes reproducibles}
+\small
 \begin{block}{Estructura}
 \begin{lstlisting}
 ---
@@ -320,17 +321,13 @@ author: "Tu Nombre"
 date: "2026-03-16"
 output: html_document
 ---
-
 # Introduccion
-
 Este es texto normal en Markdown.
-
-```{r}
+    ```{r}
 # Este es codigo R
 x <- 1:10
 mean(x)
 ```
-
 El promedio es `r mean(x)`.
 \end{lstlisting}
 \end{block}
@@ -416,10 +413,5 @@ El notebook de práctica está disponible en el campus virtual
 \end{alertblock}
 \end{frame}
 
-\begin{frame}
-\begin{center}
-\Huge ¿Preguntas?
-\end{center}
-\end{frame}
 
 \end{document}
