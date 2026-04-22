@@ -1,0 +1,19 @@
+\frametitle{R: Todo en uno}
+\begin{lstlisting}[language=R]
+# Graficos automaticos
+par(mfrow = c(2, 2))
+plot(modelo)
+par(mfrow = c(1, 1))
+
+# Tests
+shapiro.test(modelo$residuals)
+
+library(lmtest)
+bptest(modelo)
+dwtest(modelo)
+
+# Cook's distance
+cooks <- cooks.distance(modelo)
+plot(cooks, type="h")
+abline(h=1, col="red", lty=2)
+\end{lstlisting}

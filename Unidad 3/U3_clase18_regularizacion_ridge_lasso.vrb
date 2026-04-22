@@ -1,0 +1,19 @@
+\frametitle{R: Regresión polinomial}
+\begin{lstlisting}[language=R]
+# Grado 2
+modelo_poly2 <- lm(Y ~ X + I(X^2), data = datos)
+
+# Grado 3
+modelo_poly3 <- lm(Y ~ X + I(X^2) + I(X^3), data = datos)
+
+# O usar poly() que crea polinomios ortogonales
+modelo_ortho <- lm(Y ~ poly(X, degree = 3), data = datos)
+
+# Graficar
+x_seq <- seq(min(datos$X), max(datos$X), length.out = 100)
+y_pred <- predict(modelo_poly2,
+                  newdata = data.frame(X = x_seq))
+
+plot(datos$X, datos$Y)
+lines(x_seq, y_pred, col = "red", lwd = 2)
+\end{lstlisting}

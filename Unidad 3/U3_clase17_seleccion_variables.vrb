@@ -1,0 +1,20 @@
+\frametitle{R: Modelo múltiple}
+\begin{lstlisting}[language=R]
+# Ajustar modelo
+modelo <- lm(precio ~ metros + habitaciones + antiguedad,
+             data = casas)
+
+summary(modelo)
+
+# VIF
+library(car)
+vif(modelo)
+
+# Comparar modelos
+modelo1 <- lm(precio ~ metros, data = casas)
+modelo2 <- lm(precio ~ metros + habitaciones, data = casas)
+modelo3 <- lm(precio ~ metros + habitaciones + antiguedad,
+              data = casas)
+
+anova(modelo1, modelo2, modelo3)
+\end{lstlisting}

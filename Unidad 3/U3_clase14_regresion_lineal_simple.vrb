@@ -1,0 +1,17 @@
+\frametitle{Predicción en R}
+\begin{lstlisting}[language=R]
+# Nuevos datos
+nuevos <- data.frame(altura = c(172, 178, 168))
+
+# Prediccion puntual
+predict(modelo, nuevos)
+
+# Intervalo de confianza para la media
+predict(modelo, nuevos, interval = "confidence")
+
+# Intervalo de prediccion para nuevas observaciones
+predict(modelo, nuevos, interval = "prediction")
+
+# El intervalo de prediccion es siempre mas ancho
+# que el de confianza
+\end{lstlisting}

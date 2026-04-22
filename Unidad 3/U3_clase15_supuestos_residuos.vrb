@@ -1,0 +1,18 @@
+\frametitle{Predicción en R}
+\begin{lstlisting}[language=R]
+# Nuevos datos
+nuevos <- data.frame(X = c(3, 5, 7))
+
+# Prediccion puntual
+predict(modelo, nuevos)
+
+# IC para la media
+predict(modelo, nuevos, interval = "confidence",
+        level = 0.95)
+
+# Intervalo de prediccion
+predict(modelo, nuevos, interval = "prediction",
+        level = 0.95)
+
+# Output: data.frame con columnas fit, lwr, upr
+\end{lstlisting}
