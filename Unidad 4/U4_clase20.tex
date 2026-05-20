@@ -1,0 +1,377 @@
+\documentclass[aspectratio=169]{beamer}
+
+% ─── Tema y color UNS ────────────────────────────────────────────────────────
+\usetheme{Madrid}
+\definecolor{unsblue}{RGB}{30,60,120}
+\definecolor{unslightblue}{RGB}{220,230,245}
+\definecolor{alertred}{RGB}{180,30,30}
+\usecolortheme[named=unsblue]{structure}
+\setbeamercolor{palette primary}{bg=unsblue, fg=white}
+\setbeamercolor{palette secondary}{bg=unsblue!80, fg=white}
+\setbeamercolor{palette tertiary}{bg=unsblue!60, fg=white}
+\setbeamercolor{palette quaternary}{bg=unsblue, fg=white}
+\setbeamercolor{block title}{bg=unsblue, fg=white}
+\setbeamercolor{block body}{bg=unslightblue}
+\setbeamercolor{block title alerted}{bg=alertred, fg=white}
+\setbeamercolor{block body alerted}{bg=red!8}
+\setbeamercolor{block title example}{bg=unsblue!60!black, fg=white}
+\setbeamercolor{block body example}{bg=unsblue!8}
+
+% ─── Paquetes ────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{babel}
+\babelprovide[main, import]{spanish}
+\usepackage{amsmath, amssymb}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+
+% ─── Comandos ────────────────────────────────────────────────────────────────
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\bx}{\bm{x}}
+\newcommand{\E}{\mathbb{E}}
+
+% ─── Metadatos ───────────────────────────────────────────────────────────────
+\title[MAD1 -- Unidad 4]{Aprendizaje Supervisado}
+\subtitle{Clase 20: Introducción y Árboles de Decisión}
+\author[J. Bavio]{Dr.\ José Bavio}
+\institute[UNS]{Departamento de Matemática\\Universidad Nacional del Sur}
+\date{2026}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenido de la clase}
+  \tableofcontents
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{¿Qué es el Aprendizaje Supervisado?}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{¿Qué es el Aprendizaje Supervisado?}
+  \begin{block}{Idea central}
+    Tenemos datos \textbf{etiquetados}: para cada observación $\bx_i$ conocemos la respuesta $y_i$.\\
+    El objetivo es aprender una función $f$ tal que $f(\bx) \approx y$ para datos nuevos.
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Dicho de otra forma}
+    Es como aprender con un \textbf{solucionario}: el modelo estudia ejemplos resueltos
+    y luego aplica lo aprendido a ejercicios que nunca vio.
+  \end{exampleblock}
+
+  \medskip
+  Según el tipo de $y$:
+  \begin{itemize}
+    \item $y \in \R$ \quad$\Rightarrow$\quad \textbf{regresión} (Unidad 3)
+    \item $y \in \{1, \ldots, K\}$ \quad$\Rightarrow$\quad \textbf{clasificación} (esta unidad)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{El objetivo real: generalización}
+  \begin{alertblock}{Error de entrenamiento $\neq$ error real}
+    Memorizar los datos de entrenamiento no sirve.\\
+    Lo que importa es predecir bien datos \textbf{que el modelo nunca vio}.
+  \end{alertblock}
+
+  \medskip
+  \begin{exampleblock}{Analogía}
+    Un alumno que memoriza las respuestas del parcial anterior sin entender
+    los conceptos va a reprobar el parcial nuevo.\\
+    El modelo que memoriza los datos de entrenamiento hace exactamente eso.
+  \end{exampleblock}
+
+  \medskip
+  \textbf{Error de generalización:}
+  \[
+    \text{Err} = \E\bigl[\ell(y,\, f(\bx))\bigr]
+  \]
+  donde $\ell$ es la función de pérdida (ej.: pérdida 0-1 para clasificación).
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Sesgo, Varianza y Overfitting}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Sesgo y Varianza}
+  Para regresión, el error de predicción descompone en:
+  \[
+    \text{ECM} = \underbrace{\text{Var}[\hat{f}(\bx_0)]}_{\text{varianza}}
+              + \underbrace{[\text{Sesgo}(\hat{f}(\bx_0))]^2}_{\text{sesgo}^2}
+              + \underbrace{\sigma^2_\varepsilon}_{\text{irreducible}}
+  \]
+
+  \medskip
+  \begin{columns}
+    \column{0.48\textwidth}
+    \begin{block}{Alto sesgo (underfitting)}
+      El modelo es \textbf{demasiado simple}.\\
+      No captura la estructura real.\\[4pt]
+      \textit{Como ajustar una recta a datos claramente curvos.}
+    \end{block}
+
+    \column{0.48\textwidth}
+    \begin{block}{Alta varianza (overfitting)}
+      El modelo es \textbf{demasiado complejo}.\\
+      Aprende el ruido de los datos.\\[4pt]
+      \textit{Como un modelo que conecta todos los puntos con una curva serpenteante.}
+    \end{block}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{El compromiso sesgo-varianza}
+  \begin{center}
+    \begin{tabular}{ccc}
+      \toprule
+      \textbf{Complejidad} & \textbf{Sesgo} & \textbf{Varianza} \\
+      \midrule
+      Baja  & Alto  & Baja \\
+      Media & Medio & Media \\
+      Alta  & Bajo  & Alta  \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+
+  \medskip
+  \begin{exampleblock}{En la práctica}
+    El error de \textbf{validación} tiene forma de U en función de la complejidad.
+    El mínimo de esa curva es el punto óptimo.
+    El error de \textbf{entrenamiento} baja siempre: no sirve como indicador.
+  \end{exampleblock}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Validación Cruzada}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Partición de los datos}
+  \begin{block}{Tres conjuntos}
+    \begin{itemize}
+      \item \textbf{Entrenamiento:} ajuste de los parámetros del modelo.
+      \item \textbf{Validación:} selección de hiperparámetros y comparación de modelos.
+      \item \textbf{Prueba (test):} evaluación final. Se toca \textbf{una única vez}.
+    \end{itemize}
+  \end{block}
+
+  \medskip
+  \begin{alertblock}{Regla de oro}
+    El conjunto de prueba no debe influir en ninguna decisión de modelado.\\
+    Mirarlo varias veces equivale a ``hacer trampa'' con ese conjunto.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Validación cruzada $k$-fold}
+  \textbf{Idea:} dividir el conjunto de entrenamiento en $k$ partes iguales (\textit{folds}).
+
+  \medskip
+  \begin{enumerate}
+    \item Dividir en $k$ folds.
+    \item Para $j = 1, \ldots, k$: entrenar con los otros $k-1$ folds, evaluar en el fold $j$.
+    \item Promediar los $k$ errores:
+    \[
+      \text{CV}_k = \frac{1}{k}\sum_{j=1}^{k} \text{Err}_j
+    \]
+  \end{enumerate}
+
+  \medskip
+  \begin{exampleblock}{Coloquialmente}
+    Es como rendir el mismo examen 5 veces con distintos grupos de alumnos para
+    tener una estimación más confiable de cuánto aprendió el modelo.
+  \end{exampleblock}
+
+  \medskip
+  \textbf{Valores típicos:} $k = 5$ o $k = 10$.\\
+  \textbf{Caso extremo:} $k = n$ (\textit{leave-one-out}, LOOCV).
+\end{frame}
+
+\begin{frame}{CV estratificada}
+  \begin{block}{Problema con clases desbalanceadas}
+    Si el 95\% de los datos son clase A y solo el 5\% clase B,
+    un fold podría no tener ningún ejemplo de clase B.
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Solución: CV estratificada}
+    Cada fold mantiene la misma \textbf{proporción de clases} que el conjunto original.\\[4pt]
+    Es lo que hace \texttt{StratifiedKFold} en scikit-learn.
+    Siempre usarla en clasificación.
+  \end{exampleblock}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Árboles de Decisión}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{¿Qué es un árbol de decisión?}
+  \begin{block}{Idea}
+    Particionar el espacio de features con reglas del tipo\\
+    \centerline{``$x_j \leq t$ \, ¿sí o no?''}
+    hasta llegar a regiones lo más \textbf{puras} posible.
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Analogía cotidiana}
+    Es exactamente el juego del \textbf{Akinator} o el ``animal, vegetal o mineral'':
+    preguntas binarias sucesivas que van acotando las posibilidades
+    hasta llegar a una respuesta.
+  \end{exampleblock}
+
+  \medskip
+  Estructura:
+  \begin{itemize}
+    \item \textbf{Nodo raíz:} todos los datos.
+    \item \textbf{Nodos internos:} cada uno hace una pregunta $x_j \leq t$.
+    \item \textbf{Hojas:} regiones terminales que asignan una clase.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Criterios de partición: Gini}
+  \textbf{Índice de Gini} para un nodo con proporciones de clase $p_1, \ldots, p_K$:
+  \[
+    G = 1 - \sum_{k=1}^{K} p_k^2
+  \]
+
+  \begin{itemize}
+    \item $G = 0$: nodo \textbf{puro} (todas las observaciones son de la misma clase). Ideal.
+    \item $G$ máximo: clases perfectamente mezcladas. Nodo inútil.
+  \end{itemize}
+
+  \medskip
+  \begin{exampleblock}{Intuición}
+    Gini mide la probabilidad de equivocarse si clasificamos al azar según las proporciones del nodo.
+    Un nodo puro tiene probabilidad de error 0, o sea, $G = 0$.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Criterios de partición: Entropía}
+  \textbf{Entropía} (ganancia de información):
+  \[
+    H = -\sum_{k=1}^{K} p_k \log_2(p_k)
+  \]
+
+  La \textbf{ganancia de información} de un split es la caída de entropía:
+  \[
+    \Delta H = H(\text{padre}) - \frac{n_L}{n} H(\text{izq.}) - \frac{n_R}{n} H(\text{der.})
+  \]
+
+  \medskip
+  \begin{block}{¿Gini o entropía?}
+    En la práctica producen resultados casi idénticos.
+    Gini es más rápido (no requiere logaritmos).
+    scikit-learn usa Gini por defecto.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Algoritmo CART}
+  \textbf{CART} (\textit{Classification and Regression Trees}) construye el árbol de manera \textit{greedy}:
+
+  \medskip
+  \begin{enumerate}
+    \item Partir de todos los datos en el nodo raíz.
+    \item Para cada feature $j$ y cada umbral $t$: calcular la impureza del split.
+    \item Elegir el par $(j^*, t^*)$ que minimiza la impureza total.
+    \item Repetir en cada subárbol (recursión).
+    \item Parar cuando se cumple un criterio de parada.
+  \end{enumerate}
+
+  \medskip
+  \begin{alertblock}{Greedy $\neq$ óptimo global}
+    El árbol construido por CART no es necesariamente el mejor árbol posible.
+    Elegir el mejor split en cada nodo no garantiza el mejor árbol completo.
+    Es como elegir siempre la jugada que parece mejor en ajedrez
+    sin pensar en las próximas jugadas.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Criterios de parada e hiperparámetros}
+  \begin{block}{Cuándo dejar de crecer el árbol}
+    \begin{itemize}
+      \item \texttt{max\_depth}: profundidad máxima del árbol.
+      \item \texttt{min\_samples\_split}: mínimo de muestras para dividir un nodo.
+      \item \texttt{min\_samples\_leaf}: mínimo de muestras en una hoja.
+      \item \texttt{max\_leaf\_nodes}: máximo de hojas totales.
+    \end{itemize}
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Intuición}
+    Sin restricciones, el árbol crece hasta que cada hoja tiene un solo dato:
+    accuracy 100\% en entrenamiento, pero generaliza pésimo.
+    Los criterios de parada son la ``poda preventiva''.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Poda por complejidad de costo}
+  Otra estrategia: dejar crecer el árbol al máximo y luego \textbf{podarlo}.
+
+  \medskip
+  Se busca el subárbol $T$ que minimiza:
+  \[
+    C_\alpha(T) = \underbrace{\text{error de clasificación}}_{\text{en entrenamiento}} + \alpha \cdot \underbrace{|T|}_{\text{n° de hojas}}
+  \]
+
+  \begin{itemize}
+    \item $\alpha = 0$: árbol completo, sin penalización.
+    \item $\alpha$ grande: árbol muy pequeño (solo la raíz si $\alpha \to \infty$).
+    \item El $\alpha$ óptimo se elige por validación cruzada.
+  \end{itemize}
+
+  \medskip
+  \begin{exampleblock}{Analogía}
+    Es como la regulación $L_1/L_2$ en regresión, pero para árboles:
+    penalizamos la complejidad del modelo para evitar el sobreajuste.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Ventajas y limitaciones de los árboles}
+  \begin{columns}
+    \column{0.48\textwidth}
+    \begin{block}{Ventajas}
+      \begin{itemize}
+        \item Muy interpretables:\\``Si $x_1 > 3$ y $x_2 \leq 7$, entonces clase A''
+        \item No requieren normalización
+        \item Manejan variables mixtas
+        \item Capturan interacciones
+      \end{itemize}
+    \end{block}
+
+    \column{0.48\textwidth}
+    \begin{alertblock}{Limitaciones}
+      \begin{itemize}
+        \item Alta varianza: cambios pequeños en los datos generan árboles muy distintos
+        \item Fronteras de decisión solo axiales (paralelas a los ejes)
+        \item Tendencia al sobreajuste
+      \end{itemize}
+    \end{alertblock}
+  \end{columns}
+
+  \medskip
+  \begin{exampleblock}{Por eso se usan como base de ensambles}
+    Un árbol solo es inestable. Muchos árboles juntos son robustos.\\
+    Eso es exactamente Random Forest (próxima clase).
+  \end{exampleblock}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Resumen de la clase}
+  \begin{itemize}
+    \item El \textbf{aprendizaje supervisado} aprende de ejemplos etiquetados para predecir datos nuevos.
+    \item El objetivo es la \textbf{generalización}, no el ajuste perfecto al entrenamiento.
+    \item El compromiso \textbf{sesgo-varianza} explica el underfitting y el overfitting.
+    \item La \textbf{validación cruzada $k$-fold} estima el error de generalización.
+    \item Los \textbf{árboles de decisión} particionan el espacio con reglas binarias usando Gini o entropía.
+    \item El algoritmo \textbf{CART} es greedy; la poda controla la complejidad.
+  \end{itemize}
+
+  \bigskip
+  \textbf{Próxima clase:} Random Forest --- cómo convertir árboles inestables en un modelo robusto.
+\end{frame}
+
+\end{document}

@@ -1,0 +1,732 @@
+\documentclass[12pt, a4paper]{article}
+
+% ─── Codificación y tipografía ───────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{babel}
+\babelprovide[main, import]{spanish}
+%\usepackage{lmodern}
+
+% ─── Matemática ──────────────────────────────────────────────────────────────
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{bm}          % vectores en negrita
+
+% ─── Gráficos y colores ──────────────────────────────────────────────────────
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+
+% ─── Tablas ──────────────────────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{array}
+
+% ─── Hipervínculos ───────────────────────────────────────────────────────────
+\usepackage[colorlinks=true, linkcolor=unsblue, urlcolor=unsblue, citecolor=unsblue]{hyperref}
+
+% ─── Márgenes ────────────────────────────────────────────────────────────────
+\usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=3cm, headheight=15pt]{geometry}
+
+% ─── Encabezado y pie ────────────────────────────────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\small\textcolor{unsblue}{\textbf{MAD1} --- Métodos para el Análisis de Datos I}}
+\fancyhead[R]{\small\textcolor{unsblue}{Unidad 4: Aprendizaje Supervisado}}
+\fancyfoot[C]{\thepage}
+
+% ─── Color institucional UNS ─────────────────────────────────────────────────
+\definecolor{unsblue}{RGB}{30,60,120}
+\definecolor{lightblue}{RGB}{220,230,245}
+\definecolor{alertred}{RGB}{180,30,30}
+\definecolor{defgreen}{RGB}{20,100,50}
+
+% ─── Entornos teóricos ───────────────────────────────────────────────────────
+\theoremstyle{definition}
+\newtheorem{definicion}{Definición}[section]
+\newtheorem{ejemplo}{Ejemplo}[section]
+
+\theoremstyle{plain}
+\newtheorem{proposicion}{Proposición}[section]
+
+\theoremstyle{remark}
+\newtheorem{observacion}{Observación}[section]
+\newtheorem{nota}{Nota}[section]
+
+% ─── Caja de concepto clave ──────────────────────────────────────────────────
+\usepackage{tcolorbox}
+\tcbuselibrary{skins, breakable}
+
+\newtcolorbox{conceptoclave}[1][]{
+  colback=lightblue,
+  colframe=unsblue,
+  fonttitle=\bfseries\color{unsblue},
+  title={Concepto clave},
+  breakable,
+  #1
+}
+
+\newtcolorbox{alerta}[1][]{
+  colback=red!5,
+  colframe=alertred,
+  fonttitle=\bfseries\color{alertred},
+  title={Atención},
+  breakable,
+  #1
+}
+
+% ─── Numeración de secciones ─────────────────────────────────────────────────
+\setcounter{secnumdepth}{3}
+
+% ─── Interlineado ────────────────────────────────────────────────────────────
+\usepackage{setspace}
+\setstretch{1.15}
+
+% ─── Comandos propios ────────────────────────────────────────────────────────
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\bx}{\bm{x}}
+\newcommand{\bw}{\bm{w}}
+\newcommand{\by}{\bm{y}}
+\newcommand{\bX}{\bm{X}}
+\newcommand{\yhat}{\hat{y}}
+\newcommand{\sign}{\operatorname{sign}}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+% ─────────────────────────────────────────────────────────────────────────────
+
+% ── Portada ──────────────────────────────────────────────────────────────────
+\begin{titlepage}
+  \begin{center}
+    \vspace*{1.5cm}
+    {\Large \textbf{\textcolor{unsblue}{Universidad Nacional del Sur}}}\\[0.3cm]
+    {\large Departamento de Matemática}\\[1.5cm]
+
+    \rule{\textwidth}{1.5pt}\\[0.4cm]
+    {\LARGE \textbf{\textcolor{unsblue}{Métodos para el Análisis de Datos I}}}\\[0.4cm]
+    {\large Código 8142 \, | \, Licenciatura en Matemática Aplicada}\\[0.3cm]
+    \rule{\textwidth}{1.5pt}\\[1.5cm]
+
+    {\Huge \textbf{Unidad 4}}\\[0.5cm]
+    {\LARGE \textbf{\textcolor{unsblue}{Aprendizaje Supervisado}}}\\[2.5cm]
+
+    {\large Dr.\ José Bavio}\\[0.3cm]
+    {\large 2026}
+  \end{center}
+\end{titlepage}
+
+% ── Tabla de contenidos ──────────────────────────────────────────────────────
+\tableofcontents
+\newpage
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Introducción al Aprendizaje Supervisado}
+% ─────────────────────────────────────────────────────────────────────────────
+
+El \textbf{aprendizaje automático} (\textit{machine learning}, ML) es una rama de la inteligencia artificial que estudia algoritmos capaces de aprender patrones a partir de datos sin ser programados explícitamente para cada tarea.
+
+Dentro del ML se distinguen tres grandes paradigmas:
+
+\begin{itemize}
+  \item \textbf{Aprendizaje supervisado:} el modelo aprende a partir de pares entrada--salida etiquetados $(x_i, y_i)$.
+  \item \textbf{Aprendizaje no supervisado:} no hay etiquetas; el objetivo es descubrir estructura en los datos (Unidad 6).
+  \item \textbf{Aprendizaje por refuerzo:} un agente aprende tomando decisiones y recibiendo recompensas.
+\end{itemize}
+
+\begin{definicion}[Aprendizaje Supervisado]
+Dado un conjunto de entrenamiento $\mathcal{D} = \{(\bx_i, y_i)\}_{i=1}^{n}$ donde $\bx_i \in \R^p$ es el vector de \emph{features} e $y_i$ es la variable respuesta, el objetivo es aprender una función $f: \R^p \to \mathcal{Y}$ que generalice bien a datos nuevos.
+\end{definicion}
+
+Según el tipo de variable respuesta:
+\begin{itemize}
+  \item Si $y_i \in \R$ \quad $\Rightarrow$ \textbf{regresión} (cubierta en Unidad 3).
+  \item Si $y_i \in \{1, \ldots, K\}$ \quad $\Rightarrow$ \textbf{clasificación} (tema central de esta unidad).
+\end{itemize}
+
+\subsection{El paradigma de generalización}
+
+Aprender de los datos de entrenamiento no es el objetivo final: lo que importa es que el modelo \emph{generalice}, es decir, que funcione bien sobre datos que no vio durante el entrenamiento.
+
+\begin{conceptoclave}
+  El \textbf{error de generalización} (o error de prueba) es la pérdida esperada sobre nuevas observaciones:
+  \[
+    \text{Err} = \E\bigl[\ell(y, f(\bx))\bigr]
+  \]
+  donde $\ell$ es la función de pérdida (por ejemplo, pérdida 0-1 para clasificación). El objetivo del aprendizaje supervisado es minimizar $\text{Err}$, no el error de entrenamiento.
+\end{conceptoclave}
+
+\subsection{Bias-variance tradeoff}
+
+Para modelos de regresión se puede demostrar que el error cuadrático medio de predicción descompone como:
+\[
+  \text{ECM}\bigl[f(\bx_0)\bigr]
+  = \underbrace{\text{Var}\bigl[\hat{f}(\bx_0)\bigr]}_{\text{varianza}}
+  + \underbrace{\bigl[\text{Bias}(\hat{f}(\bx_0))\bigr]^2}_{\text{sesgo}^2}
+  + \underbrace{\sigma^2_\varepsilon}_{\text{irreducible}}
+\]
+
+La misma tensión existe en clasificación:
+\begin{itemize}
+  \item Modelos \textbf{demasiado simples} tienen alto sesgo (\textit{underfitting}).
+  \item Modelos \textbf{demasiado complejos} tienen alta varianza (\textit{overfitting}).
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  % Diagrama esquemático: reemplazar con figura real si se dispone
+  \fbox{\parbox{0.7\textwidth}{\centering\vspace{1cm}
+    \textit{[Insertar curva de bias-variance vs.\ complejidad del modelo]}
+  \vspace{1cm}}}
+  \caption{Compromiso sesgo-varianza en función de la complejidad del modelo.}
+\end{figure}
+
+\subsection{Partición de datos y validación cruzada}
+
+Para estimar el error de generalización se divide el conjunto de datos:
+
+\begin{itemize}
+  \item \textbf{Entrenamiento} (\textit{training set}): ajuste de los parámetros del modelo.
+  \item \textbf{Validación} (\textit{validation set}): selección de hiperparámetros.
+  \item \textbf{Prueba} (\textit{test set}): evaluación final; se toca una \emph{única vez}.
+\end{itemize}
+
+La \textbf{validación cruzada $k$-fold} divide el conjunto de entrenamiento en $k$ partes (\textit{folds}) iguales; en cada iteración se entrena con $k-1$ folds y se evalúa en el restante. El error de validación cruzada es el promedio de los $k$ errores:
+\[
+  \text{CV}_k = \frac{1}{k} \sum_{j=1}^{k} \text{Err}_j
+\]
+
+\begin{observacion}
+  La validación cruzada \emph{estratificada} (stratified $k$-fold) preserva la proporción de clases en cada fold, lo que es fundamental con clases desbalanceadas.
+\end{observacion}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Árboles de Decisión}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Concepto y estructura}
+
+Un \textbf{árbol de decisión} es un modelo que particiona el espacio de features mediante reglas de la forma $x_j \leq t$ (\textit{splits}) organizadas en una estructura jerárquica de árbol.
+
+\begin{definicion}[Árbol de clasificación]
+  Un árbol de clasificación $T$ es una estructura formada por:
+  \begin{itemize}
+    \item \textbf{Nodo raíz:} contiene todo el conjunto de entrenamiento.
+    \item \textbf{Nodos internos:} cada uno define un split $\{x_j \leq t\}$ que divide los datos en dos subconjuntos (subárboles izquierdo y derecho).
+    \item \textbf{Hojas:} regiones terminales $R_m$ que asignan una clase $\hat{y} = \arg\max_k \hat{p}_{mk}$, donde $\hat{p}_{mk}$ es la proporción de observaciones de clase $k$ en la hoja $m$.
+  \end{itemize}
+\end{definicion}
+
+\subsection{Criterios de partición}
+
+Para elegir el mejor split $(\bm{j}^*, t^*)$ se minimiza la impureza de los nodos hijos. Los criterios más usados son:
+
+\subsubsection{Índice de Gini}
+
+\[
+  G(p) = \sum_{k=1}^{K} p_k(1 - p_k) = 1 - \sum_{k=1}^{K} p_k^2
+\]
+
+donde $p_k$ es la proporción de la clase $k$ en el nodo. $G = 0$ indica nodo puro.
+
+\subsubsection{Entropía (ganancia de información)}
+
+\[
+  H(p) = -\sum_{k=1}^{K} p_k \log_2(p_k)
+\]
+
+La \textbf{ganancia de información} de un split es la reducción en entropía:
+\[
+  \Delta H = H(\text{padre}) - \frac{n_L}{n} H(\text{hijo}_L) - \frac{n_R}{n} H(\text{hijo}_R)
+\]
+
+\begin{observacion}
+  Gini y entropía producen resultados muy similares en la práctica. Gini es computacionalmente más eficiente al evitar el cálculo de logaritmos.
+\end{observacion}
+
+\subsection{Construcción: algoritmo CART}
+
+El algoritmo \textbf{CART} (\textit{Classification and Regression Trees}) construye el árbol de manera \textit{greedy} (voraz): en cada nodo busca el split que maximiza la reducción de impureza, sin garantía de optimalidad global.
+
+\begin{enumerate}
+  \item Iniciar con el nodo raíz conteniendo todos los datos.
+  \item Para cada feature $j$ y umbral $t$, calcular la impureza ponderada del split.
+  \item Elegir el split $(j^*, t^*)$ que minimiza la impureza total.
+  \item Repetir recursivamente en cada subárbol.
+  \item Detener cuando se cumple un criterio de parada (profundidad máxima, mínimo de muestras por hoja, etc.).
+\end{enumerate}
+
+\subsection{Poda}
+
+Árboles crecidos sin restricción tienen alta varianza. La \textbf{poda por complejidad de costo} (\textit{cost-complexity pruning}) busca el subárbol $T \subset T_{\max}$ que minimiza:
+\[
+  C_\alpha(T) = \sum_{m=1}^{|T|} \sum_{i \in R_m} \mathbf{1}(y_i \neq \hat{y}_m) + \alpha |T|
+\]
+donde $|T|$ es el número de hojas y $\alpha \geq 0$ es el parámetro de regularización (elegido por validación cruzada).
+
+\subsection{Ventajas y limitaciones}
+
+\begin{center}
+\begin{tabular}{p{0.45\textwidth} p{0.45\textwidth}}
+  \toprule
+  \textbf{Ventajas} & \textbf{Limitaciones} \\
+  \midrule
+  Interpretabilidad directa & Alta varianza: pequeños cambios en los datos producen árboles muy distintos \\
+  Maneja features categóricos y numéricos & Fronteras de decisión solo axiales \\
+  No requiere normalización & Tendencia a sobreajuste si no se poda \\
+  Captura interacciones entre variables & Sesgo en features con muchas categorías \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Random Forest}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Bagging}
+
+El \textbf{bagging} (\textit{bootstrap aggregating}, Breiman 1996) reduce la varianza promediando múltiples modelos inestables entrenados sobre muestras bootstrap del conjunto de entrenamiento.
+
+Dado un conjunto $\mathcal{D}$ de $n$ observaciones:
+\begin{enumerate}
+  \item Para $b = 1, \ldots, B$: extraer una muestra bootstrap $\mathcal{D}^{(b)}$ de tamaño $n$ con reemplazo y entrenar un árbol $T^{(b)}$.
+  \item Predicción por mayoría de votos:
+  \[
+    \hat{y}(\bx) = \arg\max_k \sum_{b=1}^{B} \mathbf{1}\bigl(\hat{y}^{(b)}(\bx) = k\bigr)
+  \]
+\end{enumerate}
+
+\subsection{Random Forest: decorrelación de árboles}
+
+\begin{definicion}[Random Forest]
+  \textbf{Random Forest} (Breiman, 2001) extiende el bagging añadiendo \emph{aleatoriedad en la selección de features}: en cada split de cada árbol, se elige el mejor split solo entre un subconjunto aleatorio de $m$ features (en lugar de los $p$ totales).
+\end{definicion}
+
+El parámetro $m$ controla el grado de decorrelación:
+\begin{itemize}
+  \item Valor por defecto para clasificación: $m = \lfloor\sqrt{p}\rfloor$
+  \item Valor por defecto para regresión: $m = \lfloor p/3 \rfloor$
+\end{itemize}
+
+La decorrelación es esencial: si los árboles fueran muy correlacionados, el promedio no reduciría la varianza.
+
+\begin{proposicion}[Reducción de varianza por promediado]
+  Sea $\rho$ la correlación entre dos árboles cualesquiera y $\sigma^2$ la varianza de cada uno. La varianza del promedio de $B$ árboles es:
+  \[
+    \rho \sigma^2 + \frac{1-\rho}{B}\sigma^2
+  \]
+  Cuando $B \to \infty$, la varianza tiende a $\rho\sigma^2$. Reducir $\rho$ (mediante la aleatoriedad en features) es lo que diferencia RF del bagging puro.
+\end{proposicion}
+
+\subsection{Estimación out-of-bag (OOB)}
+
+Cada árbol $T^{(b)}$ se entrena sobre $\mathcal{D}^{(b)}$. Las observaciones \emph{no incluidas} en $\mathcal{D}^{(b)}$ (aproximadamente $36.8\%$ de $\mathcal{D}$) constituyen la muestra \textbf{out-of-bag} (OOB). El error OOB es un estimador casi insesgado del error de generalización y puede usarse en lugar de validación cruzada.
+
+\subsection{Importancia de variables}
+
+Random Forest provee dos medidas de importancia:
+
+\subsubsection{Importancia por impureza (MDI)}
+
+La importancia de la variable $j$ es la reducción total de impureza (Gini o entropía) generada por los splits en $j$, promediada sobre todos los árboles:
+\[
+  \text{Imp}(j) = \frac{1}{B} \sum_{b=1}^{B} \sum_{\substack{t \in T^{(b)} \\ \text{split en }j}} \Delta G_t
+\]
+
+\subsubsection{Importancia por permutación (MDA)}
+
+Para cada árbol $T^{(b)}$ y cada variable $j$:
+\begin{enumerate}
+  \item Calcular el error OOB base.
+  \item Permutar aleatoriamente los valores de $x_j$ en el conjunto OOB.
+  \item Recalcular el error OOB con la permutación.
+  \item La importancia es el aumento promedio del error.
+\end{enumerate}
+
+\begin{alerta}
+  MDI sobreestima la importancia de variables con muchas categorías o alta cardinalidad. Para datos con features de muy distinta naturaleza, se recomienda la importancia por permutación (MDA).
+\end{alerta}
+
+\subsection{Hiperparámetros principales}
+
+\begin{center}
+\begin{tabular}{lll}
+  \toprule
+  \textbf{Hiperparámetro} & \textbf{Efecto} & \textbf{Valor típico} \\
+  \midrule
+  $n\_estimators$ & Número de árboles & 100--500 \\
+  $max\_features$ & Features considerados por split & $\sqrt{p}$ (clasif.) \\
+  $max\_depth$ & Profundidad máxima del árbol & None (sin límite) \\
+  $min\_samples\_leaf$ & Mínimo de muestras por hoja & 1--5 \\
+  $bootstrap$ & Usar muestras bootstrap & True \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Support Vector Machines (SVM)}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Clasificador de margen máximo}
+
+Para un problema de clasificación binaria con clases $y \in \{-1, +1\}$, se busca el hiperplano
+\[
+  \mathcal{H} = \{\bx : \bw^\top \bx + b = 0\}
+\]
+que separa las dos clases con el \textbf{máximo margen}. El margen es la distancia entre el hiperplano y las observaciones más cercanas de cada clase (\textit{vectores de soporte}).
+
+\subsection{Problema de optimización (caso separable)}
+
+\begin{definicion}[SVM de margen duro]
+  Minimizar $\frac{1}{2}\|\bw\|^2$ sujeto a
+  \[
+    y_i(\bw^\top \bx_i + b) \geq 1 \quad \forall\, i = 1, \ldots, n
+  \]
+\end{definicion}
+
+El margen geométrico es $2 / \|\bw\|$, de modo que minimizar $\|\bw\|^2$ equivale a maximizarlo.
+
+\subsection{SVM de margen blando (soft margin)}
+
+Cuando los datos no son linealmente separables, se introducen \textbf{variables de holgura} $\xi_i \geq 0$:
+
+\[
+  \min_{\bw, b, \bm{\xi}}\; \frac{1}{2}\|\bw\|^2 + C\sum_{i=1}^{n}\xi_i
+  \quad\text{sujeto a}\quad
+  y_i(\bw^\top \bx_i + b) \geq 1 - \xi_i,\quad \xi_i \geq 0
+\]
+
+El parámetro $C > 0$ controla el \textbf{compromiso sesgo-varianza}:
+\begin{itemize}
+  \item $C$ grande: margen más pequeño, menos errores de entrenamiento, más riesgo de sobreajuste.
+  \item $C$ pequeño: margen más grande, mayor tolerancia a errores, más regularización.
+\end{itemize}
+
+\subsection{Truco del kernel}
+
+La formulación dual del problema SVM depende de los datos solo a través de productos internos $\langle \bx_i, \bx_j \rangle$. Reemplazando el producto interno por una \textbf{función kernel} $K(\bx_i, \bx_j) = \langle \phi(\bx_i), \phi(\bx_j) \rangle$ se proyectan implícitamente los datos a un espacio de mayor dimensión sin calcularlo explícitamente.
+
+\begin{center}
+\begin{tabular}{lll}
+  \toprule
+  \textbf{Kernel} & \textbf{Fórmula} & \textbf{Parámetro(s)} \\
+  \midrule
+  Lineal & $K(\bx, \bx') = \bx^\top \bx'$ & --- \\
+  Polinomial & $K(\bx, \bx') = (\gamma\bx^\top\bx' + r)^d$ & $\gamma, r, d$ \\
+  RBF (Gaussiano) & $K(\bx, \bx') = \exp(-\gamma\|\bx-\bx'\|^2)$ & $\gamma$ \\
+  Sigmoide & $K(\bx, \bx') = \tanh(\gamma\bx^\top\bx' + r)$ & $\gamma, r$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{conceptoclave}
+  El kernel RBF con $\gamma$ pequeño produce fronteras suaves (mayor regularización); con $\gamma$ grande produce fronteras muy ajustadas al entrenamiento (riesgo de sobreajuste).
+\end{conceptoclave}
+
+\subsection{Extensión a clasificación multiclase}
+
+Las SVM son binarias por definición. Las estrategias usuales para $K > 2$ clases son:
+\begin{itemize}
+  \item \textbf{Uno contra todos (OvR):} se entrena un clasificador por clase.
+  \item \textbf{Uno contra uno (OvO):} se entrena un clasificador para cada par de clases; la predicción final es por votación.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{K-Nearest Neighbors (KNN)}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Definición}
+
+\begin{definicion}[$k$-NN clasificador]
+  Dado un punto de consulta $\bx_0$, el clasificador $k$-NN asigna la clase mayoritaria entre sus $k$ vecinos más cercanos en el conjunto de entrenamiento:
+  \[
+    \hat{y}(\bx_0) = \arg\max_c \sum_{i \in \mathcal{N}_k(\bx_0)} \mathbf{1}(y_i = c)
+  \]
+  donde $\mathcal{N}_k(\bx_0)$ es el conjunto de los $k$ índices con menor distancia a $\bx_0$.
+\end{definicion}
+
+La distancia estándar es la euclídea; alternativas incluyen Manhattan, Minkowski ($L^p$) y distancia de Mahalanobis.
+
+\subsection{Elección de $k$}
+
+\begin{itemize}
+  \item $k = 1$: frontera de decisión muy irregular, alta varianza.
+  \item $k$ grande: frontera suave, alto sesgo.
+  \item Se elige mediante validación cruzada; típicamente se prueban valores impares para evitar empates en clasificación binaria.
+\end{itemize}
+
+\subsection{La maldición de la dimensionalidad}
+
+En espacios de alta dimensión ($p \gg 1$), las distancias entre puntos tienden a homogeneizarse: la diferencia entre el vecino más cercano y el más lejano se hace proporcionalmente pequeña. Esto deteriora drásticamente el rendimiento de $k$-NN.
+
+\begin{alerta}
+  $k$-NN \textbf{requiere normalización o estandarización} previa de los features, ya que es sensible a la escala de las variables.
+\end{alerta}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Redes Neuronales Artificiales}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{La neurona artificial (perceptrón)}
+
+Una \textbf{neurona artificial} toma $p$ entradas $x_1, \ldots, x_p$, las combina linealmente y aplica una función de activación $\sigma$:
+\[
+  a = \sigma\!\left(\sum_{j=1}^{p} w_j x_j + b\right) = \sigma(\bw^\top \bx + b)
+\]
+
+\subsection{Perceptrón Multicapa (MLP)}
+
+\begin{definicion}[Perceptrón Multicapa]
+  Un \textbf{MLP} (\textit{Multilayer Perceptron}) es una red neuronal con capas totalmente conectadas (\textit{fully connected}):
+  \begin{itemize}
+    \item Una \textbf{capa de entrada} de dimensión $p$.
+    \item Una o más \textbf{capas ocultas} de neuronas con activación no lineal.
+    \item Una \textbf{capa de salida} que produce la predicción final.
+  \end{itemize}
+\end{definicion}
+
+La salida de la capa $l$ es:
+\[
+  \bm{h}^{(l)} = \sigma^{(l)}\!\left(\bm{W}^{(l)} \bm{h}^{(l-1)} + \bm{b}^{(l)}\right)
+\]
+donde $\bm{W}^{(l)}$ y $\bm{b}^{(l)}$ son la matriz de pesos y el vector de sesgos de la capa $l$.
+
+\subsection{Funciones de activación}
+
+\begin{center}
+\begin{tabular}{llll}
+  \toprule
+  \textbf{Nombre} & \textbf{Fórmula} & \textbf{Rango} & \textbf{Uso típico} \\
+  \midrule
+  Sigmoide & $\sigma(z) = 1/(1+e^{-z})$ & $(0,1)$ & Salida binaria \\
+  Tanh & $\tanh(z)$ & $(-1,1)$ & Capas ocultas \\
+  ReLU & $\max(0, z)$ & $[0,\infty)$ & Capas ocultas (estándar) \\
+  Leaky ReLU & $\max(\alpha z, z)$, $\alpha \ll 1$ & $\R$ & Evita neuronas muertas \\
+  Softmax & $e^{z_k}/\sum_j e^{z_j}$ & $(0,1)^K$ & Salida multiclase \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Función de pérdida}
+
+Para clasificación multiclase se usa la \textbf{entropía cruzada categórica}:
+\[
+  \mathcal{L} = -\frac{1}{n}\sum_{i=1}^{n}\sum_{k=1}^{K} y_{ik} \log \hat{p}_{ik}
+\]
+donde $y_{ik} \in \{0,1\}$ es el indicador de clase (codificación \textit{one-hot}) y $\hat{p}_{ik}$ es la probabilidad predicha para la clase $k$.
+
+\subsection{Entrenamiento: descenso por gradiente y backpropagation}
+
+Los parámetros $\bm{\theta} = \{\bm{W}^{(l)}, \bm{b}^{(l)}\}$ se ajustan minimizando $\mathcal{L}$ mediante \textbf{descenso por gradiente estocástico} (SGD):
+\[
+  \bm{\theta} \leftarrow \bm{\theta} - \eta \nabla_{\bm{\theta}} \mathcal{L}
+\]
+donde $\eta$ es la \textbf{tasa de aprendizaje} (\textit{learning rate}).
+
+El \textbf{algoritmo de backpropagation} calcula eficientemente $\nabla_{\bm{\theta}} \mathcal{L}$ aplicando la regla de la cadena capa por capa (de la salida hacia la entrada).
+
+\begin{conceptoclave}
+  Backpropagation no es un algoritmo de optimización por sí mismo: es un método eficiente para calcular el gradiente. El algoritmo de optimización que usa ese gradiente puede ser SGD, Adam, RMSProp, etc.
+\end{conceptoclave}
+
+\subsection{Variantes de SGD}
+
+\begin{itemize}
+  \item \textbf{Mini-batch SGD:} en cada paso se usa un subconjunto (\textit{batch}) de $m$ observaciones ($m$ típicamente entre 32 y 256).
+  \item \textbf{Momentum:} acumula gradientes previos para acelerar la convergencia.
+  \item \textbf{Adam:} combina momentum con adaptación individual de la tasa de aprendizaje por parámetro; es el optimizador más usado en la práctica.
+\end{itemize}
+
+\subsection{Regularización en redes neuronales}
+
+\begin{itemize}
+  \item \textbf{Dropout:} durante el entrenamiento, cada neurona se desactiva con probabilidad $p_{\text{drop}}$, forzando redundancia en la representación.
+  \item \textbf{Regularización $L_2$ (weight decay):} añade $\lambda\|\bm{\theta}\|^2$ a la pérdida.
+  \item \textbf{Batch normalization:} normaliza las activaciones de cada capa, acelerando el entrenamiento.
+  \item \textbf{Early stopping:} detiene el entrenamiento cuando el error de validación deja de decrecer.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Métricas de Evaluación para Clasificación}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Matriz de confusión}
+
+Para clasificación binaria (positivo/negativo), la \textbf{matriz de confusión} organiza las predicciones del modelo:
+
+\begin{center}
+\begin{tabular}{cc|cc}
+  & & \multicolumn{2}{c}{\textbf{Predicho}} \\
+  & & Positivo & Negativo \\
+  \hline
+  \multirow{2}{*}{\textbf{Real}} & Positivo & VP & FN \\
+  & Negativo & FP & VN \\
+\end{tabular}
+\end{center}
+
+donde VP = verdaderos positivos, VN = verdaderos negativos, FP = falsos positivos (error tipo I), FN = falsos negativos (error tipo II).
+
+\subsection{Métricas derivadas}
+
+\begin{align}
+  \text{Exactitud (Accuracy)} &= \frac{\text{VP} + \text{VN}}{\text{VP}+\text{FP}+\text{FN}+\text{VN}} \\[6pt]
+  \text{Precisión (Precision)} &= \frac{\text{VP}}{\text{VP}+\text{FP}} \\[6pt]
+  \text{Sensibilidad (Recall, TPR)} &= \frac{\text{VP}}{\text{VP}+\text{FN}} \\[6pt]
+  \text{Especificidad (TNR)} &= \frac{\text{VN}}{\text{VN}+\text{FP}} \\[6pt]
+  F_1 &= 2 \cdot \frac{\text{Precisión} \times \text{Recall}}{\text{Precisión} + \text{Recall}}
+\end{align}
+
+\begin{alerta}
+  La exactitud es una métrica \textbf{engañosa} con clases desbalanceadas. Si el $95\%$ de los datos son clase negativa, un clasificador que predice siempre negativo tiene accuracy del 95\% pero no detecta ningún positivo. En esos casos se prefieren $F_1$, AUC-ROC o AUC-PR.
+\end{alerta}
+
+\subsection{Curva ROC y AUC}
+
+La \textbf{curva ROC} (\textit{Receiver Operating Characteristic}) grafica la Sensibilidad (TPR) contra la Tasa de Falsos Positivos (FPR $= 1 - \text{TNR}$) para distintos umbrales de clasificación $\tau \in [0,1]$.
+
+El \textbf{AUC} (\textit{Area Under the Curve}) resume la curva en un único valor:
+\begin{itemize}
+  \item $\text{AUC} = 1$: clasificador perfecto.
+  \item $\text{AUC} = 0.5$: clasificador aleatorio (sin poder discriminante).
+  \item $\text{AUC} < 0.5$: peor que aleatorio.
+\end{itemize}
+
+\begin{conceptoclave}
+  AUC-ROC mide la probabilidad de que el modelo asigne un score mayor a una observación positiva aleatoria que a una negativa aleatoria. Es invariante al umbral de decisión y al desbalance de clases.
+\end{conceptoclave}
+
+\subsection{Curva Precisión-Recall (PR)}
+
+Con datos muy desbalanceados, la curva ROC puede ser optimista. La \textbf{curva PR} grafica Precisión vs.\ Recall para distintos umbrales; el \textbf{AP} (\textit{Average Precision}) es el área bajo ella. Es más informativa cuando los positivos son muy escasos.
+
+\subsection{Extensión a multiclase}
+
+Para $K > 2$ clases:
+\begin{itemize}
+  \item \textbf{Macro promedio:} promedio no ponderado de la métrica por clase.
+  \item \textbf{Weighted promedio:} promedio ponderado por la frecuencia de cada clase.
+  \item \textbf{Micro promedio:} agrega VP, FP, FN de todas las clases antes de calcular.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Clases Desbalanceadas}
+% ─────────────────────────────────────────────────────────────────────────────
+
+En muchos problemas reales (detección de fraude, diagnóstico médico, fallas de hardware) una clase es mucho más frecuente que la otra. Esto perjudica a la mayoría de los clasificadores, que optimizan accuracy global.
+
+\subsection{Estrategias de resampling}
+
+\subsubsection{Oversampling: SMOTE}
+
+\textbf{SMOTE} (\textit{Synthetic Minority Oversampling Technique}, Chawla et al.\ 2002) genera observaciones sintéticas de la clase minoritaria interpolando entre observaciones reales:
+\begin{enumerate}
+  \item Para cada observación $\bx_i$ de la clase minoritaria, encontrar sus $k$ vecinos más cercanos.
+  \item Generar un punto sintético $\tilde{\bx} = \bx_i + \lambda (\bx_{nn} - \bx_i)$ donde $\bx_{nn}$ es un vecino elegido al azar y $\lambda \sim \mathcal{U}(0,1)$.
+\end{enumerate}
+
+\subsubsection{Undersampling}
+
+Reducir la clase mayoritaria eliminando observaciones al azar o mediante métodos más sofisticados (Tomek links, ENN).
+
+\begin{alerta}
+  SMOTE debe aplicarse \textbf{solo sobre el conjunto de entrenamiento}, nunca sobre el de validación o prueba. Aplicarlo antes de dividir los datos produce data leakage.
+\end{alerta}
+
+\subsection{Ajuste de pesos de clase}
+
+Muchos clasificadores (RF, SVM, regresión logística) aceptan el parámetro \texttt{class\_weight} que pondera más los errores en la clase minoritaria durante el entrenamiento:
+\[
+  w_k = \frac{n}{K \cdot n_k}
+\]
+donde $n_k$ es el número de observaciones de la clase $k$.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Ingeniería de Features}
+% ─────────────────────────────────────────────────────────────────────────────
+
+La \textbf{ingeniería de features} (\textit{feature engineering}) es el proceso de transformar los datos crudos en representaciones más informativas para el modelo.
+
+\subsection{Transformaciones habituales}
+
+\begin{itemize}
+  \item \textbf{Estandarización:} $x' = (x - \bar{x})/s$. Obligatoria para SVM y KNN; recomendable para redes neuronales.
+  \item \textbf{Normalización min-max:} $x' = (x - x_{\min})/(x_{\max} - x_{\min})$.
+  \item \textbf{Transformación logarítmica:} reduce asimetría en variables con larga cola derecha.
+  \item \textbf{Codificación de variables categóricas:} one-hot encoding, label encoding, target encoding.
+  \item \textbf{Variables de interacción:} $x_1 \cdot x_2$, capturan relaciones no lineales entre pares.
+  \item \textbf{Binning (discretización):} convierte variables continuas en intervalos.
+\end{itemize}
+
+\subsection{Selección de features}
+
+\begin{itemize}
+  \item \textbf{Filtrado:} basado en estadísticos univariados (correlación, $\chi^2$, información mutua).
+  \item \textbf{Wrapper:} selección basada en el rendimiento del modelo (RFE -- \textit{Recursive Feature Elimination}).
+  \item \textbf{Embedded:} regularización LASSO, importancia en Random Forest.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Comparación de Modelos: Grid Search y Pipelines}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Búsqueda de hiperparámetros}
+
+Los hiperparámetros no se aprenden durante el entrenamiento; deben fijarse externamente. Las estrategias de búsqueda son:
+
+\begin{itemize}
+  \item \textbf{Grid search:} evalúa todas las combinaciones de una grilla prefijada de valores.
+  \item \textbf{Random search:} muestrea combinaciones al azar de distribuciones de valores; más eficiente que grid search para espacios grandes.
+  \item \textbf{Búsqueda bayesiana:} utiliza un modelo probabilístico del rendimiento para guiar la búsqueda.
+\end{itemize}
+
+\begin{observacion}
+  La evaluación durante la búsqueda de hiperparámetros debe realizarse con validación cruzada \textbf{sobre el conjunto de entrenamiento}. El conjunto de prueba queda reservado para la evaluación final del modelo seleccionado.
+\end{observacion}
+
+\subsection{Pipelines}
+
+Un \textbf{pipeline} encadena pasos de preprocesamiento y modelado en un único objeto, garantizando que:
+\begin{enumerate}
+  \item Las transformaciones se aprenden solo sobre el fold de entrenamiento en cada iteración de CV.
+  \item No hay filtración de información del conjunto de validación.
+  \item El código de producción es reproducible y no presenta discrepancias respecto al entrenamiento.
+\end{enumerate}
+
+\begin{conceptoclave}
+  El uso de pipelines es una práctica esencial de ML responsable: evita el \textbf{data leakage} y simplifica el despliegue del modelo.
+\end{conceptoclave}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section*{Resumen de la Unidad}
+\addcontentsline{toc}{section}{Resumen de la Unidad}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{center}
+\begin{tabular}{p{3cm} p{4cm} p{3.5cm} p{3.5cm}}
+  \toprule
+  \textbf{Modelo} & \textbf{Supuesto clave} & \textbf{Ventaja} & \textbf{Limitación} \\
+  \midrule
+  Árbol de decisión & Sin supuestos distribucionales & Interpretable & Alta varianza \\
+  Random Forest & IID, suficientes features & Robusto, importancia & Caja negra \\
+  SVM & Separabilidad (kernel) & Eficaz en alta dim. & Costoso en $n$ grande \\
+  KNN & Proximidad implica similitud & Sin entrenamiento & Maldición dim. \\
+  MLP & Aproximador universal & Muy flexible & Requiere muchos datos \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section*{Referencias}
+\addcontentsline{toc}{section}{Referencias}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{itemize}
+  \item Breiman, L. (2001). \textit{Random Forests}. Machine Learning, 45(1), 5--32.
+  \item Chawla, N.\ V., et al.\ (2002). \textit{SMOTE: Synthetic Minority Over-sampling Technique}. JAIR, 16, 321--357.
+  \item Géron, A. (2022). \textit{Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow} (3rd ed.). O'Reilly Media.
+  \item Hastie, T., Tibshirani, R., \& Friedman, J. (2009). \textit{The Elements of Statistical Learning} (2nd ed.). Springer.
+  \item James, G., et al.\ (2021). \textit{An Introduction to Statistical Learning with Applications in R} (2nd ed.). Springer.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\end{document}

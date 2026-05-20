@@ -1,0 +1,344 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\definecolor{unsblue}{RGB}{30,60,120}
+\definecolor{unslightblue}{RGB}{220,230,245}
+\definecolor{alertred}{RGB}{180,30,30}
+\usecolortheme[named=unsblue]{structure}
+\setbeamercolor{palette primary}{bg=unsblue, fg=white}
+\setbeamercolor{palette secondary}{bg=unsblue!80, fg=white}
+\setbeamercolor{palette tertiary}{bg=unsblue!60, fg=white}
+\setbeamercolor{palette quaternary}{bg=unsblue, fg=white}
+\setbeamercolor{block title}{bg=unsblue, fg=white}
+\setbeamercolor{block body}{bg=unslightblue}
+\setbeamercolor{block title alerted}{bg=alertred, fg=white}
+\setbeamercolor{block body alerted}{bg=red!8}
+\setbeamercolor{block title example}{bg=unsblue!60!black, fg=white}
+\setbeamercolor{block body example}{bg=unsblue!8}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{babel}
+\babelprovide[main, import]{spanish}
+\usepackage{amsmath, amssymb}
+\usepackage{bm}
+\usepackage{booktabs}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\bx}{\bm{x}}
+\newcommand{\bw}{\bm{w}}
+
+\title[MAD1 -- Unidad 4]{Aprendizaje Supervisado}
+\subtitle{Clase 22: SVM y K-Nearest Neighbors}
+\author[J. Bavio]{Dr.\ José Bavio}
+\institute[UNS]{Departamento de Matemática\\Universidad Nacional del Sur}
+\date{2026}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenido de la clase}
+  \tableofcontents
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Support Vector Machines}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Idea central de SVM}
+  Problema: clasificar datos en dos clases ($y \in \{-1, +1\}$).\\
+  Hay muchos hiperplanos que separan las clases. ¿Cuál elegir?
+
+  \medskip
+  \begin{block}{Respuesta de SVM: el de máximo margen}
+    Elegir el hiperplano que maximiza la \textbf{distancia} entre sí mismo
+    y las observaciones más cercanas de cada clase.
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Intuición geométrica}
+    Es como trazar la línea divisoria entre dos territorios
+    de forma que quede lo más lejos posible de ambos lados.\\
+    Cuanto más ``espacio libre'' hay a ambos lados, más confianza tenemos
+    al clasificar un punto nuevo que cae cerca del borde.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Hiperplano y margen}
+  El hiperplano se define como:
+  \[
+    \mathcal{H} = \{\bx : \bw^\top \bx + b = 0\}
+  \]
+
+  Los \textbf{vectores de soporte} son las observaciones más cercanas al hiperplano:
+  las únicas que determinan la solución. El resto de los datos son irrelevantes.
+
+  \medskip
+  \begin{exampleblock}{Coloquialmente}
+    De todos los datos de entrenamiento, solo importan los que están ``al borde''.\\
+    Si movés cualquier otro punto, el hiperplano no cambia.\\
+    Si movés un vector de soporte, sí cambia.
+  \end{exampleblock}
+
+  \medskip
+  Margen $= 2/\|\bw\|$. Maximizar el margen $\Leftrightarrow$ minimizar $\|\bw\|^2$.
+\end{frame}
+
+\begin{frame}{SVM de margen duro}
+  \begin{block}{Problema de optimización (datos separables)}
+    \[
+      \min_{\bw, b} \;\frac{1}{2}\|\bw\|^2
+      \quad\text{sujeto a}\quad
+      y_i(\bw^\top \bx_i + b) \geq 1 \quad \forall\, i
+    \]
+  \end{block}
+
+  \medskip
+  La restricción $y_i(\bw^\top \bx_i + b) \geq 1$ dice:
+  cada observación debe estar al lado correcto del margen (no solo del hiperplano).
+
+  \medskip
+  \begin{alertblock}{Limitación: datos no separables}
+    Si las clases se solapan, ningún hiperplano satisface todas las restricciones.
+    El margen duro no existe. Hay que relajar las restricciones.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{SVM de margen blando}
+  Se introducen \textbf{variables de holgura} $\xi_i \geq 0$ que permiten violaciones:
+  \[
+    \min_{\bw, b, \bm{\xi}} \;\frac{1}{2}\|\bw\|^2 + C\sum_{i=1}^{n} \xi_i
+    \quad\text{sujeto a}\quad
+    y_i(\bw^\top \bx_i + b) \geq 1 - \xi_i,\;\; \xi_i \geq 0
+  \]
+
+  \medskip
+  El parámetro $C$ controla el compromiso:
+  \begin{itemize}
+    \item $C$ \textbf{grande}: penaliza mucho las violaciones $\Rightarrow$ margen más angosto, más riesgo de sobreajuste.
+    \item $C$ \textbf{pequeño}: tolera violaciones $\Rightarrow$ margen más amplio, más regularización.
+  \end{itemize}
+
+  \medskip
+  \begin{exampleblock}{Analogía}
+    $C$ es como el nivel de tolerancia del modelo.
+    Un $C$ alto dice: ``no acepto ningún error''. Un $C$ bajo dice: ``acepto algunos errores si eso me da más margen general''.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{El truco del kernel}
+  ¿Qué pasa si los datos no son linealmente separables en ninguna dimensión razonable?
+
+  \medskip
+  \begin{block}{Idea: mapear a mayor dimensión}
+    Proyectar $\bx$ a un espacio de alta dimensión $\phi(\bx)$ donde las clases sí sean separables.\\
+    El hiperplano en ese espacio corresponde a una frontera \textbf{no lineal} en el espacio original.
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Truco del kernel}
+    La formulación dual de SVM solo usa $\bx_i$ a través de productos internos $\langle \bx_i, \bx_j \rangle$.\\
+    Si reemplazamos $\langle \bx_i, \bx_j \rangle$ por $K(\bx_i, \bx_j) = \langle \phi(\bx_i), \phi(\bx_j) \rangle$,
+    calculamos el producto interno en el espacio transformado \textbf{sin calcularlo explícitamente}.\\[4pt]
+    Es como operar en una dimensión altísima sin pagar el costo computacional.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Kernels más usados}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Kernel} & \textbf{Fórmula} & \textbf{Cuándo usarlo} \\
+    \midrule
+    Lineal     & $\bx^\top \bx'$                         & Datos de alta dim.\ (texto) \\
+    Polinomial & $(\gamma\,\bx^\top\bx' + r)^d$          & Interacciones polinomiales \\
+    RBF        & $\exp(-\gamma\|\bx-\bx'\|^2)$           & Uso general, no lineal \\
+    Sigmoide   & $\tanh(\gamma\,\bx^\top\bx' + r)$       & Similar a redes neuronales \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \medskip
+  \begin{block}{Kernel RBF: el parámetro $\gamma$}
+    \begin{itemize}
+      \item $\gamma$ pequeño: fronteras suaves, más regularización.
+      \item $\gamma$ grande: fronteras muy ajustadas al entrenamiento, riesgo de sobreajuste.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{SVM multiclase y consideraciones prácticas}
+  \begin{block}{SVM es binaria por definición}
+    Para $K > 2$ clases se usan estrategias de descomposición:
+    \begin{itemize}
+      \item \textbf{Uno vs.\ todos (OvR):} un clasificador por clase.
+      \item \textbf{Uno vs.\ uno (OvO):} un clasificador por par de clases; predicción por votación.
+    \end{itemize}
+  \end{block}
+
+  \medskip
+  \begin{alertblock}{Escala de los datos}
+    SVM es sensible a la escala de las variables. Siempre estandarizar antes de entrenar.
+    No hacerlo es uno de los errores más comunes en la práctica.
+  \end{alertblock}
+
+  \medskip
+  \begin{exampleblock}{¿Cuándo usar SVM?}
+    Funciona muy bien con pocos datos y alta dimensión (texto, imágenes pequeñas).
+    Costoso para $n$ muy grande (la solución requiere todos los vectores de soporte).
+  \end{exampleblock}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{K-Nearest Neighbors}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{La idea detrás de KNN}
+  \begin{block}{Principio}
+    Para clasificar un punto nuevo $\bx_0$:
+    encontrar sus $k$ vecinos más cercanos en el conjunto de entrenamiento
+    y asignar la clase más frecuente entre ellos.
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Analogía cotidiana}
+    ``Dime con quién andas y te diré quién eres.''\\
+    KNN asume que los puntos cercanos en el espacio de features pertenecen
+    a la misma clase. Si los $k$ vecinos más cercanos son 4 de clase A y 1 de clase B,
+    predecimos clase A.
+  \end{exampleblock}
+
+  \medskip
+  \textbf{No hay entrenamiento explícito:} el modelo ``aprende'' guardando todos los datos.
+  La predicción es el paso costoso.
+\end{frame}
+
+\begin{frame}{Definición formal}
+  \begin{block}{Clasificador $k$-NN}
+    \[
+      \hat{y}(\bx_0) = \arg\max_c \sum_{i \in \mathcal{N}_k(\bx_0)} \mathbf{1}(y_i = c)
+    \]
+    donde $\mathcal{N}_k(\bx_0)$ es el conjunto de los $k$ índices con menor distancia a $\bx_0$.
+  \end{block}
+
+  \medskip
+  La distancia habitual es la \textbf{euclídea}:
+  \[
+    d(\bx, \bx') = \sqrt{\sum_{j=1}^{p}(x_j - x'_j)^2}
+  \]
+  Alternativas: Manhattan ($L_1$), Minkowski ($L_p$), Mahalanobis.
+\end{frame}
+
+\begin{frame}{Elección de $k$: el hiperparámetro clave}
+  \begin{columns}
+    \column{0.48\textwidth}
+    \begin{alertblock}{$k$ pequeño ($k=1$)}
+      Frontera muy irregular.\\
+      El modelo memoriza cada dato.\\
+      Alta varianza, bajo sesgo.\\[4pt]
+      \textit{Como adivinar el partido de toda la escuela a partir del voto de una sola persona.}
+    \end{alertblock}
+
+    \column{0.48\textwidth}
+    \begin{alertblock}{$k$ grande}
+      Frontera muy suave.\\
+      El modelo ignora detalles locales.\\
+      Bajo sesgo, alto sesgo global.\\[4pt]
+      \textit{Como preguntarle a toda la Argentina para clasificar un barrio.}
+    \end{alertblock}
+  \end{columns}
+
+  \medskip
+  \begin{block}{En la práctica}
+    Se elige $k$ por validación cruzada.
+    Probar valores impares para evitar empates en clasificación binaria.
+    Valores típicos: $k = 5, 7, 11$.
+  \end{block}
+\end{frame}
+
+\begin{frame}{La maldición de la dimensionalidad}
+  \begin{block}{El problema}
+    En espacios de alta dimensión ($p$ grande), las distancias entre puntos
+    tienden a homogeneizarse: todos los puntos quedan ``igual de lejos''.
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Un dato sorprendente}
+    En $p = 1$ dimensión, el vecino más cercano está a distancia $\sim 1/n$ en promedio.\\
+    En $p = 100$ dimensiones, para tener el 1\% de los datos ``cerca'',
+    necesitaría cubrir el 63\% del rango de cada variable.\\[4pt]
+    El espacio se vuelve enormemente vacío conforme $p$ crece.
+  \end{exampleblock}
+
+  \medskip
+  \begin{alertblock}{Consecuencia para KNN}
+    El concepto de ``vecino cercano'' pierde significado en alta dimensión.
+    KNN funciona bien con $p$ pequeño (idealmente $\leq 20$).
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Consideraciones prácticas de KNN}
+  \begin{alertblock}{Escala: obligatorio normalizar}
+    Si $x_1 \in [0, 1]$ y $x_2 \in [0, 10{.}000]$,
+    la distancia euclídea queda dominada por $x_2$.
+    $x_1$ queda prácticamente invisible para el modelo.\\
+    \textbf{Siempre estandarizar o normalizar antes de KNN.}
+  \end{alertblock}
+
+  \medskip
+  \begin{block}{Costo computacional}
+    \begin{itemize}
+      \item Entrenamiento: prácticamente nulo (solo guardar los datos).
+      \item Predicción: $\mathcal{O}(n \cdot p)$ por cada punto a predecir.
+      \item Con $n$ grande, la predicción se vuelve muy lenta.
+    \end{itemize}
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{¿Cuándo usar KNN?}
+    Pocos datos, dimensión baja, y cuando el modelo necesita ser simple
+    y no importa el tiempo de predicción. También es útil como baseline.
+  \end{exampleblock}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Comparación SVM vs KNN}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{SVM vs KNN: resumen comparativo}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Aspecto} & \textbf{SVM} & \textbf{KNN} \\
+    \midrule
+    Tipo de frontera & Global (hiperplano + kernel) & Local (mayoría de vecinos) \\
+    Entrenamiento    & Costoso ($n$ grande)         & Instantáneo \\
+    Predicción       & Rápida                        & Lenta ($n$ grande) \\
+    Escala           & Obligatorio normalizar        & Obligatorio normalizar \\
+    Alta dimensión   & Bien (kernel lineal en texto) & Mal (maldición dim.) \\
+    Interpretación   & Vectores de soporte           & Directa pero local \\
+    Hiperparámetros  & $C$, kernel, $\gamma$         & $k$, métrica \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Resumen de la clase}
+  \begin{itemize}
+    \item \textbf{SVM} busca el hiperplano de máximo margen entre clases.
+    \item El \textbf{margen blando} (parámetro $C$) permite violaciones controladas.
+    \item El \textbf{truco del kernel} extiende SVM a fronteras no lineales sin calcular explícitamente la transformación.
+    \item \textbf{KNN} predice por mayoría entre los $k$ vecinos más cercanos.
+    \item Elegir $k$ es el compromiso sesgo-varianza del método.
+    \item La \textbf{maldición de la dimensionalidad} limita KNN en espacios de alta dimensión.
+    \item \textbf{Ambos modelos requieren normalización previa.}
+  \end{itemize}
+
+  \bigskip
+  \textbf{Próxima clase:} Redes neuronales, métricas de evaluación, SMOTE y pipelines.
+\end{frame}
+
+\end{document}

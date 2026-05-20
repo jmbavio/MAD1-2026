@@ -1,0 +1,311 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\definecolor{unsblue}{RGB}{30,60,120}
+\definecolor{unslightblue}{RGB}{220,230,245}
+\definecolor{alertred}{RGB}{180,30,30}
+\usecolortheme[named=unsblue]{structure}
+\setbeamercolor{palette primary}{bg=unsblue, fg=white}
+\setbeamercolor{palette secondary}{bg=unsblue!80, fg=white}
+\setbeamercolor{palette tertiary}{bg=unsblue!60, fg=white}
+\setbeamercolor{palette quaternary}{bg=unsblue, fg=white}
+\setbeamercolor{block title}{bg=unsblue, fg=white}
+\setbeamercolor{block body}{bg=unslightblue}
+\setbeamercolor{block title alerted}{bg=alertred, fg=white}
+\setbeamercolor{block body alerted}{bg=red!8}
+\setbeamercolor{block title example}{bg=unsblue!60!black, fg=white}
+\setbeamercolor{block body example}{bg=unsblue!8}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{babel}
+\babelprovide[main, import]{spanish}
+\usepackage{amsmath, amssymb}
+\usepackage{bm}
+\usepackage{booktabs}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\bx}{\bm{x}}
+
+\title[MAD1 -- Unidad 4]{Aprendizaje Supervisado}
+\subtitle{Clase 21: Ensambles y Random Forest}
+\author[J. Bavio]{Dr.\ José Bavio}
+\institute[UNS]{Departamento de Matemática\\Universidad Nacional del Sur}
+\date{2026}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenido de la clase}
+  \tableofcontents
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{La idea de los ensambles}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{¿Por qué combinar modelos?}
+  \begin{block}{Problema}
+    Un árbol de decisión tiene alta varianza: cambiás un poco los datos y el árbol cambia drásticamente.
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Intuición: la sabiduría de la multitud}
+    Si le preguntás a una sola persona cuántos caramelos hay en un frasco, puede errar por mucho.\\
+    Si promediás las respuestas de 100 personas independientes, el promedio suele ser muy preciso.\\[4pt]
+    Los \textbf{métodos de ensamble} hacen exactamente eso con modelos.
+  \end{exampleblock}
+
+  \medskip
+  Condición clave: los modelos deben ser \textbf{suficientemente distintos entre sí}.\\
+  Promediar 100 copias del mismo modelo no ayuda nada.
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Bagging}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Bootstrap}
+  Antes de entender bagging, necesitamos el \textbf{bootstrap}.
+
+  \medskip
+  \begin{block}{Muestra bootstrap}
+    Dado un conjunto $\mathcal{D}$ de $n$ observaciones, una muestra bootstrap
+    $\mathcal{D}^{(b)}$ es una muestra de tamaño $n$ extraída \textbf{con reemplazo} de $\mathcal{D}$.
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Coloquialmente}
+    Es como sacar bolitas de una bolsa y volver a meterlas antes del próximo sorteo.
+    Algunas bolitas van a salir dos veces, otras ninguna.
+    En promedio, una muestra bootstrap contiene el $\approx 63.2\%$ de las observaciones originales (distintas).
+  \end{exampleblock}
+
+  \medskip
+  Las observaciones que no entran en la muestra bootstrap ($\approx 36.8\%$)
+  se llaman \textbf{out-of-bag} (OOB). Ya veremos por qué eso es útil.
+\end{frame}
+
+\begin{frame}{Bagging (\textit{Bootstrap Aggregating})}
+  \textbf{Algoritmo} (Breiman, 1996):
+
+  \medskip
+  \begin{enumerate}
+    \item Para $b = 1, \ldots, B$:
+    \begin{enumerate}
+      \item Generar una muestra bootstrap $\mathcal{D}^{(b)}$.
+      \item Entrenar un árbol $T^{(b)}$ sobre $\mathcal{D}^{(b)}$.
+    \end{enumerate}
+    \item Combinar por \textbf{mayoría de votos}:
+    \[
+      \hat{y}(\bx) = \arg\max_k \sum_{b=1}^{B} \mathbf{1}\bigl(\hat{y}^{(b)}(\bx) = k\bigr)
+    \]
+  \end{enumerate}
+
+  \medskip
+  \begin{exampleblock}{¿Por qué reduce la varianza?}
+    Si un modelo tiene varianza $\sigma^2$ y los modelos son independientes,
+    el promedio de $B$ tiene varianza $\sigma^2/B$.
+    La varianza cae con $B$. El sesgo queda igual.
+  \end{exampleblock}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Random Forest}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{El problema del bagging puro}
+  \begin{alertblock}{Problema: correlación entre árboles}
+    Si hay un feature muy predictivo (por ejemplo, una variable que domina la predicción),
+    \textbf{todos} los árboles van a usarla en los primeros splits.\\
+    Resultado: los $B$ árboles son muy parecidos entre sí.\\
+    Promediarlos no reduce mucho la varianza.
+  \end{alertblock}
+
+  \medskip
+  \begin{exampleblock}{Analogía}
+    Preguntarle a 100 personas que leyeron exactamente el mismo artículo no es
+    más informativo que preguntarle a una sola.
+    Para que el promedio ayude, las fuentes deben ser \textbf{distintas}.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Random Forest: decorrelación de árboles}
+  \begin{block}{Ingrediente extra de Random Forest (Breiman, 2001)}
+    En cada split de cada árbol, se elige el mejor split \textbf{solo entre un subconjunto aleatorio} de $m$ features (no los $p$ totales).
+  \end{block}
+
+  \medskip
+  \begin{itemize}
+    \item Clasificación: $m = \lfloor\sqrt{p}\rfloor$ (por defecto)
+    \item Regresión: $m = \lfloor p/3 \rfloor$ (por defecto)
+  \end{itemize}
+
+  \medskip
+  \begin{exampleblock}{¿Por qué funciona?}
+    Al forzar que cada árbol ignore la mayoría de los features en cada split,
+    los árboles se ``ven obligados'' a ser distintos entre sí.
+    Cuando se promedian árboles poco correlacionados, la varianza cae mucho más.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Varianza del promedio: por qué la decorrelación importa}
+  Sean $B$ árboles, cada uno con varianza $\sigma^2$ y correlación $\rho$ entre pares.
+  La varianza del promedio es:
+  \[
+    \rho\,\sigma^2 + \frac{1-\rho}{B}\,\sigma^2
+  \]
+
+  \medskip
+  \begin{itemize}
+    \item Si $B \to \infty$: la varianza tiende a $\rho\,\sigma^2$.
+    \item Si $\rho = 0$ (árboles independientes): varianza $\to 0$.
+    \item Si $\rho = 1$ (árboles idénticos): varianza $= \sigma^2$ (sin mejora).
+  \end{itemize}
+
+  \medskip
+  \begin{exampleblock}{Conclusión práctica}
+    Aumentar $B$ (más árboles) siempre ayuda, pero con rendimientos decrecientes.
+    Reducir $\rho$ (decorrelación vía aleatoriedad en features) es lo que hace único a RF.
+  \end{exampleblock}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Estimación Out-of-Bag}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Error Out-of-Bag (OOB)}
+  \begin{block}{Idea}
+    Cada árbol $T^{(b)}$ se entrenó sobre $\mathcal{D}^{(b)}$ que excluye
+    $\approx 36.8\%$ de los datos. Esas observaciones son las \textbf{OOB} de ese árbol.
+    Para cada $\bx_i$, predecir usando \textbf{solo} los árboles que no vieron $\bx_i$.
+  \end{block}
+
+  \medskip
+  \[
+    \hat{y}_i^{\text{OOB}} = \arg\max_k \sum_{b:\, i \in \text{OOB}(b)} \mathbf{1}(\hat{y}^{(b)}(\bx_i) = k)
+  \]
+
+  \medskip
+  \begin{exampleblock}{¿Para qué sirve?}
+    El error OOB es un estimador \textbf{casi insesgado del error de generalización}
+    y no requiere reservar un conjunto de validación separado.\\[4pt]
+    Es como tener validación cruzada ``gratis'' mientras entrenás.
+  \end{exampleblock}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Importancia de Variables}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Importancia por impureza (MDI)}
+  \begin{block}{Mean Decrease in Impurity (MDI)}
+    La importancia de la variable $j$ es la reducción total de impureza (Gini/entropía)
+    acumulada en todos los splits de todos los árboles que usan $j$, promediada sobre $B$.
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Coloquialmente}
+    Una variable es ``importante'' según MDI si, cada vez que se la usa para hacer un split,
+    los nodos hijos quedan mucho más puros que el padre.\\
+    Si una variable hace splits que no mejoran casi nada la pureza, su importancia es baja.
+  \end{exampleblock}
+
+  \medskip
+  \begin{alertblock}{Cuidado}
+    MDI \textbf{sobreestima} la importancia de variables con alta cardinalidad
+    (muchos valores posibles, como IDs o fechas).
+    Es un sesgo conocido del método.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Importancia por permutación (MDA)}
+  \begin{block}{Mean Decrease in Accuracy (MDA)}
+    Para cada árbol y cada variable $j$:
+    \begin{enumerate}
+      \item Calcular el error OOB base.
+      \item \textbf{Permutar aleatoriamente} los valores de $x_j$ en el conjunto OOB.
+      \item Recalcular el error con los valores permutados.
+      \item Importancia de $j$ = aumento promedio del error.
+    \end{enumerate}
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Intuición}
+    Si mezclar al azar los valores de una variable arruina las predicciones,
+    esa variable era importante.\\
+    Si el modelo no se entera de que la mezclamos, era ruido.\\[4pt]
+    Es como preguntarse: ``¿qué pasa si le saco esta pieza al motor?''
+  \end{exampleblock}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Hiperparámetros y Práctica}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{frame}{Hiperparámetros principales de Random Forest}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Hiperparámetro} & \textbf{Efecto} & \textbf{Valor típico} \\
+    \midrule
+    \texttt{n\_estimators}   & Número de árboles            & 100--500 \\
+    \texttt{max\_features}   & Features por split           & \texttt{'sqrt'} \\
+    \texttt{max\_depth}      & Prof.\ máxima del árbol      & None \\
+    \texttt{min\_samples\_leaf} & Mínimo muestras en hoja  & 1--5 \\
+    \texttt{bootstrap}       & Usar muestras bootstrap      & True \\
+    \texttt{oob\_score}      & Calcular error OOB           & True \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \medskip
+  \begin{block}{Regla práctica}
+    Más árboles ($n\_\text{estimators}$) casi siempre mejora o mantiene igual el rendimiento:
+    no existe ``sobreajuste por tener demasiados árboles''.
+    El límite es computacional, no de precisión.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Ventajas y limitaciones de Random Forest}
+  \begin{columns}
+    \column{0.5\textwidth}
+    \begin{block}{Ventajas}
+      \begin{itemize}
+        \item Muy robusto: difícil hacerlo sobreajustar
+        \item Buena estimación de error OOB
+        \item Importancia de variables incorporada
+        \item Pocas decisiones de diseño
+        \item Paralelizable
+      \end{itemize}
+    \end{block}
+
+    \column{0.5\textwidth}
+    \begin{alertblock}{Limitaciones}
+      \begin{itemize}
+        \item Caja negra: no podés explicar una predicción puntual fácilmente
+        \item Lento para predecir en tiempo real (muchos árboles)
+        \item Memoria: guarda $B$ árboles completos
+        \item No extrapola bien fuera del rango de entrenamiento
+      \end{itemize}
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Resumen de la clase}
+  \begin{itemize}
+    \item Los \textbf{métodos de ensamble} combinan múltiples modelos débiles para obtener uno robusto.
+    \item \textbf{Bagging} reduce la varianza entrenando sobre muestras bootstrap y promediando.
+    \item \textbf{Random Forest} agrega aleatoriedad en la selección de features para \textbf{decorrelacionar} los árboles.
+    \item El \textbf{error OOB} es una estimación gratuita del error de generalización.
+    \item La \textbf{importancia de variables} (MDI y MDA) permite interpretar el modelo de forma global.
+  \end{itemize}
+
+  \bigskip
+  \textbf{Próxima clase:} SVM y KNN --- dos enfoques muy distintos al problema de clasificación.
+\end{frame}
+
+\end{document}

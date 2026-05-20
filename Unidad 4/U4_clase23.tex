@@ -1,0 +1,449 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\definecolor{unsblue}{RGB}{30,60,120}
+\definecolor{unslightblue}{RGB}{220,230,245}
+\definecolor{alertred}{RGB}{180,30,30}
+\usecolortheme[named=unsblue]{structure}
+\setbeamercolor{palette primary}{bg=unsblue, fg=white}
+\setbeamercolor{palette secondary}{bg=unsblue!80, fg=white}
+\setbeamercolor{palette tertiary}{bg=unsblue!60, fg=white}
+\setbeamercolor{palette quaternary}{bg=unsblue, fg=white}
+\setbeamercolor{block title}{bg=unsblue, fg=white}
+\setbeamercolor{block body}{bg=unslightblue}
+\setbeamercolor{block title alerted}{bg=alertred, fg=white}
+\setbeamercolor{block body alerted}{bg=red!8}
+\setbeamercolor{block title example}{bg=unsblue!60!black, fg=white}
+\setbeamercolor{block body example}{bg=unsblue!8}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{babel}
+\babelprovide[main, import]{spanish}
+\usepackage{amsmath, amssymb}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{multirow}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\bx}{\bm{x}}
+
+\title[MAD1 -- Unidad 4]{Aprendizaje Supervisado}
+\subtitle{Clase 23: Redes Neuronales, Evaluación y Pipelines}
+\author[J. Bavio]{Dr.\ José Bavio}
+\institute[UNS]{Departamento de Matemática\\Universidad Nacional del Sur}
+\date{2026}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenido de la clase}
+  \tableofcontents
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Redes Neuronales Artificiales}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{La neurona artificial}
+  \begin{block}{Idea}
+    Una neurona recibe $p$ entradas, las combina linealmente y aplica una función no lineal:
+    \[
+      a = \sigma\!\left(\sum_{j=1}^{p} w_j x_j + b\right) = \sigma(\bm{w}^\top \bx + b)
+    \]
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Analogía biológica (solo para intuición)}
+    En el cerebro, una neurona ``se activa'' si la suma de señales que recibe supera un umbral.
+    La función de activación $\sigma$ cumple el mismo rol: decide si la neurona ``se prende'' o no.\\[4pt]
+    La analogía no es perfecta, pero ayuda a recordar la estructura.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Perceptrón Multicapa (MLP)}
+  \begin{block}{Definición}
+    Un \textbf{MLP} (\textit{Multilayer Perceptron}) apila capas de neuronas:
+    \begin{itemize}
+      \item \textbf{Capa de entrada:} dimensión $p$ (una neurona por feature).
+      \item \textbf{Capas ocultas:} transformaciones no lineales sucesivas.
+      \item \textbf{Capa de salida:} produce la predicción final.
+    \end{itemize}
+  \end{block}
+
+  \medskip
+  Salida de la capa $l$:
+  \[
+    \bm{h}^{(l)} = \sigma^{(l)}\!\left(\bm{W}^{(l)} \bm{h}^{(l-1)} + \bm{b}^{(l)}\right)
+  \]
+
+  \begin{exampleblock}{¿Por qué capas ocultas?}
+    Cada capa aprende representaciones más abstractas de los datos.
+    La primera capa puede detectar bordes; la segunda, formas; la tercera, objetos.
+    Con suficientes capas y neuronas, un MLP puede aproximar cualquier función continua
+    (\textit{teorema de aproximación universal}).
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Funciones de activación}
+  \begin{center}
+  \begin{tabular}{llll}
+    \toprule
+    \textbf{Nombre} & \textbf{Fórmula} & \textbf{Rango} & \textbf{Uso} \\
+    \midrule
+    Sigmoide    & $1/(1+e^{-z})$          & $(0,1)$    & Salida binaria \\
+    Tanh        & $\tanh(z)$              & $(-1,1)$   & Capas ocultas \\
+    ReLU        & $\max(0,z)$             & $[0,\infty)$ & Estándar hoy \\
+    Leaky ReLU  & $\max(\alpha z,z)$      & $\R$       & Evita neuronas muertas \\
+    Softmax     & $e^{z_k}/\sum_j e^{z_j}$ & $(0,1)^K$ & Salida multiclase \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \medskip
+  \begin{exampleblock}{¿Por qué ReLU domina hoy?}
+    La sigmoide y la tanh ``aplastan'' los gradientes en sus extremos (gradiente $\approx 0$):
+    el entrenamiento se detiene. ReLU no tiene ese problema.
+    Además es muy simple de calcular: $\max(0,z)$.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Entrenamiento: descenso por gradiente}
+  Los parámetros $\bm{\theta} = \{\bm{W}^{(l)}, \bm{b}^{(l)}\}$ se ajustan minimizando la función de pérdida.
+
+  \medskip
+  \textbf{Descenso por gradiente estocástico (SGD):}
+  \[
+    \bm{\theta} \leftarrow \bm{\theta} - \eta\, \nabla_{\bm{\theta}}\, \mathcal{L}
+  \]
+  donde $\eta$ es la \textbf{tasa de aprendizaje} (\textit{learning rate}).
+
+  \medskip
+  \begin{exampleblock}{Intuición}
+    Imaginar que estás en una montaña con niebla y querés bajar al valle.
+    El gradiente te dice la dirección de máxima subida; ir en la dirección opuesta
+    (descenso por gradiente) te lleva hacia abajo.
+    El learning rate es cuán grande es cada paso que das.
+  \end{exampleblock}
+
+  \medskip
+  \begin{alertblock}{Cuidado con $\eta$}
+    $\eta$ muy grande: el modelo ``salta'' y no converge.\\
+    $\eta$ muy pequeño: convergencia lentísima.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Backpropagation}
+  \begin{block}{¿Cómo calcular $\nabla_{\bm{\theta}}\,\mathcal{L}$?}
+    \textbf{Backpropagation} aplica la regla de la cadena capa por capa,
+    de la salida hacia la entrada, calculando eficientemente el gradiente
+    respecto a cada parámetro de la red.
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Aclaración importante}
+    Backprop no es el algoritmo de optimización: es el método para calcular el gradiente.
+    El algoritmo de optimización (SGD, Adam, etc.) usa ese gradiente.\\[4pt]
+    Es como la diferencia entre calcular la pendiente de una montaña (backprop)
+    y la estrategia de descenso que usás (SGD, Adam).
+  \end{exampleblock}
+
+  \medskip
+  \textbf{Adam} (Kingma \& Ba, 2015) es el optimizador más usado hoy:
+  combina momentum con adaptación individual de la tasa por parámetro.
+\end{frame}
+
+\begin{frame}{Regularización en redes neuronales}
+  \begin{columns}
+    \column{0.5\textwidth}
+    \begin{block}{Dropout}
+      Durante el entrenamiento, cada neurona se desactiva con probabilidad $p_{\text{drop}}$.
+      Fuerza redundancia: la red no puede depender de ninguna neurona individual.\\[4pt]
+      \textit{Como estudiar para el examen sin saber de antemano qué páginas del libro van a estar disponibles.}
+    \end{block}
+
+    \column{0.5\textwidth}
+    \begin{block}{Early stopping}
+      Entrenar hasta que el error de validación deja de mejorar.
+      Guardar los pesos del mejor epoch.\\[4pt]
+      \textit{Parar de estudiar cuando ya no aprendés más, antes de que empieces a ``aprender'' los ruidos.}
+    \end{block}
+  \end{columns}
+
+  \medskip
+  \begin{block}{Otras técnicas}
+    \begin{itemize}
+      \item Regularización $L_2$ (\textit{weight decay}): penaliza pesos grandes.
+      \item Batch normalization: normaliza activaciones, acelera el entrenamiento.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Métricas de Evaluación}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{Matriz de confusión}
+  Para clasificación binaria (positivo / negativo):
+
+  \medskip
+  \begin{center}
+  \begin{tabular}{cc|cc}
+    & & \multicolumn{2}{c}{\textbf{Predicho}} \\
+    & & Positivo & Negativo \\
+    \hline
+    \multirow{2}{*}{\textbf{Real}} & Positivo & VP & FN \\
+    & Negativo & FP & VN \\
+  \end{tabular}
+  \end{center}
+
+  \medskip
+  \begin{itemize}
+    \item \textbf{VP} (verdadero positivo): predijo positivo y era positivo. Bien.
+    \item \textbf{VN} (verdadero negativo): predijo negativo y era negativo. Bien.
+    \item \textbf{FP} (falso positivo): predijo positivo pero era negativo. \textit{Error tipo I.}
+    \item \textbf{FN} (falso negativo): predijo negativo pero era positivo. \textit{Error tipo II.}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Métricas derivadas}
+  \[
+    \text{Accuracy} = \frac{\text{VP}+\text{VN}}{n}
+    \qquad
+    \text{Precisión} = \frac{\text{VP}}{\text{VP}+\text{FP}}
+    \qquad
+    \text{Recall} = \frac{\text{VP}}{\text{VP}+\text{FN}}
+  \]
+  \[
+    F_1 = 2\cdot\frac{\text{Precisión}\times\text{Recall}}{\text{Precisión}+\text{Recall}}
+  \]
+
+  \medskip
+  \begin{exampleblock}{Intuición de Precisión y Recall}
+    \textbf{Precisión:} ``De todos los que el modelo acusó de positivos, ¿cuántos realmente lo eran?''\\
+    \textbf{Recall:} ``De todos los positivos reales, ¿cuántos detectó el modelo?''\\[4pt]
+    En diagnóstico médico: recall alto es crítico (no quiero perder enfermos).\\
+    En correo spam: precisión alta importa más (no quiero tirar mail legítimo).
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{El problema de la accuracy con clases desbalanceadas}
+  \begin{alertblock}{Ejemplo: detección de fraude}
+    99\% de las transacciones son legítimas, 1\% son fraude.\\
+    Un clasificador que predice SIEMPRE ``no fraude'' tiene accuracy = 99\%.\\
+    Sin embargo, \textbf{no detecta ningún fraude}.
+  \end{alertblock}
+
+  \medskip
+  \begin{block}{Soluciones}
+    Con clases desbalanceadas, preferir:
+    \begin{itemize}
+      \item $F_1$ o $F_\beta$ (con $\beta > 1$ si recall importa más)
+      \item AUC-ROC (Area Under the ROC Curve)
+      \item AUC-PR (Area Under the Precision-Recall Curve)
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{Curva ROC y AUC}
+  La \textbf{curva ROC} grafica:
+  \begin{itemize}
+    \item Eje $y$: TPR (Recall, Sensibilidad) $= \text{VP}/(\text{VP}+\text{FN})$
+    \item Eje $x$: FPR $= \text{FP}/(\text{FP}+\text{VN})$
+  \end{itemize}
+  para todos los posibles umbrales $\tau \in [0,1]$.
+
+  \medskip
+  \begin{block}{AUC-ROC}
+    \begin{itemize}
+      \item AUC $= 1$: clasificador perfecto.
+      \item AUC $= 0.5$: clasificador aleatorio (diagonal).
+      \item AUC $< 0.5$: peor que aleatorio.
+    \end{itemize}
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Interpretación probabilística}
+    AUC = probabilidad de que el modelo asigne un score más alto a un positivo aleatorio
+    que a un negativo aleatorio.\\
+    No depende del umbral de decisión: mide la capacidad discriminante global.
+  \end{exampleblock}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Clases Desbalanceadas y SMOTE}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{¿Por qué el desbalance es un problema?}
+  \begin{block}{Efecto sobre el entrenamiento}
+    Si el 95\% de los datos son clase mayoritaria, el modelo aprende rápido a
+    ignorar la clase minoritaria: el error en la mayoría domina la función de pérdida.
+    El modelo ``toma el atajo'' de predecir siempre la clase mayoritaria.
+  \end{block}
+
+  \medskip
+  \textbf{Estrategias principales:}
+  \begin{enumerate}
+    \item Resampling (oversampling / undersampling)
+    \item Ajuste de pesos de clase (\texttt{class\_weight})
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{SMOTE}
+  \textbf{SMOTE} (\textit{Synthetic Minority Oversampling Technique}, Chawla et al., 2002)
+  genera observaciones \textbf{sintéticas} de la clase minoritaria:
+
+  \medskip
+  \begin{enumerate}
+    \item Para cada punto $\bx_i$ de la clase minoritaria, encontrar sus $k$ vecinos más cercanos.
+    \item Generar un punto sintético interpolando:
+    \[
+      \tilde{\bx} = \bx_i + \lambda\,(\bx_{nn} - \bx_i), \quad \lambda \sim \mathcal{U}(0,1)
+    \]
+  \end{enumerate}
+
+  \medskip
+  \begin{exampleblock}{Coloquialmente}
+    En lugar de copiar y pegar los mismos ejemplos minoritarios (oversampling simple),
+    SMOTE ``inventa'' ejemplos nuevos que están entre dos ejemplos reales de la clase.
+    Añade variedad sin salir de la región donde ya existen ejemplos.
+  \end{exampleblock}
+
+  \medskip
+  \begin{alertblock}{Regla fundamental}
+    SMOTE se aplica \textbf{solo sobre el conjunto de entrenamiento}.
+    Nunca antes de dividir los datos: eso produce data leakage.
+  \end{alertblock}
+\end{frame}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Pipelines y Grid Search}
+% ═════════════════════════════════════════════════════════════════════════════
+
+\begin{frame}{¿Qué es un pipeline?}
+  \begin{block}{Definición}
+    Un \textbf{pipeline} encadena pasos de preprocesamiento y modelado en un único objeto.
+    Cada paso transforma los datos y los pasa al siguiente.
+  \end{block}
+
+  \medskip
+  Ejemplo típico:
+  \[
+    \text{Datos} \xrightarrow{\text{imputar}} \xrightarrow{\text{estandarizar}} \xrightarrow{\text{SMOTE}} \xrightarrow{\text{modelo}} \text{Predicción}
+  \]
+
+  \medskip
+  \begin{exampleblock}{¿Por qué es importante?}
+    Sin pipeline, es fácil cometer el error de:
+    \begin{enumerate}
+      \item Estandarizar todos los datos.
+      \item \textit{Luego} dividir en train/test.
+    \end{enumerate}
+    Resultado: el test set ``contaminó'' los parámetros de la estandarización.
+    Eso es \textbf{data leakage}: el modelo vio información del test durante el entrenamiento.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Data Leakage}
+  \begin{alertblock}{El error más silencioso del ML}
+    El \textbf{data leakage} ocurre cuando información del futuro o del test set
+    contamina el entrenamiento del modelo.\\
+    El modelo parece funcionar muy bien en evaluación, pero falla en producción.
+  \end{alertblock}
+
+  \medskip
+  \begin{block}{Formas comunes de leakage}
+    \begin{itemize}
+      \item Normalizar/estandarizar con estadísticos calculados sobre todo el dataset.
+      \item Aplicar SMOTE antes de dividir train/test.
+      \item Seleccionar features con toda la información antes de dividir.
+      \item Usar features que ``vienen del futuro'' (ej.: resultado de un evento para predecirlo).
+    \end{itemize}
+  \end{block}
+
+  \medskip
+  \begin{exampleblock}{Solución}
+    Usar pipelines con validación cruzada: cada transformación se ajusta solo con los datos de entrenamiento de cada fold.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Grid Search y búsqueda de hiperparámetros}
+  \begin{block}{Grid Search}
+    Define una grilla de valores para cada hiperparámetro y evalúa todas las combinaciones
+    usando validación cruzada sobre el conjunto de entrenamiento.
+  \end{block}
+
+  \medskip
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    \textbf{Método} & \textbf{Descripción} \\
+    \midrule
+    Grid Search   & Todas las combinaciones (exhaustivo, costoso) \\
+    Random Search & Muestrea combinaciones al azar (más eficiente) \\
+    Bayesiano     & Guía la búsqueda con un modelo probabilístico \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \medskip
+  \begin{alertblock}{Regla de oro}
+    La evaluación con grid search usa el \textbf{conjunto de entrenamiento} (con CV interna).
+    El conjunto de prueba queda reservado para la evaluación final.
+    Mirar el test set durante la búsqueda de hiperparámetros invalida su uso como estimador imparcial.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Pipeline + Grid Search: la combinación correcta}
+  Con \texttt{GridSearchCV} en scikit-learn sobre un pipeline:
+
+  \medskip
+  \begin{enumerate}
+    \item En cada fold de CV:
+    \begin{itemize}
+      \item Los pasos del pipeline se \textbf{ajustan} sobre el fold de entrenamiento.
+      \item Se \textbf{aplican} sobre el fold de validación.
+    \end{itemize}
+    \item Se elige el conjunto de hiperparámetros con mejor CV.
+    \item Se re-entrena el pipeline completo con todos los datos de entrenamiento.
+    \item Se evalúa \textbf{una sola vez} sobre el test set.
+  \end{enumerate}
+
+  \medskip
+  \begin{exampleblock}{Coloquialmente}
+    Es el equivalente a preparar el examen con ejercicios de práctica
+    sin mirar las respuestas del examen real hasta el día del examen.
+    Una sola vez. Sin volver a estudiar después de ver el resultado.
+  \end{exampleblock}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Resumen de la Unidad 4}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Modelo} & \textbf{Fortaleza} & \textbf{Limitación clave} \\
+    \midrule
+    Árbol de decisión & Interpretable      & Alta varianza \\
+    Random Forest     & Robusto, OOB       & Caja negra \\
+    SVM               & Alta dimensión     & Costoso en $n$ grande \\
+    KNN               & Sin entrenamiento  & Maldición dimensionalidad \\
+    MLP               & Muy flexible       & Requiere muchos datos \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \bigskip
+  \textbf{Temas transversales:}
+  \begin{itemize}
+    \item Bias-variance tradeoff y validación cruzada (siempre).
+    \item Métricas apropiadas al problema (accuracy no siempre sirve).
+    \item Pipelines para evitar data leakage.
+    \item SMOTE para clases desbalanceadas.
+  \end{itemize}
+\end{frame}
+
+\end{document}
