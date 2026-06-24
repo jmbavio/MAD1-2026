@@ -1,0 +1,316 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+% Color UNS
+\definecolor{azulUNS}{RGB}{30,60,120}
+\usecolortheme[named=azulUNS]{structure}
+
+\title[MAD1 -- U6]{Métodos de Análisis de Datos I}
+\subtitle{Unidad 6 -- Bloque 4: El data scientist en contexto}
+\author{Departamento de Matemática -- UNS}
+\date{2026}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenidos}
+  \tableofcontents
+\end{frame}
+
+%-----------------------------------------------
+\section{Más allá del modelo}
+%-----------------------------------------------
+
+\begin{frame}{El trabajo real de un analista de datos}
+  En los cursos aprendemos a construir modelos. En el trabajo real, construir el modelo es solo una parte.
+
+  \bigskip
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{Lo que se enseña:}
+      \begin{itemize}
+        \item Preprocesamiento
+        \item Selección de modelo
+        \item Entrenamiento y evaluación
+        \item Métricas
+      \end{itemize}
+    \column{0.5\textwidth}
+      \textbf{Lo que también ocupa tiempo real:}
+      \begin{itemize}
+        \item Entender el problema de negocio
+        \item Conseguir y limpiar los datos
+        \item Negociar qué pregunta es respondible
+        \item Comunicar resultados
+        \item Mantener y monitorear modelos en producción
+      \end{itemize}
+  \end{columns}
+
+  \bigskip
+  \begin{alertblock}{Estimación práctica}
+    En proyectos reales, entre el 60\% y el 80\% del tiempo se gasta en datos: obtenerlos, entenderlos, limpiarlos, validarlos. El modelado ocupa una fracción menor de lo que se imagina.
+  \end{alertblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{Ética y sesgo en los datos}
+%-----------------------------------------------
+
+\begin{frame}{Sesgo: el problema empieza en los datos}
+  Un modelo aprende de los datos. Si los datos tienen sesgos, el modelo los amplifica.
+
+  \bigskip
+  \textbf{Tipos de sesgo frecuentes:}
+  \begin{itemize}
+    \item \textbf{Sesgo de selección:} los datos no representan a la población objetivo. \\
+    \textit{Ejemplo: un modelo de crédito entrenado solo con clientes que accedieron al crédito, sin incluir a los rechazados.}
+    \item \textbf{Sesgo histórico:} los datos reflejan decisiones pasadas injustas. \\
+    \textit{Ejemplo: contratación histórica con discriminación de género $\rightarrow$ modelo que perpetúa esa discriminación.}
+    \item \textbf{Sesgo de medición:} el instrumento que genera los datos no mide lo mismo para todos los grupos. \\
+    \textit{Ejemplo: detección de enfermedades con herramientas calibradas para un solo grupo demográfico.}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Sesgo: casos reales}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{COMPAS (2016):}\\
+      Sistema de predicción de reincidencia criminal usado en EE.UU.\\
+      Un análisis periodístico mostró que asignaba puntuaciones de riesgo más altas a acusados afroamericanos que a blancos con perfiles similares.\\
+      \bigskip
+      \textbf{Amazon Recruiting (2018):}\\
+      Amazon descartó un sistema de selección de CVs porque penalizaba sistemáticamente a mujeres, habiendo aprendido de contrataciones históricas dominadas por hombres.
+    \column{0.5\textwidth}
+      \textbf{Reconocimiento facial:}\\
+      Estudios (MIT Media Lab, 2018) mostraron que sistemas comerciales tenían tasas de error hasta 34 puntos porcentuales más altas para mujeres de piel oscura que para hombres de piel clara.\\
+      \bigskip
+      \begin{alertblock}{La lección}
+        La objetividad del algoritmo es una ilusión si los datos de entrenamiento codifican injusticia histórica.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Equidad algorítmica: no hay una sola definición}
+  Intuitivamente, un modelo ``justo'' trata igual a todos. Formalmente, hay varias definiciones incompatibles entre sí:
+
+  \bigskip
+  \begin{itemize}
+    \item \textbf{Paridad demográfica:} igual tasa de positivos en todos los grupos.
+    \item \textbf{Igualdad de oportunidades:} igual tasa de verdaderos positivos (TPR) entre grupos.
+    \item \textbf{Calibración:} igual significado de la puntuación de riesgo entre grupos.
+  \end{itemize}
+
+  \bigskip
+  \begin{alertblock}{Resultado teórico (Chouldechova, 2017)}
+    Cuando las tasas base de la variable objetivo difieren entre grupos, \textbf{no es posible} satisfacer simultáneamente paridad demográfica, igualdad de oportunidades y calibración.\\
+    Elegir una definición de equidad implica sacrificar otra.
+  \end{alertblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{Cuándo NO usar ML}
+%-----------------------------------------------
+
+\begin{frame}{Cuándo NO usar machine learning}
+  ML no es la solución a todo. Hay situaciones donde \textbf{no corresponde} o \textbf{no ayuda}.
+
+  \bigskip
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{No usar ML cuando:}
+      \begin{itemize}
+        \item El problema se resuelve con una regla simple y conocida.
+        \item No hay suficientes datos.
+        \item El proceso subyacente cambia tan rápido que cualquier modelo queda desactualizado.
+        \item La explicabilidad es un requisito no negociable y el modelo no la provee.
+        \item El costo de un error es muy alto y no hay forma de auditarlo.
+      \end{itemize}
+    \column{0.5\textwidth}
+      \begin{exampleblock}{Ejemplo}
+        Una empresa quiere predecir si un cliente pagará a tiempo.\\
+        Tiene 80 registros históricos.\\
+        \bigskip
+        Un modelo de ML no tiene suficientes datos para generalizar. Una regla heurística (``clientes con más de 3 atrasos previos $\rightarrow$ riesgo alto'') puede ser más robusta y explicable.
+      \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{La maldición de la complejidad innecesaria}
+  Más complejo $\neq$ mejor.
+
+  \bigskip
+  \begin{columns}
+    \column{0.55\textwidth}
+      \textbf{Principio de parsimonia:}\\
+      Entre dos modelos con rendimiento similar, preferir el más simple. Razones:
+      \begin{itemize}
+        \item Más fácil de interpretar y auditar.
+        \item Menos propenso a sobreajuste en datos pequeños.
+        \item Más fácil de mantener en producción.
+        \item Menos costoso computacionalmente.
+        \item Más fácil de explicar a quienes toman decisiones.
+      \end{itemize}
+    \column{0.45\textwidth}
+      \begin{alertblock}{Regla práctica}
+        Antes de usar XGBoost o una red neuronal, probar regresión logística o un árbol de decisión simple.\\
+        Si la ganancia de precisión no justifica la pérdida de interpretabilidad, quedarse con el modelo simple.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%-----------------------------------------------
+\section{Limitaciones del modelo vs. limitaciones del dato}
+%-----------------------------------------------
+
+\begin{frame}{Distinguir: ¿falla el modelo o fallan los datos?}
+  Cuando un modelo tiene mal desempeño, hay dos causas posibles muy distintas:
+
+  \bigskip
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{Limitación del modelo:}
+      \begin{itemize}
+        \item El algoritmo es inadecuado para la estructura del problema.
+        \item Hiperparámetros mal ajustados.
+        \item Sobreajuste o subajuste.
+      \end{itemize}
+      \bigskip
+      \textbf{Solución:} cambiar el modelo, ajustar, regularizar.
+    \column{0.5\textwidth}
+      \textbf{Limitación del dato:}
+      \begin{itemize}
+        \item La variable objetivo está mal definida o mal medida.
+        \item Las variables predictoras no capturan el fenómeno real.
+        \item Los datos son insuficientes, sesgados o desactualizados.
+      \end{itemize}
+      \bigskip
+      \textbf{Solución:} mejorar la recolección, redefinir el problema, recolectar más datos.
+  \end{columns}
+
+  \bigskip
+  \begin{alertblock}{Error frecuente}
+    Cambiar el modelo cuando el problema es el dato. Ningún algoritmo puede extraer información que no está en los datos.
+  \end{alertblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{El rol del analista como traductor}
+%-----------------------------------------------
+
+\begin{frame}{El analista como traductor}
+  El analista de datos ocupa una posición única: entiende tanto el lenguaje de los datos como el del dominio.
+
+  \bigskip
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{Traducción técnica $\rightarrow$ dominio:}
+      \begin{itemize}
+        \item ``AUC = 0.85'' $\rightarrow$ ``Detectamos 8 de cada 10 casos relevantes.''
+        \item ``Coeficiente $\beta = 0.3$'' $\rightarrow$ ``Un año más de antigüedad se asocia con un 30\% más de probabilidad de retención.''
+        \item ``Cluster 3'' $\rightarrow$ ``Clientes jóvenes de alto valor con compras nocturnas.''
+      \end{itemize}
+    \column{0.5\textwidth}
+      \textbf{Traducción dominio $\rightarrow$ técnica:}
+      \begin{itemize}
+        \item ``Queremos predecir quién va a comprar de nuevo'' $\rightarrow$ ¿clasificación, regresión, ranking?
+        \item ``Necesitamos detectar fraude'' $\rightarrow$ ¿cuál es el costo relativo de falsos positivos vs. falsos negativos?
+        \item ``¿Por qué el modelo rechazó este caso?'' $\rightarrow$ XAI local.
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Preguntar bien antes de modelar}
+  Antes de abrir un notebook, hay preguntas que deben responderse:
+
+  \bigskip
+  \begin{enumerate}
+    \item \textbf{¿Cuál es la decisión que se tomará con este análisis?} \\
+    No ``queremos entender los datos'', sino ``si el modelo dice X, haremos Y''.
+    \item \textbf{¿Cuál es el costo de equivocarse?} \\
+    Falso positivo vs. falso negativo: ¿cuál es peor en este contexto?
+    \item \textbf{¿Los datos disponibles son adecuados para la pregunta?} \\
+    Antes de modelar, no después.
+    \item \textbf{¿Existe ya una solución simple que funcione?} \\
+    Si hay una regla de negocio que funciona bien, ¿por qué agregar complejidad?
+    \item \textbf{¿Cómo se va a usar el modelo en producción?} \\
+    Un modelo que nadie implementa no tiene valor.
+  \end{enumerate}
+\end{frame}
+
+%-----------------------------------------------
+\section{El ciclo de vida de un proyecto de datos}
+%-----------------------------------------------
+
+\begin{frame}{El ciclo de vida de un proyecto de datos}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{Fases típicas:}
+      \begin{enumerate}
+        \item Definición del problema
+        \item Recolección y exploración de datos
+        \item Preprocesamiento y feature engineering
+        \item Modelado y evaluación
+        \item Interpretación y comunicación
+        \item Despliegue (deployment)
+        \item Monitoreo y mantenimiento
+      \end{enumerate}
+    \column{0.5\textwidth}
+      \begin{exampleblock}{El ciclo no es lineal}
+        En la práctica, se vuelve atrás constantemente.\\
+        La exploración revela que la pregunta estaba mal formulada.\\
+        El modelo revela que los datos tienen errores.\\
+        El despliegue revela que el contexto cambió.\\
+        \bigskip
+        Iterar no es fracasar: es el proceso normal.
+      \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Data drift: cuando el mundo cambia}
+  Un modelo entrenado hoy puede degradarse con el tiempo sin que nadie lo cambie.
+
+  \bigskip
+  \textbf{¿Por qué?}
+  \begin{itemize}
+    \item \textbf{Data drift:} la distribución de las variables de entrada cambia. \\
+    \textit{Ejemplo: un modelo de precios entrenado antes de una crisis inflacionaria.}
+    \item \textbf{Concept drift:} la relación entre variables y objetivo cambia. \\
+    \textit{Ejemplo: patrones de fraude cambian cuando los defraudadores adaptan su comportamiento.}
+  \end{itemize}
+
+  \bigskip
+  \textbf{Consecuencia:} los modelos en producción deben monitorearse. Las métricas de un modelo no son permanentes.
+
+  \bigskip
+  \begin{alertblock}{Regla práctica}
+    Antes de desplegar un modelo, definir cómo y cuándo se va a reevaluar. Un modelo sin monitoreo es una deuda técnica.
+  \end{alertblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{Cierre}
+%-----------------------------------------------
+
+\begin{frame}{Ideas para llevarse}
+  \begin{enumerate}
+    \item El trabajo real de un analista incluye mucho más que entrenar modelos.
+    \item Los sesgos en los datos se amplifican en los modelos: la ``objetividad'' del algoritmo es una ilusión.
+    \item No existe una definición única de equidad algorítmica: elegir una implica sacrificar otra.
+    \item Antes de usar ML, preguntar si una solución más simple alcanza.
+    \item Distinguir limitaciones del modelo de limitaciones del dato: son problemas distintos con soluciones distintas.
+    \item El analista traduce entre el lenguaje técnico y el lenguaje del dominio: en ambas direcciones.
+    \item Los modelos en producción se degradan: monitorear no es opcional.
+  \end{enumerate}
+\end{frame}
+
+\end{document}

@@ -1,0 +1,104 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{tikz}
+\usetikzlibrary{positioning,fit,backgrounds,arrows.meta}
+\usepackage{xcolor}
+
+% Paleta UNS + colores del mapa
+\definecolor{azulUNS}{RGB}{30,60,120}
+\usecolortheme[named=azulUNS]{structure}
+
+\definecolor{tealBox}{RGB}{225,245,238}
+\definecolor{tealBorde}{RGB}{15,110,86}
+\definecolor{tealTxt}{RGB}{8,80,65}
+
+\definecolor{coralBox}{RGB}{250,236,231}
+\definecolor{coralBorde}{RGB}{153,60,29}
+\definecolor{coralTxt}{RGB}{113,43,19}
+
+\definecolor{purpBox}{RGB}{238,237,254}
+\definecolor{purpBorde}{RGB}{83,74,183}
+\definecolor{purpTxt}{RGB}{38,33,92}
+
+\definecolor{azulBox}{RGB}{230,241,251}
+\definecolor{azulBorde}{RGB}{24,95,165}
+
+\definecolor{grisBox}{RGB}{241,239,232}
+\definecolor{grisBorde}{RGB}{95,94,90}
+
+\title[MAD1 -- U6]{Métodos de Análisis de Datos I}
+\subtitle{Unidad 6 -- Bloque 1: Otros paradigmas de aprendizaje}
+\author{Departamento de Matemática -- UNS}
+\date{2026}
+
+\begin{document}
+
+\begin{frame}{El mapa del aprendizaje automático}
+\begin{center}
+\begin{tikzpicture}[
+  font=\scriptsize,
+  zona/.style={
+    rectangle, rounded corners=3pt, draw=tealBorde, line width=0.4pt,
+    fill=tealBox, text=tealTxt, align=left, inner sep=4pt,
+    text width=3.6cm, minimum height=0.85cm},
+  chip/.style={
+    rectangle, rounded corners=4pt, draw=purpBorde, line width=0.4pt,
+    fill=purpBox, text=purpTxt, align=center, inner sep=3pt,
+    text width=2.1cm, minimum height=0.45cm},
+]
+
+% --- Region izquierda: aprende de datos ---
+\node[zona] (sup)  at (0,0)    {\textbf{Supervisado}\\\tiny etiquetas humanas completas};
+\node[zona] (semi) at (0,-1.1) {\textbf{Semi-supervisado}\\\tiny muy pocas etiquetas};
+\node[zona] (auto) at (0,-2.2) {\textbf{Auto-supervisado}\\\tiny etiquetas sintéticas};
+\node[zona] (nosup)at (0,-3.3) {\textbf{No supervisado}\\\tiny sin etiquetas};
+
+% Eje de etiquetas a la izquierda
+\draw[-{Latex[length=2mm]}, azulBorde, line width=0.6pt]
+  ([xshift=-3pt]sup.north west) -- ([xshift=-3pt]nosup.south west)
+  node[midway, left, rotate=90, anchor=south, text=azulBorde, font=\tiny]
+  {etiquetas humanas: menos $\leftarrow$ más};
+
+\begin{scope}[on background layer]
+  \node[rectangle, rounded corners=6pt, draw=azulBorde, line width=0.4pt,
+        fill=azulBox, fit=(sup)(semi)(auto)(nosup),
+        inner sep=10pt, label={[anchor=north west, text=azulBorde,
+        font=\scriptsize\bfseries]north west:Aprende de un conjunto de datos}] (regdatos) {};
+\end{scope}
+
+% --- Region derecha: refuerzo ---
+\node[rectangle, rounded corners=6pt, draw=coralBorde, line width=0.4pt,
+      fill=coralBox, text=coralTxt, align=left, inner sep=10pt,
+      text width=3.4cm, minimum height=4.3cm, anchor=north]
+      (rl) at (6.6,1.15)
+      {\textbf{Por refuerzo (RL)}\\[4pt]
+       \tiny Aprende actuando, no de un dataset fijo\\[5pt]
+       \tiny Señal: recompensa por cada acción\\[5pt]
+       \tiny El entorno responde a lo que el agente hace\\[5pt]
+       \tiny Ej.: AlphaGo, robótica, control de tráfico};
+
+% --- Franja inferior: transversales ---
+\node[chip] (c1) at (-1.7,-4.7) {Transfer learning};
+\node[chip] (c2) at (0.7,-4.7)  {Federado};
+\node[chip] (c3) at (3.1,-4.7)  {Activo};
+\node[chip] (c4) at (5.5,-4.7)  {Few / zero-shot};
+
+\begin{scope}[on background layer]
+  \node[rectangle, rounded corners=6pt, draw=grisBorde, line width=0.4pt,
+        fill=grisBox, fit=(c1)(c2)(c3)(c4), inner sep=9pt,
+        label={[anchor=north west, font=\scriptsize\bfseries]north west:%
+        Enfoques transversales \textmd{\scriptsize(se combinan con cualquiera de los anteriores)}}] {};
+\end{scope}
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.2cm}
+{\scriptsize El eje que separa a los cuatro primeros es \textbf{cuántas etiquetas humanas} hay. RL aprende por interacción, no de un dataset fijo. Los enfoques transversales se montan sobre cualquiera (p.\,ej.\ GPT = auto-supervisado + transfer).}
+
+\end{frame}
+
+\end{document}

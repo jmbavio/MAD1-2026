@@ -1,0 +1,345 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+% Color UNS
+\definecolor{azulUNS}{RGB}{30,60,120}
+\usecolortheme[named=azulUNS]{structure}
+
+\title[MAD1 -- U6]{Métodos de Análisis de Datos I}
+\subtitle{Unidad 6 -- Bloque 1: Otros paradigmas de aprendizaje}
+\author{Departamento de Matemática -- UNS}
+\date{2026}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenidos}
+  \tableofcontents
+\end{frame}
+
+%-----------------------------------------------
+\section{El mapa del aprendizaje automático}
+%-----------------------------------------------
+
+\begin{frame}{¿Dónde estamos?}
+  Durante el curso trabajamos principalmente con:
+  \begin{itemize}
+    \item \textbf{Aprendizaje supervisado:} regresión, clasificación, SVM (Support Vector Machine, máquina de vectores de soporte), árboles, redes neuronales
+    \item \textbf{Aprendizaje no supervisado:} clustering, reducción de dimensionalidad, detección de anomalías, autoencoders
+  \end{itemize}
+  \bigskip
+  Pero el ecosistema de ML (Machine Learning, aprendizaje automático) es mucho más amplio. En este bloque hacemos un mapa general de los paradigmas existentes.
+\end{frame}
+
+\begin{frame}{Los paradigmas: una visión de conjunto}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{Por el tipo de señal de entrenamiento:}
+      \begin{itemize}
+        \item Supervisado
+        \item No supervisado
+        \item Semi-supervisado
+        \item Auto-supervisado
+        \item Por refuerzo
+      \end{itemize}
+    \column{0.5\textwidth}
+      \textbf{Por otras características:}
+      \begin{itemize}
+        \item Aprendizaje federado
+        \item Aprendizaje activo
+        \item Few-shot / zero-shot
+        \item Transfer learning
+      \end{itemize}
+  \end{columns}
+  \bigskip
+  \begin{alertblock}{Idea clave}
+    No son categorías mutuamente excluyentes. Un modelo puede ser a la vez auto-supervisado y usar transfer learning.
+  \end{alertblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{Aprendizaje semi-supervisado}
+%-----------------------------------------------
+
+\begin{frame}{Aprendizaje semi-supervisado}
+  \begin{block}{Definición}
+    Se cuenta con un conjunto de datos \textbf{mixto}: pocos ejemplos etiquetados y muchos sin etiquetar. El modelo aprovecha la estructura de los datos no etiquetados para mejorar la clasificación.
+  \end{block}
+  \bigskip
+  \textbf{¿Qué lo diferencia?}
+  \begin{itemize}
+    \item En supervisado: todos los datos tienen etiqueta.
+    \item En no supervisado: ningún dato tiene etiqueta.
+    \item En semi-supervisado: \textit{algunos} tienen etiqueta, y eso es valioso.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Semi-supervisado: ejemplos}
+  \small
+  \begin{itemize}
+    \item \textbf{Imágenes médicas:} etiquetar una radiografía requiere un radiólogo (caro y lento). Con 200 imágenes etiquetadas y 10.000 sin etiquetar, el modelo usa la estructura de las no etiquetadas para ubicar mejor la frontera entre tejido sano y patológico.
+    \item \textbf{Detección de spam:} clasificar correos a mano es tedioso. Unos pocos miles etiquetados más millones sin etiquetar permiten aprender qué patrones de lenguaje ``se parecen'' a spam, sin anotar todo el conjunto.
+    \item \textbf{Reconocimiento de voz:} transcribir audio palabra por palabra es costoso. Miles de horas de audio sin transcribir ayudan a aprender la fonética del idioma; las pocas horas transcritas anclan el significado.
+    \item \textbf{Análisis de sentimientos:} reseñas con puntaje (etiqueta implícita: 1 a 5 estrellas) más millones de comentarios sin calificación.
+  \end{itemize}
+  \begin{exampleblock}{Estrategia típica: \textit{self-training}}
+    Entrenar con los etiquetados $\rightarrow$ predecir sobre los no etiquetados $\rightarrow$ agregar las predicciones más confiables al conjunto de entrenamiento $\rightarrow$ repetir.
+  \end{exampleblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{Aprendizaje auto-supervisado}
+%-----------------------------------------------
+
+\begin{frame}{Aprendizaje auto-supervisado}
+  \begin{block}{Definición}
+    El modelo \textbf{genera sus propias etiquetas} a partir de los datos crudos. No necesita anotación humana. La tarea de entrenamiento es artificial (\textit{pretext task}), pero lo aprendido es útil para tareas reales.
+  \end{block}
+  \bigskip
+  \textbf{¿Qué lo diferencia del no supervisado?}
+  \begin{itemize}
+    \item No supervisado: descubre estructura (clusters, dimensiones).
+    \item Auto-supervisado: se entrena \textit{como si} fuera supervisado, pero sin anotación humana.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Auto-supervisado: ejemplos (1/2) --- la tarea pretexto}
+  La clave es inventar una \textbf{tarea pretexto}: un problema cuya respuesta ya está en los datos, sin que nadie la anote. Ejemplos en imágenes:
+  \bigskip
+  \begin{itemize}
+    \item \textbf{Colorización:} se pasa la imagen a blanco y negro y se entrena al modelo a recuperar el color. La etiqueta (el color real) estaba en la foto original.
+    \item \textbf{Inpainting (relleno):} se oculta un parche de la imagen y el modelo debe predecir qué había ahí. Para hacerlo bien, debe ``entender'' el contenido.
+    \item \textbf{Predicción de rotación:} se rota la imagen 0\textdegree, 90\textdegree, 180\textdegree{} o 270\textdegree{} y el modelo debe adivinar el ángulo. Reconocer la orientación correcta exige aprender qué es cada objeto.
+  \end{itemize}
+  \bigskip
+  En todos los casos: \textbf{no hubo anotación humana}, pero el modelo aprende representaciones útiles para tareas reales posteriores.
+\end{frame}
+
+\begin{frame}{Auto-supervisado: ejemplos (2/2) --- modelos reales}
+  \small
+  \begin{itemize}
+    \item \textbf{Modelos de lenguaje --- GPT (Generative Pre-trained Transformer) y BERT (Bidirectional Encoder Representations from Transformers):} la tarea pretexto es predecir la próxima palabra (GPT) o rellenar una palabra oculta en la oración (BERT). La etiqueta es el propio texto. Ambos son \textbf{arquitecturas} basadas en Transformers.
+    \item \textbf{Visión por computadora --- SimCLR y DINO:} son \textbf{métodos} de entrenamiento contrastivo. Se generan dos versiones distorsionadas de la misma imagen (recorte, color, giro) y se entrena al modelo para que las reconozca como ``la misma cosa''.
+    \item \textbf{Audio --- wav2vec:} aprende a predecir fragmentos de audio a partir de los anteriores, sin transcripciones. Luego ese conocimiento se reutiliza para reconocimiento de voz.
+  \end{itemize}
+  \begin{alertblock}{Relevancia}
+    La mayoría de los grandes modelos de IA actuales (LLMs --- Large Language Models, grandes modelos de lenguaje; y modelos de visión fundacionales) son auto-supervisados. Es el paradigma dominante en deep learning moderno.
+  \end{alertblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{Aprendizaje por refuerzo}
+%-----------------------------------------------
+
+\begin{frame}{Aprendizaje por refuerzo (RL)}
+  \begin{block}{Definición}
+    Un \textbf{agente} aprende a tomar decisiones en un \textbf{entorno} mediante prueba y error, maximizando una \textbf{recompensa} acumulada. No hay un conjunto de datos fijo: los datos se generan por la interacción.
+  \end{block}
+  \bigskip
+  \textbf{Componentes clave:}
+  \begin{itemize}
+    \item \textbf{Estado} $s$: descripción del entorno en un momento dado.
+    \item \textbf{Acción} $a$: lo que el agente puede hacer.
+    \item \textbf{Recompensa} $r$: señal escalar que indica qué tan buena fue la acción.
+    \item \textbf{Política} $\pi$: función que mapea estados a acciones.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{RL: ¿qué lo diferencia de todo lo demás?}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{En supervisado/no supervisado:}
+      \begin{itemize}
+        \item Datos fijos, estáticos.
+        \item No hay interacción con un entorno.
+        \item El error es directo (pérdida, distancia).
+      \end{itemize}
+    \column{0.5\textwidth}
+      \textbf{En RL:}
+      \begin{itemize}
+        \item Los datos se generan al actuar.
+        \item Las acciones afectan el entorno (y futuros estados).
+        \item La recompensa puede ser diferida.
+      \end{itemize}
+  \end{columns}
+  \bigskip
+  \begin{exampleblock}{La gran dificultad}
+    El \textbf{problema de atribución de crédito}: ¿qué acción, entre muchas pasadas, fue responsable de una recompensa que llegó tarde?
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{RL: ejemplos (1/2)}
+  \small
+  \begin{itemize}
+    \item \textbf{Juegos:} AlphaGo (Go), AlphaStar (StarCraft II), OpenAI Five (Dota 2). Son entornos ideales para RL: reglas claras y una recompensa inequívoca (ganar o perder). El agente juega millones de partidas contra sí mismo y mejora por ensayo y error.
+    \item \textbf{Robótica:} aprender a caminar, agarrar objetos o ensamblar piezas. La recompensa premia el movimiento exitoso; el agente entrena en simulación porque equivocarse en el mundo real rompe hardware.
+    \item \textbf{Control de tráfico:} semáforos que ajustan sus tiempos de verde según el flujo de autos que detectan, con la recompensa definida como minimizar la demora total. El entorno (la ciudad) responde a cada decisión.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{RL: ejemplos (2/2)}
+  \small
+  \begin{itemize}
+    \item \textbf{Control industrial:} optimizar el consumo energético de la refrigeración en centros de datos (Google DeepMind logró reducir el gasto de enfriamiento). La recompensa es la energía ahorrada sin violar límites de temperatura.
+    \item \textbf{Sistemas de recomendación:} qué contenido mostrar para maximizar el interés \textit{a largo plazo}, no solo el clic inmediato. El reto es que la acción de hoy cambia qué verá el usuario mañana.
+    \item \textbf{Finanzas:} estrategias de trading y gestión de cartera, donde cada operación modifica el estado del portafolio.
+    \item \textbf{RLHF (Reinforcement Learning from Human Feedback):} los LLM como ChatGPT se afinan con RL usando preferencias humanas como señal de recompensa, para alinear las respuestas con lo que las personas consideran útil.
+  \end{itemize}
+\end{frame}
+
+%-----------------------------------------------
+\section{Otros paradigmas relevantes}
+%-----------------------------------------------
+
+\begin{frame}{Aprendizaje federado}
+  \begin{block}{Definición}
+    El modelo se entrena \textbf{de forma distribuida}: los datos nunca salen de cada dispositivo/nodo. Solo se comparten los gradientes o actualizaciones del modelo.
+  \end{block}
+  \bigskip
+  \begin{itemize}
+    \item \textbf{Motivación:} privacidad, regulación (datos médicos, financieros), ancho de banda.
+    \item \textbf{Ejemplo:} el teclado predictivo de tu celular mejora con el uso de millones de usuarios sin que Google/Apple vea tus mensajes.
+    \item \textbf{Desafíos:} datos heterogéneos entre nodos, comunicación costosa, ataques adversariales.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Aprendizaje activo}
+  \begin{block}{Definición}
+    El modelo \textbf{elige qué ejemplos quiere que le etiqueten}. Consulta a un oráculo (humano) sobre los casos más informativos o inciertos.
+  \end{block}
+  \bigskip
+  \begin{itemize}
+    \item \textbf{Motivación:} etiquetar datos es caro. Con menos etiquetas bien elegidas se logra el mismo rendimiento.
+    \item \textbf{Estrategias:} mayor incertidumbre, mayor divergencia entre versiones del modelo (\textit{query by committee}), mayor densidad informativa.
+    \item \textbf{Ejemplo:} clasificación de imágenes satelitales de desastres — el modelo pide etiquetar primero los casos ambiguos.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Few-shot y zero-shot learning}
+  \begin{block}{Few-shot}
+    El modelo aprende una nueva tarea con \textbf{muy pocos ejemplos} (1, 5, 10). Requiere haber aprendido representaciones generales durante el preentrenamiento.
+  \end{block}
+  \begin{block}{Zero-shot}
+    El modelo resuelve una tarea \textbf{sin ver ningún ejemplo} de esa tarea en entrenamiento. Solo se describe la tarea en lenguaje natural.
+  \end{block}
+  \bigskip
+  \begin{exampleblock}{Ejemplo}
+    ``Clasificá este texto como positivo o negativo.'' --- un LLM puede hacer esto sin haber sido entrenado explícitamente para análisis de sentimientos.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Transfer learning}
+  \begin{block}{Definición}
+    Se toma un modelo preentrenado en una tarea grande y se \textbf{adapta} a una tarea más pequeña o específica (\textit{fine-tuning}).
+  \end{block}
+  \bigskip
+  \begin{itemize}
+    \item \textbf{Ejemplo clásico:} ResNet (Residual Network, una arquitectura de red convolucional) entrenada en ImageNet (un dataset de millones de imágenes) $\rightarrow$ clasificar rayos X con apenas 1.000 imágenes.
+    \item \textbf{Ejemplo en NLP (Natural Language Processing, procesamiento de lenguaje natural):} BERT preentrenado en Wikipedia $\rightarrow$ clasificar reseñas médicas.
+    \item \textbf{Por qué funciona:} las capas bajas aprenden representaciones generales (bordes, texturas, sintaxis) que son útiles en muchos dominios.
+  \end{itemize}
+  \bigskip
+  \textbf{Transfer learning} + \textbf{auto-supervisado} = la base de la IA moderna.
+\end{frame}
+
+%-----------------------------------------------
+\section{Diagrama de Venn: relaciones entre paradigmas}
+%-----------------------------------------------
+
+\begin{frame}{¿Cómo se relacionan?}
+  \begin{columns}
+    \column{0.55\textwidth}
+      \textbf{Solapamientos frecuentes:}
+      \begin{itemize}
+        \item Auto-supervisado $\cap$ Transfer learning: GPT, BERT, CLIP (Contrastive Language-Image Pre-training, modelo multimodal que liga texto e imagen).
+        \item Semi-supervisado $\cap$ Aprendizaje activo: etiquetar selectivamente + propagar.
+        \item RL $\cap$ Auto-supervisado: RLHF en LLMs.
+        \item Federado $\cap$ cualquier paradigma: es una restricción sobre \textit{dónde} viven los datos, no sobre \textit{cómo} se aprende.
+      \end{itemize}
+    \column{0.45\textwidth}
+      \textbf{Lo que los diferencia en esencia:}
+      \begin{itemize}
+        \item \textbf{Supervisado:} etiquetas humanas.
+        \item \textbf{No supervisado:} sin etiquetas.
+        \item \textbf{Semi:} pocas etiquetas.
+        \item \textbf{Auto:} etiquetas sintéticas.
+        \item \textbf{RL:} recompensa por acción.
+        \item \textbf{Activo:} el modelo pregunta.
+        \item \textbf{Federado:} datos distribuidos.
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+%-----------------------------------------------
+\section{Glosario de siglas y modelos}
+%-----------------------------------------------
+
+\begin{frame}{Glosario (1/2): conceptos y siglas generales}
+  \small
+  \begin{table}
+    \begin{tabular}{lll}
+      \toprule
+      \textbf{Sigla} & \textbf{Significado} & \textbf{Qué es} \\
+      \midrule
+      ML   & Machine Learning                       & Disciplina \\
+      RL   & Reinforcement Learning                 & Paradigma de aprendizaje \\
+      NLP  & Natural Language Processing            & Disciplina \\
+      LLM  & Large Language Model                   & Categoría de modelo \\
+      SVM  & Support Vector Machine                 & Algoritmo \\
+      RLHF & Reinf. Learning from Human Feedback    & Técnica de entrenamiento \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \bigskip
+  Estas siglas nombran \textit{ideas} o \textit{enfoques}, no modelos concretos.
+\end{frame}
+
+\begin{frame}{Glosario (2/2): modelos, arquitecturas y sistemas}
+  \small
+  \begin{table}
+    \begin{tabular}{lll}
+      \toprule
+      \textbf{Nombre} & \textbf{Significado} & \textbf{Qué es} \\
+      \midrule
+      GPT      & Generative Pre-trained Transformer       & Arquitectura (Transformer) \\
+      BERT     & Bidir. Encoder Repr. from Transformers   & Arquitectura (Transformer) \\
+      ResNet   & Residual Network                         & Arquitectura (convolucional) \\
+      CLIP     & Contrastive Language-Image Pre-training  & Modelo multimodal \\
+      SimCLR   & Simple Contrastive Learning of Repr.     & Método de entrenamiento \\
+      DINO     & self-DIstillation with NO labels         & Método de entrenamiento \\
+      wav2vec  & ``waveform to vector''                   & Modelo de audio \\
+      AlphaGo  & ---                                      & Sistema/agente (RL) \\
+      ImageNet & ---                                      & Dataset / benchmark \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \bigskip
+  \begin{alertblock}{Tres ejes distintos}
+    \textbf{Arquitectura} = cómo está construida la red (GPT, BERT, ResNet). \textbf{Método} = cómo se entrena (SimCLR, DINO, RLHF). \textbf{Sistema} = una aplicación completa (AlphaGo). Un proyecto real combina los tres.
+  \end{alertblock}
+\end{frame}
+
+
+
+\begin{frame}{Ideas para llevarse}
+  \begin{enumerate}
+    \item Los paradigmas \textbf{no son cajas}: se combinan y se superponen.
+    \item La escasez de etiquetas es el problema central que motiva semi-supervisado, activo y auto-supervisado.
+    \item El aprendizaje por refuerzo es el más diferente: interacción, secuencia, recompensa diferida.
+    \item El aprendizaje federado responde a restricciones del mundo real (privacidad, regulación), no a una diferencia en cómo se aprende.
+    \item La IA de vanguardia hoy combina \textbf{auto-supervisado + transfer learning + RL}.
+  \end{enumerate}
+\end{frame}
+
+\end{document}

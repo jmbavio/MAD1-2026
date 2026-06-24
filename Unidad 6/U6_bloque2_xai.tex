@@ -1,0 +1,356 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+% Color UNS
+\definecolor{azulUNS}{RGB}{30,60,120}
+\usecolortheme[named=azulUNS]{structure}
+
+\title[MAD1 -- U6]{Métodos de Análisis de Datos I}
+\subtitle{Unidad 6 -- Bloque 2: Inteligencia Artificial Explicable (XAI)}
+\author{Departamento de Matemática -- UNS}
+\date{2026}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenidos}
+  \tableofcontents
+\end{frame}
+
+%-----------------------------------------------
+\section{¿Por qué explicar un modelo?}
+%-----------------------------------------------
+
+\begin{frame}{El problema de la caja negra}
+  Un modelo entrenado puede predecir con alta precisión\ldots pero ¿por qué tomó esa decisión?
+
+  \bigskip
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{Casos donde importa explicar:}
+      \begin{itemize}
+        \item Crédito bancario denegado
+        \item Diagnóstico médico asistido
+        \item Contratación de personal
+        \item Sentencias judiciales asistidas
+        \item \textbf{Rendimiento deportivo}
+      \end{itemize}
+    \column{0.5\textwidth}
+      \begin{alertblock}{El dilema}
+        Los modelos más precisos (redes neuronales, XGBoost, random forests) suelen ser los menos interpretables.\\
+        Los más interpretables (regresión lineal, árbol pequeño) suelen ser los menos precisos.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{XAI: Inteligencia Artificial Explicable}
+  \begin{block}{Definición}
+    \textbf{XAI} (eXplainable Artificial Intelligence) es el conjunto de técnicas que permiten entender, interpretar y justificar las predicciones de modelos de ML, especialmente los de alta complejidad.
+  \end{block}
+
+  \bigskip
+  \textbf{Dos grandes dimensiones:}
+  \begin{itemize}
+    \item \textbf{Global vs. local:} ¿explicamos el comportamiento general del modelo o una predicción particular?
+    \item \textbf{Intrínseca vs. post-hoc:} ¿el modelo es interpretable por diseño, o aplicamos XAI después de entrenarlo?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Mapa de técnicas XAI}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{Intrínsecas (modelo interpretable):}
+      \begin{itemize}
+        \item Regresión lineal/logística
+        \item Árbol de decisión (profundidad baja)
+        \item Reglas de decisión
+      \end{itemize}
+      \bigskip
+      \textbf{Post-hoc globales:}
+      \begin{itemize}
+        \item Importancia de variables (permutación)
+        \item PDP / ICE
+        \item SHAP (valores globales)
+      \end{itemize}
+    \column{0.5\textwidth}
+      \textbf{Post-hoc locales:}
+      \begin{itemize}
+        \item LIME
+        \item SHAP (valores individuales)
+        \item Contrafácticos
+      \end{itemize}
+      \bigskip
+      \begin{exampleblock}{En este bloque}
+        Trabajamos con \textbf{importancia por permutación}, \textbf{PDP/ICE}, \textbf{SHAP} y \textbf{LIME}, aplicados a un dataset de rendimiento de jugadores de fútbol.
+      \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+%-----------------------------------------------
+\section{Dataset: rendimiento de jugadores}
+%-----------------------------------------------
+
+\begin{frame}{El dataset de trabajo}
+  \textbf{Problema:} predecir si un jugador será convocado a la selección nacional (variable binaria: 1 = convocado, 0 = no convocado).
+
+  \bigskip
+  \textbf{Variables predictoras:}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \begin{itemize}
+        \item \texttt{goles}: goles en el torneo
+        \item \texttt{asistencias}: asistencias de gol
+        \item \texttt{minutos}: minutos jugados
+        \item \texttt{pases\_clave}: pases que generan tiro
+        \item \texttt{duelos\_ganados}: \% duelos ganados
+      \end{itemize}
+    \column{0.5\textwidth}
+      \begin{itemize}
+        \item \texttt{velocidad}: máxima en km/h
+        \item \texttt{faltas\_recibidas}: por partido
+        \item \texttt{edad}: años
+        \item \texttt{valor\_mercado}: millones de euros
+        \item \texttt{posicion}: numérica (1--4)
+      \end{itemize}
+  \end{columns}
+
+  \bigskip
+  Modelo utilizado: \textbf{Random Forest} (clasificador).
+\end{frame}
+
+%-----------------------------------------------
+\section{Importancia de variables}
+%-----------------------------------------------
+
+\begin{frame}{Importancia de variables por permutación}
+  \begin{block}{Idea}
+    Para cada variable $X_j$: permutar aleatoriamente sus valores en el conjunto de validación y medir cuánto cae el rendimiento del modelo. Si cae mucho $\Rightarrow$ la variable era importante.
+  \end{block}
+
+  \bigskip
+  \textbf{Ventajas sobre la importancia por impureza (Gini):}
+  \begin{itemize}
+    \item No favorece artificialmente variables con muchas categorías.
+    \item Se evalúa en datos de validación, no de entrenamiento.
+    \item Agnóstica al modelo: funciona con cualquier algoritmo.
+  \end{itemize}
+
+  \bigskip
+  \begin{alertblock}{Limitación}
+    Si dos variables están correlacionadas, la importancia de ambas puede subestimarse al permutar una sola.
+  \end{alertblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{PDP e ICE}
+%-----------------------------------------------
+
+\begin{frame}{Gráfico de dependencia parcial (PDP)}
+  \begin{block}{Definición}
+    El \textbf{PDP} (Partial Dependence Plot) muestra el efecto \textbf{promedio} de una variable $X_j$ sobre la predicción, marginalizando sobre el resto de variables.
+  \end{block}
+
+  \bigskip
+  \textbf{Construcción:}
+  \begin{enumerate}
+    \item Fijar un valor $x_j^*$ para la variable de interés.
+    \item Reemplazar $X_j$ con $x_j^*$ en \textbf{todos} los ejemplos.
+    \item Calcular la predicción promedio del modelo.
+    \item Repetir para distintos valores de $x_j^*$.
+  \end{enumerate}
+
+  \bigskip
+  \textbf{Ejemplo:} ¿Cómo varía la probabilidad de convocatoria en función de los goles marcados, promediando sobre todos los jugadores?
+\end{frame}
+
+\begin{frame}{ICE: curvas individuales}
+  \begin{block}{Definición}
+    Las curvas \textbf{ICE} (Individual Conditional Expectation) muestran el efecto de $X_j$ sobre la predicción para \textbf{cada observación individualmente}.
+  \end{block}
+
+  \bigskip
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{PDP:} una curva, efecto promedio.\\
+      \textbf{ICE:} una curva por observación.\\
+      El PDP es el promedio de las curvas ICE.
+
+      \bigskip
+      \textbf{¿Cuándo importa la diferencia?}\\
+      Cuando hay \textbf{interacciones}: el efecto de $X_j$ depende del valor de otras variables. El PDP oculta esa heterogeneidad.
+    \column{0.5\textwidth}
+      \begin{exampleblock}{Ejemplo}
+        Para goles vs. convocatoria:\\
+        Jugadores defensores pueden mostrar una curva ICE plana (los goles no les cambian la chance), mientras que delanteros muestran una curva fuertemente creciente.\\
+        El PDP promedia ambas y puede malinterpretar el efecto.
+      \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+%-----------------------------------------------
+\section{SHAP}
+%-----------------------------------------------
+
+\begin{frame}{SHAP: valores de Shapley para ML}
+  \begin{block}{Origen}
+    Los \textbf{valores de Shapley} provienen de la teoría de juegos cooperativos (Lloyd Shapley, 1953). La idea: distribuir el ``pago'' (predicción) entre los ``jugadores'' (variables) de forma justa.
+  \end{block}
+
+  \bigskip
+  \textbf{Interpretación para ML:}\\
+  El valor SHAP de la variable $X_j$ para una observación $i$ es la \textbf{contribución marginal promedio} de esa variable a la predicción, considerando todas las posibles coaliciones de variables.
+
+  \bigskip
+  \begin{alertblock}{Propiedad clave}
+    $\hat{f}(x_i) = \phi_0 + \sum_{j=1}^{p} \phi_j^{(i)}$\\
+    La predicción se descompone exactamente como suma de contribuciones individuales.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{SHAP: tipos de visualización}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{Beeswarm (enjambre):}
+      \begin{itemize}
+        \item Un punto por observación.
+        \item Eje x: valor SHAP (contribución).
+        \item Color: valor de la variable (alto/bajo).
+        \item Muestra distribución de efectos.
+      \end{itemize}
+      \bigskip
+      \textbf{Importancia global:}
+      \begin{itemize}
+        \item $|\phi_j|$ promedio sobre todas las observaciones.
+        \item Ranking de variables.
+      \end{itemize}
+    \column{0.5\textwidth}
+      \textbf{Waterfall (cascada):}
+      \begin{itemize}
+        \item Una observación específica.
+        \item Muestra paso a paso cómo cada variable sube o baja la predicción desde el valor base $\phi_0$.
+        \item Ideal para explicar \textbf{una decisión puntual}.
+      \end{itemize}
+      \bigskip
+      \begin{exampleblock}{Ejemplo}
+        Jugador $i$: goles $\uparrow$ SHAP$= +0.18$, edad $\downarrow$ SHAP$= -0.09$, velocidad $\uparrow$ SHAP$= +0.12$\ldots
+      \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{SHAP: propiedades axiomáticas}
+  Los valores SHAP son los \textbf{únicos} que satisfacen simultáneamente:
+
+  \bigskip
+  \begin{enumerate}
+    \item \textbf{Eficiencia:} las contribuciones suman exactamente la predicción menos el valor base.
+    \item \textbf{Simetría:} si dos variables contribuyen igual en todas las coaliciones, reciben el mismo valor.
+    \item \textbf{Variable ficticia:} si una variable no cambia ninguna predicción, su SHAP es cero.
+    \item \textbf{Aditividad:} para modelos combinados, los SHAPs se suman.
+  \end{enumerate}
+
+  \bigskip
+  \begin{alertblock}{Costo computacional}
+    Calcular los valores exactos requiere $2^p$ coaliciones. En la práctica se usan aproximaciones eficientes (TreeSHAP para árboles, KernelSHAP para modelos generales).
+  \end{alertblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{LIME}
+%-----------------------------------------------
+
+\begin{frame}{LIME: explicaciones locales}
+  \begin{block}{Definición}
+    \textbf{LIME} (Local Interpretable Model-agnostic Explanations) aproxima el modelo complejo \textbf{localmente} alrededor de una observación de interés, usando un modelo simple e interpretable.
+  \end{block}
+
+  \bigskip
+  \textbf{Procedimiento:}
+  \begin{enumerate}
+    \item Tomar la observación $x_i$ a explicar.
+    \item Generar perturbaciones de $x_i$ (vecindad local).
+    \item Obtener las predicciones del modelo original para esas perturbaciones.
+    \item Ajustar un modelo simple (regresión lineal regularizada) pesando las perturbaciones por su cercanía a $x_i$.
+    \item Los coeficientes del modelo simple son la explicación.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{LIME vs. SHAP}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{LIME:}
+      \begin{itemize}
+        \item Explicación local aproximada.
+        \item Modelo simple ajustado localmente.
+        \item Puede ser inestable: pequeños cambios en $x_i$ pueden cambiar la explicación.
+        \item Agnóstico al modelo.
+        \item Más intuitivo para no expertos.
+      \end{itemize}
+    \column{0.5\textwidth}
+      \textbf{SHAP:}
+      \begin{itemize}
+        \item Explicación local exacta (con aproximaciones eficientes).
+        \item Fundamentación teórica sólida (teoría de juegos).
+        \item Consistente y estable.
+        \item Versiones optimizadas para tipos de modelos (TreeSHAP).
+        \item Más costoso computacionalmente.
+      \end{itemize}
+  \end{columns}
+  \bigskip
+  En la práctica: \textbf{SHAP} para análisis riguroso; \textbf{LIME} para comunicar a audiencias no técnicas o explorar rápidamente.
+\end{frame}
+
+%-----------------------------------------------
+\section{Contrafácticos}
+%-----------------------------------------------
+
+\begin{frame}{Explicaciones contrafácticas}
+  \begin{block}{Definición}
+    Una \textbf{explicación contrafáctica} responde: ¿qué mínimo cambio en las variables de entrada habría llevado a una predicción diferente?
+  \end{block}
+
+  \bigskip
+  \begin{exampleblock}{Ejemplo}
+    Jugador $i$ no fue convocado. El modelo indica:\\
+    \textit{``Si hubiera tenido 2 goles más y 10 minutos más por partido, habría sido convocado.''}
+  \end{exampleblock}
+
+  \bigskip
+  \textbf{Ventajas:}
+  \begin{itemize}
+    \item Muy accionables: dicen \textit{qué cambiar}, no solo \textit{qué importó}.
+    \item No requieren revelar el modelo completo.
+    \item Familiares para los usuarios (razonamiento humano natural).
+  \end{itemize}
+
+  \bigskip
+  \textbf{Desafío:} pueden existir muchos contrafácticos válidos. ¿Cuál elegir?
+\end{frame}
+
+%-----------------------------------------------
+\section{Cierre}
+%-----------------------------------------------
+
+\begin{frame}{Ideas para llevarse}
+  \begin{enumerate}
+    \item XAI no es un lujo: en muchos contextos es un \textbf{requisito ético y regulatorio}.
+    \item \textbf{Global vs. local}: entender el modelo en general o explicar una decisión puntual son preguntas distintas que requieren herramientas distintas.
+    \item \textbf{PDP/ICE} muestran el efecto marginal de una variable; ICE revela heterogeneidad que el PDP oculta.
+    \item \textbf{SHAP} descompone la predicción en contribuciones individuales con garantías teóricas.
+    \item \textbf{LIME} aproxima localmente con un modelo simple; útil para comunicar pero menos estable.
+    \item Los \textbf{contrafácticos} son la forma más accionable de explicar una decisión.
+    \item Ninguna técnica reemplaza el juicio: la explicación debe interpretarse en contexto.
+  \end{enumerate}
+\end{frame}
+
+\end{document}

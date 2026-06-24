@@ -1,0 +1,370 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+% Color UNS
+\definecolor{azulUNS}{RGB}{30,60,120}
+\usecolortheme[named=azulUNS]{structure}
+
+\title[MAD1 -- U6]{Métodos de Análisis de Datos I}
+\subtitle{Unidad 6 -- Bloque 3: Comunicación de resultados}
+\author{Departamento de Matemática -- UNS}
+\date{2026}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenidos}
+  \tableofcontents
+\end{frame}
+
+%-----------------------------------------------
+\section{El análisis no termina en el modelo}
+%-----------------------------------------------
+
+\begin{frame}{El análisis no termina en el modelo}
+  Un modelo entrenado, con buenas métricas, es el \textbf{inicio} de la comunicación, no el final.
+
+  \bigskip
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{Lo que el analista sabe:}
+      \begin{itemize}
+        \item Qué modelo se usó y por qué
+        \item Qué métricas se optimizaron
+        \item Qué supuestos se hicieron
+        \item Qué limitaciones tiene
+      \end{itemize}
+    \column{0.5\textwidth}
+      \textbf{Lo que el destinatario necesita:}
+      \begin{itemize}
+        \item Qué significa el resultado para su problema
+        \item Cuánto puede confiar en él
+        \item Qué hacer con esa información
+        \item Qué no puede hacerse con ese análisis
+      \end{itemize}
+  \end{columns}
+
+  \bigskip
+  \begin{alertblock}{La brecha}
+    La distancia entre ``el modelo tiene AUC = 0.87'' y ``deberían cambiar la política de stock'' es comunicación. Es trabajo del analista cerrar esa brecha.
+  \end{alertblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{Conocer a la audiencia}
+%-----------------------------------------------
+
+\begin{frame}{Conocer a la audiencia}
+  No existe una sola forma de comunicar resultados. Depende de quién escucha.
+
+  \bigskip
+  \begin{columns}
+    \column{0.33\textwidth}
+      \textbf{Técnica}\\
+      (colegas, revisores)
+      \begin{itemize}
+        \item Mostrar el pipeline completo
+        \item Métricas detalladas
+        \item Incertidumbre cuantificada
+        \item Código reproducible
+      \end{itemize}
+    \column{0.33\textwidth}
+      \textbf{Tomadores de decisión}\\
+      (gerentes, directores)
+      \begin{itemize}
+        \item Resultado en términos del negocio
+        \item Confianza, no fórmulas
+        \item Implicancias y riesgos
+        \item Recomendación concreta
+      \end{itemize}
+    \column{0.33\textwidth}
+      \textbf{Público general}\\
+      (comunicación, prensa)
+      \begin{itemize}
+        \item Analogías y ejemplos
+        \item Sin jerga técnica
+        \item Una idea central
+        \item Visual dominante
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{El error más común: hablarle a uno cuando estás con el otro}
+  \begin{exampleblock}{Situación real}
+    Un analista presenta ante el directorio de una empresa de logística. Muestra la curva ROC, explica el umbral de clasificación, detalla la matriz de confusión.\\
+    \bigskip
+    La directora pregunta: \textit{``¿Y esto en plata qué significa?''}
+  \end{exampleblock}
+
+  \bigskip
+  \textbf{Lo que debería haberse dicho:}\\
+  \textit{``Con este modelo, de cada 100 envíos que hoy se retrasan sin que nadie lo anticipe, podríamos detectar 78 con un día de anticipación. Eso equivale a reducir un 30\% los costos de reenvío urgente.''}
+
+  \bigskip
+  Traducir métricas técnicas a consecuencias concretas es una habilidad tan importante como saber construir el modelo.
+\end{frame}
+
+%-----------------------------------------------
+\section{Tipos de hallazgos y cómo presentarlos}
+%-----------------------------------------------
+
+\begin{frame}{Tipo 1: confirmás lo que ya sospechaban}
+  \begin{columns}
+    \column{0.55\textwidth}
+      \textbf{La situación:}\\
+      El análisis confirma algo que los dueños del problema ya intuían o sabían por experiencia.
+
+      \bigskip
+      \textbf{Reacción típica:}\\
+      \textit{``Eso ya lo sabíamos. ¿Para qué sirvió el análisis?''}
+
+      \bigskip
+      \textbf{Cómo encuadrarlo:}
+      \begin{itemize}
+        \item Cuantificar lo que antes era intuición.
+        \item Mostrar la magnitud, no solo la dirección.
+        \item Establecer una línea de base objetiva.
+        \item ``Ahora lo sabemos con evidencia.''
+      \end{itemize}
+    \column{0.45\textwidth}
+      \begin{exampleblock}{Ejemplo}
+        Análisis de ventas de una cadena de supermercados: ``Las ventas caen los lunes.''\\
+        \bigskip
+        La respuesta: \textit{``Obvio, siempre fue así.''}\\
+        \bigskip
+        El valor real: \textit{``Caen un 23\% en promedio, con mayor impacto en la sección de frescos. Eso justifica ajustar el pedido del viernes en esa categoría específica.''}
+      \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Tipo 2: descubrís algo contraintuitivo}
+  \begin{columns}
+    \column{0.55\textwidth}
+      \textbf{La situación:}\\
+      El análisis arroja un resultado que contradice la creencia establecida o la experiencia del área.
+
+      \bigskip
+      \textbf{Reacción típica:}\\
+      \textit{``El modelo debe estar mal.''} o \textit{``Eso no puede ser.''}
+
+      \bigskip
+      \textbf{Cómo manejarlo:}
+      \begin{itemize}
+        \item No defender el modelo, explorar juntos.
+        \item Verificar si hay error en los datos o en el pipeline.
+        \item Si el resultado se sostiene, presentar la evidencia paso a paso.
+        \item Separar \textit{``el modelo dice X''} de \textit{``por lo tanto deben hacer X''}.
+      \end{itemize}
+    \column{0.45\textwidth}
+      \begin{exampleblock}{Ejemplo}
+        Un análisis de RR.HH. muestra que los empleados con mayor capacitación tienen mayor rotación.\\
+        \bigskip
+        La intuición: capacitar retiene. Los datos: los capacitados son más empleables y se van.\\
+        \bigskip
+        El análisis no dice que no capaciten: dice que la retención requiere otras palancas además de la capacitación.
+      \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Tipo 3: los datos no alcanzan para responder la pregunta}
+  \begin{columns}
+    \column{0.55\textwidth}
+      \textbf{La situación:}\\
+      El análisis no puede responder la pregunta original: datos insuficientes, variable objetivo no disponible, sesgo de selección, etc.
+
+      \bigskip
+      \textbf{Reacción típica (incorrecta):}\\
+      Forzar una respuesta, minimizar las limitaciones, o presentar resultados débiles como si fueran robustos.
+
+      \bigskip
+      \textbf{Lo correcto:}
+      \begin{itemize}
+        \item Decirlo claramente.
+        \item Explicar \textit{qué} falta y \textit{por qué} importa.
+        \item Proponer cómo obtener esos datos en el futuro.
+        \item Ofrecer lo que sí se puede responder.
+      \end{itemize}
+    \column{0.45\textwidth}
+      \begin{alertblock}{Regla de oro}
+        Un analista que dice ``con estos datos no se puede concluir eso'' es más valioso que uno que presenta una conclusión sin fundamento.\\
+        \bigskip
+        La credibilidad a largo plazo se construye siendo honesto sobre los límites del análisis.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%-----------------------------------------------
+\section{Visualización efectiva}
+%-----------------------------------------------
+
+\begin{frame}{El gráfico correcto para el mensaje correcto}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{Quiero mostrar\ldots}
+      \begin{itemize}
+        \item Distribución de una variable $\rightarrow$ histograma, boxplot, violín
+        \item Relación entre dos variables $\rightarrow$ dispersión, correlación
+        \item Evolución en el tiempo $\rightarrow$ línea
+        \item Comparación entre categorías $\rightarrow$ barras
+        \item Proporción del todo $\rightarrow$ barras apiladas (no torta)
+        \item Importancia relativa $\rightarrow$ barras horizontales ordenadas
+        \item Incertidumbre $\rightarrow$ barras de error, intervalos de confianza
+      \end{itemize}
+    \column{0.5\textwidth}
+      \begin{alertblock}{El gráfico de torta}
+        Los humanos somos malos comparando ángulos. Una barra es casi siempre mejor que una torta.\\
+        Excepción válida: mostrar que algo es ``más de la mitad'' o ``casi todo''.
+      \end{alertblock}
+      \bigskip
+      \begin{exampleblock}{Regla práctica}
+        Si el gráfico requiere una leyenda para entenderse, preguntarse si una tabla sería más clara.
+      \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Errores frecuentes en visualización}
+  \begin{enumerate}
+    \item \textbf{Eje Y que no empieza en cero} (en barras): exagera diferencias visualmente.
+    \item \textbf{Escala inapropiada}: lineal cuando debería ser logarítmica, o viceversa.
+    \item \textbf{Demasiada información en un solo gráfico}: el mensaje se pierde.
+    \item \textbf{Colores sin semántica}: usar rojo/verde para cosas que no son malas/buenas.
+    \item \textbf{Títulos descriptivos en lugar de argumentativos}: ``Ventas por mes'' vs. ``Las ventas cayeron consistentemente en el segundo trimestre''.
+    \item \textbf{Omitir la incertidumbre}: mostrar la media sin el intervalo de confianza puede ser engañoso.
+    \item \textbf{Confundir correlación con causalidad} en el título o la narrativa.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{El título como argumento}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{Título descriptivo:}\\
+      ``Relación entre edad y salario''
+
+      \bigskip
+      \textbf{Título argumentativo:}\\
+      ``El salario crece con la experiencia, pero se estanca después de los 45 años''
+
+      \bigskip
+      El título argumentativo:
+      \begin{itemize}
+        \item Dice qué ver en el gráfico.
+        \item Reduce la ambigüedad de interpretación.
+        \item Hace al gráfico autosuficiente.
+        \item Obliga al analista a tener una tesis.
+      \end{itemize}
+    \column{0.5\textwidth}
+      \begin{alertblock}{Atención}
+        Un título argumentativo implica responsabilidad. Si el gráfico no sostiene la tesis, el título es deshonesto.\\
+        \bigskip
+        Antes de escribir un título argumentativo: verificar que el gráfico realmente lo muestre.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+%-----------------------------------------------
+\section{Narrativa y estructura del reporte}
+%-----------------------------------------------
+
+\begin{frame}{Estructura de un reporte de análisis}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{Estructura clásica (pirámide invertida):}
+      \begin{enumerate}
+        \item \textbf{Conclusión principal} (primero)
+        \item Hallazgos que la sostienen
+        \item Metodología resumida
+        \item Limitaciones y próximos pasos
+        \item Apéndice técnico (si hace falta)
+      \end{enumerate}
+      \bigskip
+      El lector no técnico lee 1 y 2.\\
+      El lector técnico lee todo.
+    \column{0.5\textwidth}
+      \begin{exampleblock}{Por qué la conclusión va primero}
+        En ciencia, la hipótesis va al principio y los resultados al final.\\
+        En comunicación ejecutiva, el destinatario tiene poco tiempo. Quiere saber qué hacer antes de saber cómo llegaste.\\
+        \bigskip
+        Adaptar la estructura a la audiencia no es menos riguroso: es mejor comunicación.
+      \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Narrativa: conectar los hallazgos}
+  Un buen reporte no es una lista de gráficos. Es una historia con hilo conductor.
+
+  \bigskip
+  \textbf{Preguntas que guían la narrativa:}
+  \begin{itemize}
+    \item ¿Cuál es el problema que motivó el análisis?
+    \item ¿Qué hipótesis teníamos antes de ver los datos?
+    \item ¿Qué encontramos? ¿Coincidió con la hipótesis?
+    \item ¿Qué implica ese hallazgo para la decisión original?
+    \item ¿Qué no pudimos responder y por qué?
+  \end{itemize}
+
+  \bigskip
+  \begin{alertblock}{Trampa frecuente}
+    Reportar \textit{todo} lo que se analizó, aunque no sea relevante para la pregunta original. Más análisis $\neq$ mejor reporte. La selección y el énfasis son parte del trabajo.
+  \end{alertblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{Ética en la comunicación}
+%-----------------------------------------------
+
+\begin{frame}{Honestidad e integridad en el reporte}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{Prácticas deshonestas (aunque comunes):}
+      \begin{itemize}
+        \item \textit{Cherry-picking}: mostrar solo los subgrupos donde el modelo funciona bien.
+        \item Escala manipulada para exagerar diferencias.
+        \item Omitir casos donde el modelo falla.
+        \item Presentar correlación como causalidad.
+        \item Redondear métricas favorablemente.
+      \end{itemize}
+    \column{0.5\textwidth}
+      \textbf{Prácticas honestas:}
+      \begin{itemize}
+        \item Mostrar métricas en el conjunto de test, no de entrenamiento.
+        \item Reportar intervalos de confianza.
+        \item Mencionar explícitamente las limitaciones.
+        \item Distinguir entre lo que los datos dicen y lo que el analista interpreta.
+        \item Separar la descripción de la recomendación.
+      \end{itemize}
+  \end{columns}
+
+  \bigskip
+  \begin{alertblock}{Principio}
+    Un análisis honesto que no respalda la hipótesis del cliente es más valioso que uno que la respalda artificialmente.
+  \end{alertblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{Cierre}
+%-----------------------------------------------
+
+\begin{frame}{Ideas para llevarse}
+  \begin{enumerate}
+    \item Comunicar resultados es parte del trabajo del analista, no un extra.
+    \item La audiencia determina el formato, el lenguaje y el nivel de detalle.
+    \item Confirmar lo que ya se sabe tiene valor si se cuantifica y se da contexto.
+    \item Un hallazgo contraintuitivo no es un error: es una oportunidad para explorar juntos.
+    \item El gráfico correcto depende del mensaje, no de la estética.
+    \item La conclusión va primero cuando se habla con tomadores de decisión.
+    \item La honestidad sobre las limitaciones construye credibilidad a largo plazo.
+  \end{enumerate}
+\end{frame}
+
+\end{document}

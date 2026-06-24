@@ -1,0 +1,318 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{verbatim}
+
+% Color UNS
+\definecolor{azulUNS}{RGB}{30,60,120}
+\definecolor{grisclaro}{RGB}{245,245,245}
+\usecolortheme[named=azulUNS]{structure}
+
+\title[MAD1 -- U6]{Métodos de Análisis de Datos I}
+\subtitle{Unidad 6 -- Bloque 5: Portfolio profesional}
+\author{Departamento de Matemática -- UNS}
+\date{2026}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenidos}
+  \tableofcontents
+\end{frame}
+
+%-----------------------------------------------
+\section{¿Qué es un portfolio de data science?}
+%-----------------------------------------------
+
+\begin{frame}{¿Qué es un portfolio?}
+  Un \textbf{portfolio} es una colección de proyectos que demuestra lo que sabés hacer con datos reales.
+
+  \bigskip
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{No es:}
+      \begin{itemize}
+        \item Una lista de cursos o certificados.
+        \item Código copiado de tutoriales sin adaptación.
+        \item Un proyecto con datos perfectos y resultados obvios.
+        \item Una colección de notebooks sin explicar.
+      \end{itemize}
+    \column{0.5\textwidth}
+      \textbf{Sí es:}
+      \begin{itemize}
+        \item Evidencia de que podés formular un problema, analizarlo y comunicar resultados.
+        \item Trabajo propio, documentado, reproducible.
+        \item Proyectos con datos reales o realistas, con decisiones justificadas.
+        \item Algo que cualquiera pueda ejecutar y entender sin preguntarte.
+      \end{itemize}
+  \end{columns}
+
+  \bigskip
+  \begin{alertblock}{Principio}
+    Un portfolio de 2 proyectos bien hechos vale más que 10 notebooks sin contexto.
+  \end{alertblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{GitHub como vitrina}
+%-----------------------------------------------
+
+\begin{frame}{GitHub como vitrina profesional}
+  GitHub es el estándar para mostrar trabajo técnico. Un perfil bien organizado comunica mucho antes de que alguien lea una línea de código.
+
+  \bigskip
+  \textbf{Buenas prácticas en GitHub:}
+  \begin{itemize}
+    \item Cada proyecto en un repositorio propio, con nombre descriptivo.
+    \item \textbf{README.md} completo en cada repositorio (ver template más adelante).
+    \item Commits con mensajes que explican qué se hizo, no solo ``update''.
+    \item Código comentado: no en cada línea, pero sí en las decisiones no obvias.
+    \item Sin archivos de datos sensibles ni credenciales subidas al repositorio.
+    \item Notebooks con outputs limpios (sin errores ni celdas ejecutadas a medias).
+  \end{itemize}
+
+  \bigskip
+  \begin{exampleblock}{Herramienta complementaria}
+    Un blog personal o perfil en \textbf{Kaggle} / \textbf{Hugging Face} puede complementar GitHub para proyectos con visualizaciones interactivas o modelos deployados.
+  \end{exampleblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{Estructura de un proyecto bien documentado}
+%-----------------------------------------------
+
+\begin{frame}{Estructura de carpetas recomendada}
+  \begin{columns}
+    \column{0.5\textwidth}
+\texttt{mi\_proyecto/}\\
+\texttt{├── README.md}\\
+\texttt{├── data/}\\
+\texttt{│\phantom{xx}├── raw/}\\
+\texttt{│\phantom{xx}└── processed/}\\
+\texttt{├── notebooks/}\\
+\texttt{│\phantom{xx}├── 01\_exploracion.ipynb}\\
+\texttt{│\phantom{xx}├── 02\_modelado.ipynb}\\
+\texttt{│\phantom{xx}└── 03\_resultados.ipynb}\\
+\texttt{├── src/}\\
+\texttt{│\phantom{xx}└── utils.py}\\
+\texttt{├── reports/}\\
+\texttt{│\phantom{xx}└── reporte\_final.pdf}\\
+\texttt{└── requirements.txt}
+    \column{0.5\textwidth}
+      \textbf{Notas:}
+      \begin{itemize}
+        \item \texttt{data/raw/}: datos originales, nunca modificados.
+        \item \texttt{data/processed/}: datos limpios listos para modelar.
+        \item Los notebooks se numeran para indicar el orden de ejecución.
+        \item \texttt{src/} para funciones reutilizables (no repetir código entre notebooks).
+        \item \texttt{requirements.txt} permite reproducir el entorno.
+      \end{itemize}
+      \bigskip
+      \begin{alertblock}{Regla}
+        Si los datos son grandes o sensibles, subir solo una muestra o instrucciones para obtenerlos.
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Template: README.md de un proyecto}
+  \textbf{Secciones mínimas de un buen README:}
+
+  \bigskip
+  \begin{enumerate}
+    \item \textbf{Título y descripción breve} (2--3 líneas): qué problema resuelve y con qué datos.
+    \item \textbf{Motivación}: por qué el problema es interesante o relevante.
+    \item \textbf{Datos}: origen, tamaño, variables principales.
+    \item \textbf{Metodología}: qué técnicas se usaron y por qué.
+    \item \textbf{Resultados principales}: métrica clave y hallazgo más relevante en 1--2 oraciones.
+    \item \textbf{Cómo ejecutar}: instrucciones claras para reproducir el análisis.
+    \item \textbf{Limitaciones y próximos pasos}.
+  \end{enumerate}
+
+  \bigskip
+  \begin{exampleblock}{Criterio simple}
+    Si alguien ajeno al proyecto puede entender qué hiciste, por qué y qué encontraste leyendo solo el README, está bien escrito.
+  \end{exampleblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{Qué mostrar de cada unidad}
+%-----------------------------------------------
+
+\begin{frame}{Qué podés mostrar: Unidad 1 -- Introducción y EDA}
+  \textbf{Proyecto sugerido:} análisis exploratorio completo de un dataset de interés personal.
+
+  \bigskip
+  \textbf{Lo que demuestra:}
+  \begin{itemize}
+    \item Capacidad de limpiar datos reales (valores faltantes, outliers, tipos).
+    \item Exploración visual con criterio: no graficar todo, sino lo que responde preguntas.
+    \item Formulación de hipótesis a partir de los datos.
+  \end{itemize}
+
+  \bigskip
+  \textbf{Mini template de notebook:}
+  \begin{enumerate}
+    \item \textbf{Celda 1}: contexto del dataset (origen, tamaño, pregunta que guía el EDA).
+    \item \textbf{Celda 2}: carga y revisión inicial (\texttt{head}, \texttt{info}, \texttt{describe}).
+    \item \textbf{Celda 3}: tratamiento de valores faltantes con justificación.
+    \item \textbf{Celda 4}: distribuciones de variables clave (histogramas, boxplots).
+    \item \textbf{Celda 5}: relaciones entre variables (correlación, dispersión).
+    \item \textbf{Celda 6}: síntesis en texto: qué encontré y qué pregunta surge.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Qué podés mostrar: Unidad 2 -- Regresión}
+  \textbf{Proyecto sugerido:} predicción de una variable continua con interpretación de coeficientes.
+
+  \bigskip
+  \textbf{Lo que demuestra:}
+  \begin{itemize}
+    \item Construcción y evaluación de un modelo de regresión lineal o logística.
+    \item Interpretación del significado de cada coeficiente en términos del dominio.
+    \item Verificación de supuestos (linealidad, homocedasticidad, normalidad de residuos).
+  \end{itemize}
+
+  \bigskip
+  \textbf{Mini template de notebook:}
+  \begin{enumerate}
+    \item \textbf{Celda 1}: formulación del problema y justificación del modelo.
+    \item \textbf{Celda 2}: preprocesamiento (encoding, escalado si corresponde).
+    \item \textbf{Celda 3}: ajuste del modelo e interpretación de coeficientes.
+    \item \textbf{Celda 4}: gráficos de residuos y verificación de supuestos.
+    \item \textbf{Celda 5}: métricas ($R^2$, RMSE, MAE) en train y test.
+    \item \textbf{Celda 6}: conclusión: ¿qué variables importan y cuánto?
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Qué podés mostrar: Unidad 3 -- Clasificación}
+  \textbf{Proyecto sugerido:} clasificador binario o multiclase con evaluación completa.
+
+  \bigskip
+  \textbf{Lo que demuestra:}
+  \begin{itemize}
+    \item Manejo del desbalance de clases y elección del umbral de decisión.
+    \item Uso adecuado de métricas (precisión, recall, F1, AUC-ROC) según el contexto.
+    \item Comparación entre al menos dos modelos con justificación de la elección final.
+  \end{itemize}
+
+  \bigskip
+  \textbf{Mini template de notebook:}
+  \begin{enumerate}
+    \item \textbf{Celda 1}: descripción del problema y análisis del desbalance de clases.
+    \item \textbf{Celda 2}: pipeline de preprocesamiento con \texttt{Pipeline} de sklearn.
+    \item \textbf{Celda 3}: entrenamiento de dos o más modelos con validación cruzada.
+    \item \textbf{Celda 4}: curva ROC, matriz de confusión, reporte de clasificación.
+    \item \textbf{Celda 5}: análisis del umbral: trade-off precisión/recall.
+    \item \textbf{Celda 6}: justificación del modelo final y sus limitaciones.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Qué podés mostrar: Unidad 4 -- Modelos avanzados}
+  \textbf{Proyecto sugerido:} comparación de modelos de ensamble o SVM con optimización de hiperparámetros.
+
+  \bigskip
+  \textbf{Lo que demuestra:}
+  \begin{itemize}
+    \item Uso de Random Forest, Gradient Boosting o SVM en un problema real.
+    \item Búsqueda sistemática de hiperparámetros (GridSearch, RandomSearch, Optuna).
+    \item Análisis de importancia de variables e interpretación del modelo.
+  \end{itemize}
+
+  \bigskip
+  \textbf{Mini template de notebook:}
+  \begin{enumerate}
+    \item \textbf{Celda 1}: justificación de por qué un modelo complejo sobre uno simple.
+    \item \textbf{Celda 2}: línea de base con modelo simple (regresión logística, árbol).
+    \item \textbf{Celda 3}: entrenamiento del modelo avanzado con hiperparámetros por defecto.
+    \item \textbf{Celda 4}: optimización de hiperparámetros y curva de validación.
+    \item \textbf{Celda 5}: importancia de variables y análisis de errores.
+    \item \textbf{Celda 6}: comparación con la línea de base: ¿valió la complejidad?
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Qué podés mostrar: Unidad 5 -- Aprendizaje no supervisado}
+  \textbf{Proyecto sugerido:} segmentación de entidades con clustering e interpretación de grupos.
+
+  \bigskip
+  \textbf{Lo que demuestra:}
+  \begin{itemize}
+    \item Aplicación de clustering (K-Means, DBSCAN, jerárquico) con selección justificada del número de grupos.
+    \item Reducción de dimensionalidad (PCA, UMAP) para visualización.
+    \item Interpretación de los clusters en términos del dominio.
+  \end{itemize}
+
+  \bigskip
+  \textbf{Mini template de notebook:}
+  \begin{enumerate}
+    \item \textbf{Celda 1}: motivación para segmentar (¿qué decisión se toma con los grupos?).
+    \item \textbf{Celda 2}: preprocesamiento y escalado (crítico en clustering).
+    \item \textbf{Celda 3}: selección del número de clusters (codo, silueta, dendrograma).
+    \item \textbf{Celda 4}: visualización en 2D con PCA o UMAP.
+    \item \textbf{Celda 5}: perfil de cada cluster (estadísticas descriptivas por grupo).
+    \item \textbf{Celda 6}: interpretación: ¿qué nombre le pondrías a cada grupo y por qué?
+  \end{enumerate}
+\end{frame}
+
+%-----------------------------------------------
+\section{Errores comunes en portfolios}
+%-----------------------------------------------
+
+\begin{frame}{Errores comunes en portfolios}
+  \begin{columns}
+    \column{0.5\textwidth}
+      \textbf{En el código:}
+      \begin{itemize}
+        \item Notebooks con celdas desordenadas o sin ejecutar de arriba a abajo.
+        \item Variables con nombres \texttt{df2}, \texttt{X\_final2}, \texttt{model\_v3}.
+        \item Sin separación entre exploración, modelado y evaluación.
+        \item Código repetido que debería estar en funciones.
+      \end{itemize}
+    \column{0.5\textwidth}
+      \textbf{En el contenido:}
+      \begin{itemize}
+        \item Métricas en entrenamiento sin reportar test.
+        \item Ninguna discusión de limitaciones.
+        \item Conclusiones que no se desprenden del análisis.
+        \item Dataset de Titanic, Iris o tips sin ninguna vuelta de tuerca propia.
+        \item Copiar código de Kaggle sin entenderlo ni adaptarlo.
+      \end{itemize}
+  \end{columns}
+
+  \bigskip
+  \begin{alertblock}{La señal más clara de un buen proyecto}
+    El analista tomó decisiones y las justificó. No siguió un tutorial: resolvió un problema.
+  \end{alertblock}
+\end{frame}
+
+%-----------------------------------------------
+\section{Cierre}
+%-----------------------------------------------
+
+\begin{frame}{Ideas para llevarse}
+  \begin{enumerate}
+    \item Un portfolio demuestra proceso, no solo resultados.
+    \item GitHub es la vitrina estándar: mantenerlo ordenado y documentado.
+    \item Cada proyecto necesita un README que permita entenderlo sin preguntar.
+    \item Cada unidad de la materia es base para un proyecto de portfolio real.
+    \item La estructura del notebook importa: contexto $\rightarrow$ datos $\rightarrow$ análisis $\rightarrow$ conclusión.
+    \item Evitar los datasets cliché sin adaptación propia.
+    \item La señal de un buen analista: tomó decisiones y las justificó.
+  \end{enumerate}
+
+  \bigskip
+  \begin{exampleblock}{Para empezar hoy}
+    Elegir un dataset que te interese de verdad. Formular una pregunta concreta. Seguir el template de la unidad más cercana al problema. Documentar cada decisión. Subir a GitHub.
+  \end{exampleblock}
+\end{frame}
+
+\end{document}
