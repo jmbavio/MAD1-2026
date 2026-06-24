@@ -1,0 +1,347 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[activeacute]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+
+\usetheme{Madrid}
+\usecolortheme[RGB={30,60,120}]{structure}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{
+  \leavevmode
+  \hbox{
+    \begin{beamercolorbox}[wd=.45\paperwidth,ht=2.5ex,dp=1ex,left,leftskip=1em]{author in head/foot}
+      \usebeamerfont{author in head/foot}\insertshortauthor
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[wd=.35\paperwidth,ht=2.5ex,dp=1ex,center]{title in head/foot}
+      \usebeamerfont{title in head/foot}MAD1 -- Unidad 5
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[wd=.2\paperwidth,ht=2.5ex,dp=1ex,right,rightskip=1em]{date in head/foot}
+      \usebeamerfont{date in head/foot}\insertframenumber{} / \inserttotalframenumber
+    \end{beamercolorbox}
+  }
+}
+
+\definecolor{unsazul}{RGB}{30,60,120}
+\definecolor{unsazulclaro}{RGB}{220,230,245}
+\definecolor{verdeapp}{RGB}{20,120,60}
+
+\tcbuselibrary{skins, breakable}
+
+\newtcolorbox{aplicacion}{
+  colback=verdeapp!8,
+  colframe=verdeapp,
+  fonttitle=\bfseries\small,
+  title={Aplicaciones reales},
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\newtcolorbox{concepto}{
+  colback=unsazulclaro,
+  colframe=unsazul,
+  fonttitle=\bfseries\small,
+  title={Idea clave},
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\newtcolorbox{atencion}{
+  colback=orange!10,
+  colframe=orange!80!black,
+  fonttitle=\bfseries\small,
+  title={Atenci\'on},
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\title[Unidad 5 -- Densidad y anomalías]{Unidad 5: Aprendizaje No Supervisado}
+\subtitle{Bloque 3 -- Densidad y anomalías}
+\author[MAD1 -- UNS]{Métodos de Análisis de Datos I}
+\institute{Departamento de Matemática -- Universidad Nacional del Sur}
+\date{}
+
+%---------------------------------------------------------------
+\begin{document}
+%---------------------------------------------------------------
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{¿Qué es una anomalía?}
+\begin{columns}[T]
+\column{0.55\textwidth}
+Una \textbf{anomalía} (outlier) es una observación que no se ajusta al patrón general de los datos.
+
+\medskip
+\begin{concepto}
+Un punto es anómalo si vive en una región de \textbf{baja densidad}: está donde los datos son escasos. Los métodos de este bloque difieren en cómo estiman o explotan esa densidad.
+\end{concepto}
+
+\medskip
+\textbf{Tipos de anomalías:}
+\begin{itemize}
+  \item \textbf{Global:} anómalo respecto a todo el dataset.
+  \item \textbf{Contextual:} normal globalmente, anómalo en su vecindad (LOF).
+  \item \textbf{Colectivo:} un grupo de puntos es anómalo en conjunto.
+\end{itemize}
+
+\column{0.42\textwidth}
+\textbf{Métodos de este bloque:}
+\medskip
+{\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Método} & \textbf{Enfoque} & \textbf{Contextual} \\
+\midrule
+KDE             & Densidad global  & No  \\
+Isolation Forest & Aislamiento     & No  \\
+LOF             & Densidad local   & Sí  \\
+One-Class SVM   & Frontera         & Parcial \\
+\bottomrule
+\end{tabular}
+}
+
+\medskip
+\begin{aplicacion}
+Fraude financiero, fallas industriales, intrusión en redes, control de calidad, vigilancia médica, errores de sensores.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{KDE: Estimación de Densidad por Núcleo}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\textbf{Idea:} estimar $f(x)$ sin asumir ninguna forma paramétrica.
+
+\medskip
+\[
+\hat{f}_h(x) = \frac{1}{nh}\sum_{i=1}^{n} K\!\left(\frac{x - x_i}{h}\right)
+\]
+
+Cada observación ``aporta'' una campana centrada en sí misma. La suma es la densidad estimada.
+
+\medskip
+\textbf{Kernels comunes:}
+
+{\small
+\begin{tabular}{ll}
+\toprule
+Gaussiano    & $(2\pi)^{-1/2}\exp(-u^2/2)$ \\
+Epanechnikov & $\frac{3}{4}(1-u^2)\mathbf{1}_{|u|\leq 1}$ \\
+\bottomrule
+\end{tabular}
+}
+
+\medskip
+\textbf{Ancho de banda $h$:} controla el suavizado.
+\begin{itemize}
+  \item $h$ grande: curva suave, puede ocultar estructura.
+  \item $h$ pequeño: curva rugosa, puede sobreajustar.
+\end{itemize}
+
+Regla de Silverman: $h^* = 1.06\,\hat{\sigma}\,n^{-1/5}$.
+
+\column{0.45\textwidth}
+\begin{concepto}
+El histograma apila bloques en bins fijos. KDE reemplaza cada bloque por una campana centrada en cada dato. El resultado es una curva suave que no depende de la posición arbitraria de los bins.
+\end{concepto}
+
+\medskip
+\begin{aplicacion}
+\textbf{Epidemiología:} estimar la distribución geográfica de casos de una enfermedad sin asumir que sigue una forma paramétrica conocida.
+
+\medskip
+\textbf{Economía:} estimar la distribución del ingreso en una población. La bimodalidad (dos picos) indica dos subpoblaciones distintas.
+
+\medskip
+\textbf{Tráfico:} estimar densidad de accidentes en una red vial para identificar puntos negros.
+
+\medskip
+\textbf{Astrofísica:} distribución de velocidades de galaxias en un cúmulo para inferir la masa oscura presente.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Isolation Forest}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\textbf{Principio:} los outliers son más fáciles de aislar que los puntos normales.
+
+\medskip
+\textbf{Construcción:}
+\begin{enumerate}
+  \item Construir múltiples \textbf{árboles de aislamiento}: en cada árbol, elegir aleatoriamente una variable y un corte aleatorio para dividir el espacio.
+  \item Repetir hasta aislar cada punto.
+\end{enumerate}
+
+\medskip
+\textbf{Score de anomalía:} inversamente proporcional a la longitud media del camino de raíz a hoja, promediada sobre todos los árboles.
+
+\medskip
+\begin{concepto}
+Para encontrar a alguien en una multitud, lo más fácil es atrapar al que está solo en un rincón: basta una pregunta para aislarlo. Para alguien en el centro, hacen falta muchas. Isolation Forest mide exactamente eso.
+\end{concepto}
+
+\column{0.45\textwidth}
+\textbf{Ventajas:}
+\begin{itemize}
+  \item Escala bien a datos grandes.
+  \item No requiere calcular distancias.
+  \item Robusto en alta dimensionalidad.
+\end{itemize}
+
+\medskip
+\textbf{Parámetros:} \texttt{contamination} (fracción esperada de outliers), \texttt{n\_estimators}.
+
+\medskip
+\begin{aplicacion}
+\textbf{Banca:} detectar transacciones fraudulentas en tiempo real entre millones de operaciones diarias.
+
+\medskip
+\textbf{Manufactura:} sensores en líneas de producción generan millones de lecturas; Isolation Forest detecta lecturas anómalas que preceden a fallas de maquinaria.
+
+\medskip
+\textbf{Ciberseguridad:} identificar conexiones de red inusuales en logs de miles de eventos por segundo.
+
+\medskip
+\textbf{Salud:} monitoreo continuo de pacientes en UCI: alertas automáticas ante parámetros vitales fuera de rango.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{LOF: Local Outlier Factor}
+\begin{columns}[T]
+\column{0.52\textwidth}
+LOF compara la \textbf{densidad local} de un punto con la de sus vecinos.
+
+\medskip
+\[
+LOF_k(\mathbf{x}_i) = \frac{\overline{lrd}_k\bigl(N_k(\mathbf{x}_i)\bigr)}{lrd_k(\mathbf{x}_i)}
+\]
+
+$lrd_k(\mathbf{x}_i)$: densidad de alcanzabilidad local de $\mathbf{x}_i$.\\
+$\overline{lrd}_k$: promedio de densidades de sus $k$ vecinos.
+
+\medskip
+\begin{itemize}
+  \item $LOF \approx 1$: densidad similar a vecinos $\to$ normal.
+  \item $LOF \gg 1$: densidad mucho menor que vecinos $\to$ outlier.
+\end{itemize}
+
+\medskip
+\begin{concepto}
+Ventaja clave: detecta \textbf{outliers contextuales}. Un punto puede ser normal en una región densa pero anómalo en una región escasa. Isolation Forest no hace esta distinción.
+\end{concepto}
+
+\column{0.45\textwidth}
+\begin{atencion}
+LOF requiere calcular distancias a todos los vecinos: escala mal a datasets muy grandes. Para millones de puntos, preferir Isolation Forest.
+\end{atencion}
+
+\medskip
+\begin{aplicacion}
+\textbf{Sensores ambientales:} una estación meteorológica en un valle puede tener temperaturas ``normales'' globalmente pero anómalas respecto a sus vecinas geográficas.
+
+\medskip
+\textbf{Comercio electrónico:} un usuario que compra productos de lujo puede parecer normal globalmente, pero es anómalo en el contexto de su historial habitual de compras económicas.
+
+\medskip
+\textbf{Redes de tráfico:} detectar nodos de una red vial con flujo anómalo respecto a su entorno local.
+
+\medskip
+\textbf{Medicina:} un valor de glucemia puede ser normal en población general pero anómalo para un paciente diabético con historial estable.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{One-Class SVM}
+\begin{columns}[T]
+\column{0.52\textwidth}
+One-Class SVM aprende una \textbf{frontera de decisión} que encierra la mayor parte de los datos de entrenamiento.
+
+\medskip
+\textbf{Idea:} encontrar un hiperplano en el espacio de características (via kernel) que separe los datos del origen con margen máximo.
+
+\medskip
+Observaciones fuera de la frontera $\to$ anomalías.
+
+\medskip
+\begin{concepto}
+A diferencia de Isolation Forest y LOF, One-Class SVM aprende una \textbf{frontera explícita} en el espacio de entrada. El kernel permite que esa frontera sea no lineal.
+\end{concepto}
+
+\medskip
+\textbf{Parámetros:}
+\begin{itemize}
+  \item \texttt{nu}: fracción máxima de puntos de entrenamiento fuera de la frontera.
+  \item \texttt{kernel}: RBF es el más común.
+\end{itemize}
+
+\column{0.45\textwidth}
+\begin{atencion}
+One-Class SVM es sensible a la escala y requiere ajuste cuidadoso del kernel. Escala mal a datasets muy grandes (costo cuadrático en $n$). Mejor para datasets pequeños o medianos con buena caracterización del ``comportamiento normal''.
+\end{atencion}
+
+\medskip
+\begin{aplicacion}
+\textbf{Detección de intrusiones:} entrenar solo con tráfico de red legítimo; cualquier patrón nuevo fuera de la frontera es sospechoso.
+
+\medskip
+\textbf{Control de calidad:} en manufactura de semiconductores, entrenar con piezas buenas; rechazar piezas cuyas medidas caen fuera de la frontera aprendida.
+
+\medskip
+\textbf{Bioinformática:} clasificar secuencias genéticas: entrenar con secuencias de una especie y detectar contaminaciones o mutaciones raras.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Resumen: Bloque 3 -- Densidad y anomalías}
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+{\small
+\begin{tabular}{lllll}
+\toprule
+\textbf{Método} & \textbf{Principio} & \textbf{Escala} & \textbf{Contextual} & \textbf{Cuándo usarlo} \\
+\midrule
+KDE             & Estima $f(\mathbf{x})$ & Moderada & No & Exploración, visualización de densidad \\
+Isolation Forest & Aislamiento        & Alta     & No & Datos grandes, score global \\
+LOF             & Densidad local      & Moderada & Sí & Outliers contextuales \\
+One-Class SVM   & Frontera (kernel)   & Baja     & Parcial & Datasets pequeños, frontera explícita \\
+\bottomrule
+\end{tabular}
+}
+\end{center}
+
+\medskip
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Regla práctica:}
+\begin{itemize}
+  \item Para exploración y visualización $\to$ \textbf{KDE}.
+  \item Para datos grandes en producción $\to$ \textbf{Isolation Forest}.
+  \item Si los outliers son contextuales $\to$ \textbf{LOF}.
+  \item Si tengo pocos datos y quiero frontera explícita $\to$ \textbf{One-Class SVM}.
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{Buenas prácticas:}
+\begin{itemize}
+  \item Siempre escalar antes de aplicar cualquier método.
+  \item Combinar múltiples detectores y tomar el consenso.
+  \item Definir \texttt{contamination} según el dominio (¿cuánto fraude espero?).
+  \item Validar manualmente una muestra de los outliers detectados.
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\end{document}

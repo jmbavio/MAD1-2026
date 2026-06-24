@@ -1,0 +1,392 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[activeacute]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+
+\usetheme{Madrid}
+\usecolortheme[RGB={30,60,120}]{structure}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{
+  \leavevmode
+  \hbox{
+    \begin{beamercolorbox}[wd=.45\paperwidth,ht=2.5ex,dp=1ex,left,leftskip=1em]{author in head/foot}
+      \usebeamerfont{author in head/foot}\insertshortauthor
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[wd=.35\paperwidth,ht=2.5ex,dp=1ex,center]{title in head/foot}
+      \usebeamerfont{title in head/foot}MAD1 -- Unidad 5
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[wd=.2\paperwidth,ht=2.5ex,dp=1ex,right,rightskip=1em]{date in head/foot}
+      \usebeamerfont{date in head/foot}\insertframenumber{} / \inserttotalframenumber
+    \end{beamercolorbox}
+  }
+}
+
+\definecolor{unsazul}{RGB}{30,60,120}
+\definecolor{unsazulclaro}{RGB}{220,230,245}
+\definecolor{verdeapp}{RGB}{20,120,60}
+
+\tcbuselibrary{skins, breakable}
+
+\newtcolorbox{aplicacion}{
+  colback=verdeapp!8,
+  colframe=verdeapp,
+  fonttitle=\bfseries\small,
+  title={Aplicaciones reales},
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\newtcolorbox{concepto}{
+  colback=unsazulclaro,
+  colframe=unsazul,
+  fonttitle=\bfseries\small,
+  title={Idea clave},
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\newtcolorbox{atencion}{
+  colback=orange!10,
+  colframe=orange!80!black,
+  fonttitle=\bfseries\small,
+  title={Atenci\'on},
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\title[Unidad 5 -- Autoencoders]{Unidad 5: Aprendizaje No Supervisado}
+\subtitle{Bloque 4 -- Aprendizaje profundo no supervisado}
+\author[MAD1 -- UNS]{Métodos de Análisis de Datos I}
+\institute{Departamento de Matemática -- Universidad Nacional del Sur}
+\date{}
+
+%---------------------------------------------------------------
+\begin{document}
+%---------------------------------------------------------------
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{¿Por qué redes neuronales no supervisadas?}
+\begin{columns}[T]
+\column{0.55\textwidth}
+Los métodos clásicos (PCA, KDE, K-means) tienen limitaciones cuando la estructura de los datos es \textbf{no lineal} y de muy alta dimensión.
+
+\medskip
+\textbf{¿Qué aportan las redes neuronales?}
+\begin{itemize}
+  \item Pueden capturar relaciones \textbf{no lineales} complejas.
+  \item Escalan a dimensiones muy altas (imágenes, audio, texto).
+  \item Aprenden representaciones jerárquicas de los datos.
+\end{itemize}
+
+\medskip
+\begin{concepto}
+El principio fundamental: entrenar la red para que \textbf{comprima y reconstruya} los datos. Lo que la red aprende a preservar en la compresión es la estructura relevante. No necesitamos etiquetas: la señal de aprendizaje es el error de reconstrucción.
+\end{concepto}
+
+\column{0.42\textwidth}
+\textbf{Autoencoder en este bloque:}
+
+\medskip
+{\small
+\begin{tabular}{ll}
+\toprule
+\textbf{Componente} & \textbf{Rol} \\
+\midrule
+Encoder    & Comprime $\mathbf{x} \to \mathbf{z}$ \\
+Bottleneck & Representación comprimida \\
+Decoder    & Reconstruye $\mathbf{z} \to \hat{\mathbf{x}}$ \\
+\bottomrule
+\end{tabular}
+}
+
+\medskip
+\begin{aplicacion}
+Compresión de imágenes, detección de anomalías en manufactura, eliminación de ruido en señales médicas, representaciones para NLP, generación de nuevos datos.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Arquitectura del autoencoder}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\[
+\mathbf{x} \in \mathbb{R}^p \;\xrightarrow{\;\text{encoder}\;}\; \mathbf{z} \in \mathbb{R}^q \;\xrightarrow{\;\text{decoder}\;}\; \hat{\mathbf{x}} \in \mathbb{R}^p
+\]
+
+\medskip
+\textbf{Función de pérdida:}
+\[
+\mathcal{L} = \frac{1}{n}\sum_{i=1}^{n}\|\mathbf{x}_i - \hat{\mathbf{x}}_i\|^2
+\]
+
+\medskip
+\textbf{Entrenamiento:} backpropagation estándar. No se necesita ninguna etiqueta $y_i$.
+
+\medskip
+\textbf{Arquitectura típica para datos tabulares:}
+\medskip
+{\small
+\begin{tabular}{ll}
+\toprule
+\textbf{Capa} & \textbf{Detalle} \\
+\midrule
+Entrada    & $p$ neuronas \\
+Encoder 1  & Dense($d_1$, ReLU), $d_1 < p$ \\
+Encoder 2  & Dense($q$, ReLU), bottleneck \\
+Decoder 1  & Dense($d_1$, ReLU) \\
+Salida     & Dense($p$, lineal o sigmoid) \\
+\bottomrule
+\end{tabular}
+}
+
+\column{0.45\textwidth}
+\begin{concepto}
+Un autoencoder es como un sistema de mensajería con canal angosto: el encoder resume la novela en un telegrama ($\mathbf{z}$) y el decoder reconstruye la novela desde el telegrama. Si el canal es angosto, la red aprende qué es lo más importante.
+\end{concepto}
+
+\medskip
+\begin{aplicacion}
+\textbf{Imágenes:} el bottleneck de un autoencoder entrenado en rostros aprende variables latentes como ``ángulo de la cara'', ``iluminación'', ``expresión'', aunque nadie se las indicó.
+
+\medskip
+\textbf{Texto:} autoencoders sobre embeddings de párrafos aprenden a representar el ``tema'' del texto en pocas dimensiones.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Autoencoder como reductor de dimensionalidad}
+\begin{columns}[T]
+\column{0.52\textwidth}
+El vector latente $\mathbf{z}$ es una representación de $\mathbf{x}$ en $q$ dimensiones.
+
+\medskip
+\textbf{Comparación con PCA:}
+
+\medskip
+{\small
+\begin{tabular}{lll}
+\toprule
+ & \textbf{PCA} & \textbf{Autoencoder} \\
+\midrule
+Transformación & Lineal & No lineal \\
+Computación    & Analítica (SVD) & Iterativa (GD) \\
+Interpretación & Alta (loadings) & Baja \\
+Escala         & Alta & Alta \\
+\bottomrule
+\end{tabular}
+}
+
+\medskip
+\begin{concepto}
+Un autoencoder \textbf{lineal} (sin activaciones no lineales) de una sola capa oculta es matemáticamente equivalente a PCA. Las activaciones no lineales son lo que agrega potencia real.
+\end{concepto}
+
+\column{0.45\textwidth}
+\begin{aplicacion}
+\textbf{Genómica:} reducir perfiles de expresión de 20.000 genes a 10--30 dimensiones latentes, capturando relaciones no lineales entre genes que PCA no ve.
+
+\medskip
+\textbf{Sensores industriales:} comprimir señales de vibración de 500 canales simultáneos a 5 dimensiones latentes para monitoreo en tiempo real.
+
+\medskip
+\textbf{Astronomía:} representar espectros de galaxias en pocas dimensiones para clasificación y búsqueda de objetos raros.
+
+\medskip
+\textbf{Finanzas:} comprimir miles de variables macroeconómicas a factores latentes no lineales para predicción.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Autoencoder para detección de anomalías}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\textbf{Principio:} entrenar el autoencoder \textbf{solo con datos normales}.
+
+\medskip
+Un autoencoder bien entrenado en datos normales:
+\begin{itemize}
+  \item Reconstruye bien los datos normales: $\|\mathbf{x} - \hat{\mathbf{x}}\|^2$ pequeño.
+  \item Reconstruye mal las anomalías: el modelo no ``aprendió'' ese patrón.
+\end{itemize}
+
+\medskip
+\textbf{Score de anomalía:}
+\[
+\text{score}(\mathbf{x}) = \|\mathbf{x} - \hat{\mathbf{x}}\|^2
+\]
+
+Se fija un umbral $\tau$: si $\text{score}(\mathbf{x}) > \tau \Rightarrow$ anomalía.
+
+\medskip
+\begin{concepto}
+El error de reconstrucción actúa como un termómetro de rareza: cuanto más difícil le resulta al autoencoder reconstruir un punto, más raro es ese punto.
+\end{concepto}
+
+\column{0.45\textwidth}
+\begin{aplicacion}
+\textbf{Manufactura:} entrenar con imágenes de piezas sin defectos. Las piezas con grietas o deformaciones tienen error de reconstrucción alto.
+
+\medskip
+\textbf{Fraude bancario:} entrenar con transacciones legítimas. Las transacciones fraudulentas tienen patrones no vistos que el autoencoder no puede reconstruir bien.
+
+\medskip
+\textbf{Cardiología:} entrenar con ECGs (electrocardiogramas) normales. Arritmias raras generan error de reconstrucción alto, disparando alertas automáticas.
+
+\medskip
+\textbf{Redes informáticas:} entrenar con tráfico normal. Ataques de intrusión, que tienen patrones distintos, son detectados por su alta pérdida de reconstrucción.
+
+\medskip
+\textbf{Física de partículas:} en el CERN, detectar eventos anómalos entre millones de colisiones en el LHC.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Denoising autoencoders}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\textbf{Idea:} corromper los datos de entrada con ruido y entrenar para reconstruir la versión limpia.
+
+\medskip
+\[
+\tilde{\mathbf{x}} = \mathbf{x} + \boldsymbol{\varepsilon}, \quad \boldsymbol{\varepsilon} \sim \mathcal{N}(\mathbf{0}, \sigma^2 \mathbf{I})
+\]
+
+\medskip
+\textbf{Pérdida:}
+\[
+\mathcal{L} = \frac{1}{n}\sum_{i=1}^{n}\|\mathbf{x}_i - \text{decoder}(\text{encoder}(\tilde{\mathbf{x}}_i))\|^2
+\]
+
+\medskip
+\begin{concepto}
+Al forzar al encoder a ignorar el ruido y capturar solo la estructura real, el autoencoder aprende representaciones más robustas y generalizables. El ruido actúa como regularización implícita.
+\end{concepto}
+
+\column{0.45\textwidth}
+\begin{aplicacion}
+\textbf{Imágenes médicas:} eliminar ruido en imágenes de tomografía (CT) o resonancia magnética (MRI) adquiridas con dosis bajas de radiación.
+
+\medskip
+\textbf{Audio:} separar la voz del ruido de fondo en grabaciones con micrófono de baja calidad.
+
+\medskip
+\textbf{Astronomía:} recuperar señales débiles de galaxias lejanas contaminadas por ruido instrumental.
+
+\medskip
+\textbf{Texto:} corregir errores tipográficos o reconstruir texto con palabras faltantes en documentos digitalizados con OCR (reconocimiento óptico de caracteres) imperfecto.
+
+\medskip
+\textbf{Sensores IoT:} limpiar lecturas ruidosas de sensores de temperatura, humedad o presión en redes industriales.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Consideraciones prácticas}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\textbf{Dimensión del bottleneck:}
+\begin{itemize}
+  \item Demasiado pequeña: pierde información, reconstrucción pobre.
+  \item Demasiado grande: puede memorizar en lugar de generalizar.
+  \item Explorar con validación cruzada o curva de reconstrucción.
+\end{itemize}
+
+\medskip
+\textbf{Regularización:}
+\begin{itemize}
+  \item Dropout en encoder y decoder.
+  \item Regularización L2 en los pesos.
+  \item Denoising (ruido en la entrada).
+\end{itemize}
+
+\medskip
+\textbf{Preprocesamiento:}
+\begin{itemize}
+  \item Escalar a $[0,1]$ si la salida es sigmoid.
+  \item Estandarizar si la salida es lineal.
+\end{itemize}
+
+\medskip
+\textbf{Arquitectura:} para datos tabulares, 2--3 capas ocultas son suficientes. Para imágenes, usar capas convolucionales.
+
+\column{0.45\textwidth}
+\begin{atencion}
+El umbral de anomalía $\tau$ es crítico y depende del dominio. Definirlo mirando la distribución de errores de reconstrucción en el conjunto de entrenamiento (por ejemplo, percentil 95 o 99).
+\end{atencion}
+
+\medskip
+\begin{aplicacion}
+\textbf{CARDIO-PLACA (ejemplo propio):} entrenar un autoencoder con los 25 predictores clínicos de pacientes sanos. Los pacientes con placa de difícil diagnóstico generan mayor error de reconstrucción, pudiendo complementar al modelo de clasificación supervisado.
+\end{aplicacion}
+
+\medskip
+\begin{concepto}
+Los autoencoders son el punto de entrada al aprendizaje profundo no supervisado. Su extensión natural son los VAE (Autoencoders Variacionales), que generan nuevas muestras en lugar de solo reconstruir.
+\end{concepto}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Resumen: Bloque 4 y cierre de la Unidad 5}
+
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Autoencoders en síntesis:}
+
+\medskip
+{\small
+\begin{tabular}{ll}
+\toprule
+\textbf{Uso} & \textbf{Mecanismo} \\
+\midrule
+Reducción de dim. & Vector latente $\mathbf{z}$ \\
+Detección anomalías & Error de reconstrucción \\
+Eliminación de ruido & Denoising autoencoder \\
+\bottomrule
+\end{tabular}
+}
+
+\medskip
+\textbf{Vs.\ métodos clásicos:}
+\begin{itemize}
+  \item Más potente que PCA para estructuras no lineales.
+  \item Más costoso computacionalmente.
+  \item Menos interpretable.
+  \item Requiere más datos para entrenar bien.
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{Cierre de la Unidad 5 -- los 4 bloques:}
+
+\medskip
+{\small
+\begin{tabular}{ll}
+\toprule
+\textbf{Bloque} & \textbf{Pregunta central} \\
+\midrule
+Clustering & ¿Hay grupos naturales? \\
+Representación & ¿Puedo ver los datos en menos dims.? \\
+Densidad/anomalías & ¿Hay puntos raros? \\
+Autoencoders & ¿Puedo comprimir y reconstruir? \\
+\bottomrule
+\end{tabular}
+}
+
+\medskip
+\textbf{Hilo conductor:} los cuatro bloques trabajan sin etiquetas $y_i$. La estructura emerge de los datos mismos. La elección del método depende de la pregunta que uno quiere responder.
+\end{columns}
+\end{frame}
+
+\end{document}

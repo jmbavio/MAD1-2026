@@ -1,0 +1,466 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[activeacute]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+
+\usetheme{Madrid}
+\usecolortheme[RGB={30,60,120}]{structure}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{
+  \leavevmode
+  \hbox{
+    \begin{beamercolorbox}[wd=.45\paperwidth,ht=2.5ex,dp=1ex,left,leftskip=1em]{author in head/foot}
+      \usebeamerfont{author in head/foot}\insertshortauthor
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[wd=.35\paperwidth,ht=2.5ex,dp=1ex,center]{title in head/foot}
+      \usebeamerfont{title in head/foot}MAD1 -- Unidad 5
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[wd=.2\paperwidth,ht=2.5ex,dp=1ex,right,rightskip=1em]{date in head/foot}
+      \usebeamerfont{date in head/foot}\insertframenumber{} / \inserttotalframenumber
+    \end{beamercolorbox}
+  }
+}
+
+\definecolor{unsazul}{RGB}{30,60,120}
+\definecolor{unsazulclaro}{RGB}{220,230,245}
+\definecolor{grisclaro}{RGB}{245,245,245}
+\definecolor{verdeapp}{RGB}{20,120,60}
+
+\tcbuselibrary{skins, breakable}
+
+\newtcolorbox{aplicacion}{
+  colback=verdeapp!8,
+  colframe=verdeapp,
+  fonttitle=\bfseries\small,
+  title={Aplicaciones reales},
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\newtcolorbox{concepto}{
+  colback=unsazulclaro,
+  colframe=unsazul,
+  fonttitle=\bfseries\small,
+  title={Idea clave},
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\newtcolorbox{atencion}{
+  colback=orange!10,
+  colframe=orange!80!black,
+  fonttitle=\bfseries\small,
+  title={Atenci\'on},
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\title[Unidad 5 -- Clustering]{Unidad 5: Aprendizaje No Supervisado}
+\subtitle{Bloque 1 -- Clustering}
+\author[MAD1 -- UNS]{Métodos de Análisis de Datos I}
+\institute{Departamento de Matemática -- Universidad Nacional del Sur}
+\date{}
+
+%---------------------------------------------------------------
+\begin{document}
+%---------------------------------------------------------------
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{¿Qué es el clustering?}
+\begin{columns}[T]
+\column{0.55\textwidth}
+\textbf{Problema:} dado un conjunto de observaciones $\{\mathbf{x}_1,\ldots,\mathbf{x}_n\}$ \emph{sin etiquetas}, encontrar grupos homogéneos.
+
+\medskip
+\begin{concepto}
+Los puntos dentro de un grupo deben ser \textbf{similares entre sí} y \textbf{distintos} de los de otros grupos. Nadie nos dice cuáles son los grupos: emergen de los datos.
+\end{concepto}
+
+\medskip
+Diferencia con clasificación:
+\begin{itemize}
+  \item Clasificación: tenemos $y_i$, aprendemos $f(\mathbf{x}) \to y$.
+  \item Clustering: no hay $y_i$; la estructura la descubrimos nosotros.
+\end{itemize}
+
+\column{0.42\textwidth}
+\textbf{Comparativa de métodos:}
+\medskip
+
+{\small
+\begin{tabular}{lcc}
+\toprule
+\textbf{Método} & \textbf{Requiere $k$} & \textbf{Outliers} \\
+\midrule
+K-means    & Sí  & Sensible \\
+Jerárquico & No* & Sensible \\
+DBSCAN     & No  & Detecta \\
+GMM        & Sí  & Moderado \\
+\bottomrule
+\multicolumn{3}{l}{\tiny *elige $k$ al cortar el dendrograma}
+\end{tabular}
+}
+
+\medskip
+\begin{aplicacion}
+Segmentación de clientes, agrupamiento de genes, detección de tópicos, compresión de imágenes.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Métricas de distancia}
+Todo algoritmo de clustering necesita medir ``similitud''. La elección importa.
+
+\medskip
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Distancia Euclidiana}
+\[
+d_E(\mathbf{x},\mathbf{z}) = \sqrt{\sum_{j=1}^{p}(x_j - z_j)^2}
+\]
+La más usada. Sensible a escala.
+
+\medskip
+\textbf{Distancia Manhattan}
+\[
+d_M(\mathbf{x},\mathbf{z}) = \sum_{j=1}^{p}|x_j - z_j|
+\]
+Más robusta a outliers.
+
+\column{0.48\textwidth}
+\textbf{Distancia Coseno}
+\[
+d_{\cos}(\mathbf{x},\mathbf{z}) = 1 - \frac{\mathbf{x} \cdot \mathbf{z}}{\|\mathbf{x}\|\|\mathbf{z}\|}
+\]
+Ideal para texto: importa la dirección, no la magnitud.
+
+\medskip
+\begin{atencion}
+\textbf{Siempre escalar antes de clusterizar.} Si una variable es salario en pesos y otra es edad en años, la primera domina la distancia sin razón conceptual.
+\end{atencion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{K-means: algoritmo}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\textbf{Objetivo:} minimizar la inercia (varianza intra-cluster):
+\[
+W = \sum_{l=1}^{k}\sum_{\mathbf{x}_i \in C_l} \|\mathbf{x}_i - \boldsymbol{\mu}_l\|^2
+\]
+
+\medskip
+\textbf{Algoritmo:}
+\begin{enumerate}
+  \item Inicializar $k$ centroides.
+  \item \textbf{Asignar} cada punto al centroide más cercano.
+  \item \textbf{Actualizar} cada centroide como la media de su cluster.
+  \item Repetir hasta convergencia.
+\end{enumerate}
+
+\medskip
+\begin{concepto}
+K-means converge siempre, pero puede quedar en un mínimo local. Se recomienda múltiples inicializaciones y quedarse con la de menor inercia.
+\end{concepto}
+
+\column{0.45\textwidth}
+\begin{aplicacion}
+\textbf{Marketing:} segmentar clientes por comportamiento de compra para campañas dirigidas.
+
+\medskip
+\textbf{Medicina:} agrupar pacientes con perfiles clínicos similares para tratamientos personalizados.
+
+\medskip
+\textbf{Imágenes:} cuantización de color: reducir una imagen de millones de colores a $k$ colores representativos (compresión).
+
+\medskip
+\textbf{Astronomía:} clasificar galaxias por forma y brillo en catálogos de millones de objetos celestes.
+
+\medskip
+\textbf{Transporte:} ubicar depósitos de bicicletas públicas para minimizar la distancia promedio de los usuarios.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{K-means: ¿cuántos clusters?}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Método del codo:}
+
+Graficar inercia $W$ vs.\ $k$. Buscar el punto donde la reducción se aplana.
+
+\medskip
+\[
+k=1 \to k=2: \text{ gran caída}
+\]
+\[
+k=5 \to k=6: \text{ caída mínima} \Rightarrow k=5
+\]
+
+\medskip
+\textbf{Coeficiente de silueta} para cada punto $i$:
+\[
+s_i = \frac{b_i - a_i}{\max(a_i, b_i)} \in [-1, 1]
+\]
+$a_i$: distancia media a su cluster.\\
+$b_i$: distancia media mínima a otro cluster.
+
+\medskip
+$\bar{s}$ cerca de 1: clusters bien separados.
+
+\column{0.48\textwidth}
+\begin{aplicacion}
+\textbf{Retail:} un supermercado analiza tickets de compra. Con $k=3$ emerge: ``compradores semanales de grandes volúmenes'', ``compradores diarios de poco'', ``compradores de ocasión''. La curva del codo confirma $k=3$.
+
+\medskip
+\textbf{Recursos humanos:} agrupar empleados por desempeño y antigüedad. La silueta indica si los grupos son realmente distintos o si se solapan.
+\end{aplicacion}
+
+\medskip
+\begin{atencion}
+K-means asume clusters \textbf{esféricos} y de \textbf{tamaño similar}. Si los datos tienen formas irregulares o muy distintos tamaños, K-means falla. Ver DBSCAN o GMM.
+\end{atencion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Clustering jerárquico}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\textbf{Idea:} construir una jerarquía de fusiones.
+
+\medskip
+\textbf{Algoritmo aglomerativo:}
+\begin{enumerate}
+  \item Cada punto es su propio cluster.
+  \item Fusionar los dos clusters más cercanos.
+  \item Repetir hasta un único cluster.
+\end{enumerate}
+
+\medskip
+\textbf{Métodos de enlace:}
+
+{\small
+\begin{tabular}{ll}
+\toprule
+\textbf{Enlace} & \textbf{Distancia entre $A$ y $B$} \\
+\midrule
+Simple   & mínima entre pares \\
+Completo & máxima entre pares \\
+Promedio & media de todas las distancias \\
+Ward     & minimiza aumento de inercia \\
+\bottomrule
+\end{tabular}
+}
+
+\medskip
+\begin{concepto}
+El resultado es un \textbf{dendrograma}. El número de clusters $k$ se elige \emph{después} cortando el árbol a la altura adecuada.
+\end{concepto}
+
+\column{0.45\textwidth}
+\begin{aplicacion}
+\textbf{Genómica:} agrupar genes con patrones de expresión similares en experimentos de microarray. El dendrograma revela familias de genes que se activan juntos.
+
+\medskip
+\textbf{Lingüística:} construir familias de lenguas por similitud léxica. El árbol resultante coincide con clasificaciones históricas (romance, germánicas, eslavas).
+
+\medskip
+\textbf{Arqueología:} clasificar artefactos por composición química para inferir rutas de comercio.
+
+\medskip
+\textbf{Ecología:} agrupar especies por nicho ecológico a partir de variables ambientales.
+
+\medskip
+\textbf{Finanzas:} agrupar activos financieros para construir carteras diversificadas: clusters de acciones que se mueven juntas.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{DBSCAN: clustering por densidad}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\textbf{Parámetros:} radio $\varepsilon$ y mínimo de vecinos $m$.
+
+\medskip
+\textbf{Tipos de puntos:}
+\begin{itemize}
+  \item \textbf{Núcleo:} tiene $\geq m$ vecinos en radio $\varepsilon$.
+  \item \textbf{Borde:} está en la vecindad de un núcleo.
+  \item \textbf{Ruido:} ni núcleo ni borde.
+\end{itemize}
+
+\medskip
+Los puntos núcleo conectados forman un cluster.
+
+\medskip
+\begin{concepto}
+DBSCAN no requiere especificar $k$ y puede encontrar clusters de \textbf{cualquier forma}. Los outliers quedan etiquetados explícitamente como ruido.
+\end{concepto}
+
+\medskip
+\textbf{Desventaja:} dificultoso con clusters de densidades muy distintas y con alta dimensionalidad.
+
+\column{0.45\textwidth}
+\begin{aplicacion}
+\textbf{Geolocalización:} detectar zonas de alta concentración de accidentes de tráfico en una ciudad. La forma irregular de las zonas peligrosas no es capturada por K-means.
+
+\medskip
+\textbf{Astronomía:} identificar cúmulos de estrellas en mapas del cielo. Las galaxias tienen formas filamentosas, no esféricas.
+
+\medskip
+\textbf{Detección de fraude:} transacciones bancarias inusuales aparecen como ruido (outliers) rodeadas de clusters de comportamiento normal.
+
+\medskip
+\textbf{Manufactura:} detectar zonas defectuosas en superficies industriales a partir de mediciones de sensores.
+
+\medskip
+\textbf{Epidemiología:} identificar brotes geográficos de enfermedades infecciosas.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Modelos de Mezclas Gaussianas (GMM)}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\textbf{Modelo:} los datos provienen de $k$ gaussianas:
+\[
+p(\mathbf{x}) = \sum_{l=1}^{k} \pi_l \,\mathcal{N}(\mathbf{x} \mid \boldsymbol{\mu}_l, \boldsymbol{\Sigma}_l)
+\]
+
+\medskip
+\textbf{Estimación por EM:}
+\begin{enumerate}
+  \item \textbf{Paso E:} calcular probabilidad de pertenencia $r_{il}$ a cada componente.
+  \item \textbf{Paso M:} actualizar $\pi_l$, $\boldsymbol{\mu}_l$, $\boldsymbol{\Sigma}_l$.
+  \item Repetir hasta convergencia.
+\end{enumerate}
+
+\medskip
+\begin{concepto}
+A diferencia de K-means, la asignación es \textbf{blanda}: cada punto tiene probabilidad $r_{il}$ de pertenecer a cada cluster. K-means es un caso límite de GMM.
+\end{concepto}
+
+\medskip
+Selección de $k$: BIC o AIC.
+
+\column{0.45\textwidth}
+\begin{aplicacion}
+\textbf{Reconocimiento de voz:} modelar fonemas como mezclas de gaussianas en el espacio de características acústicas.
+
+\medskip
+\textbf{Biometría:} modelar distribuciones de huellas dactilares o iris para sistemas de identificación.
+
+\medskip
+\textbf{Finanzas:} modelar retornos financieros con régimen mixto: un componente de ``días normales'' y otro de ``crisis'' (alta volatilidad).
+
+\medskip
+\textbf{Medicina:} en imágenes de resonancia magnética, separar tejidos (materia gris, blanca, líquido cefalorraquídeo) cuyas intensidades de pixel siguen distribuciones gaussianas distintas.
+
+\medskip
+\textbf{Robótica:} modelar distribuciones de posición de objetos para robots que manipulan objetos en entornos inciertos.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Evaluación de clustering}
+Sin etiquetas verdaderas, la evaluación es \textbf{intrínseca}.
+
+\medskip
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Coeficiente de silueta} $\bar{s} \in [-1,1]$
+
+Para cada punto $i$:
+\[
+s_i = \frac{b_i - a_i}{\max(a_i,b_i)}
+\]
+$a_i$: distancia media dentro del cluster.\\
+$b_i$: distancia media mínima al cluster más cercano.
+
+\medskip
+\textbf{Davies-Bouldin} (menor es mejor):
+\[
+DB = \frac{1}{k}\sum_{l}\max_{j\neq l}\frac{s_l + s_j}{d(\boldsymbol{\mu}_l,\boldsymbol{\mu}_j)}
+\]
+
+\textbf{Calinski-Harabasz} (mayor es mejor):
+\[
+CH = \frac{\text{traza}(B_k)/(k-1)}{\text{traza}(W_k)/(n-k)}
+\]
+
+\column{0.48\textwidth}
+\begin{concepto}
+No existe una única métrica ``correcta''. Lo ideal es usar varias y combinarlas con el criterio del dominio.
+\end{concepto}
+
+\medskip
+\begin{aplicacion}
+\textbf{Salud:} al segmentar pacientes, la silueta indica si los grupos son clínicamente distinguibles. Si $\bar{s} < 0.3$, los grupos se solapan y quizás el número de clusters es incorrecto.
+
+\medskip
+\textbf{Marketing:} al segmentar clientes, se usa Calinski-Harabasz para comparar soluciones con $k=3$, 4 o 5 y elegir la más compacta y separada. Luego un experto del negocio valida si los segmentos ``tienen sentido''.
+\end{aplicacion}
+
+\medskip
+\begin{atencion}
+La evaluación cuantitativa siempre debe complementarse con \textbf{validación de dominio}: que los grupos sean interpretables y accionables.
+\end{atencion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Resumen: Bloque 1 -- Clustering}
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+{\small
+\begin{tabular}{lllll}
+\toprule
+\textbf{Método} & \textbf{Criterio} & \textbf{Forma} & \textbf{Outliers} & \textbf{Cuándo usarlo} \\
+\midrule
+K-means    & Inercia mínima    & Esférica   & Sensible & Clusters bien separados, $k$ conocido \\
+Jerárquico & Enlace entre grupos & Flexible & Sensible & Quiero explorar la jerarquía \\
+DBSCAN     & Densidad local    & Arbitraria & Detecta  & Forma irregular, outliers presentes \\
+GMM        & Verosimilitud     & Elíptica   & Moderado & Necesito probabilidades de pertenencia \\
+\bottomrule
+\end{tabular}
+}
+\end{center}
+
+\medskip
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Regla práctica:}
+\begin{itemize}
+  \item Empezar siempre con K-means para tener una línea de base.
+  \item Si los datos tienen ruido o forma irregular $\to$ DBSCAN.
+  \item Si quiero jerarquía o no sé $k$ $\to$ jerárquico.
+  \item Si necesito incertidumbre en la asignación $\to$ GMM.
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{Pipeline típico:}
+\begin{enumerate}
+  \item Escalar variables.
+  \item Explorar con K-means + codo + silueta.
+  \item Refinar con DBSCAN o jerárquico si es necesario.
+  \item Evaluar con múltiples métricas + criterio de dominio.
+\end{enumerate}
+\end{columns}
+\end{frame}
+
+\end{document}

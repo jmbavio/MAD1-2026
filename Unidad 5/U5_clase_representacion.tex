@@ -1,0 +1,373 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[activeacute]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+
+\usetheme{Madrid}
+\usecolortheme[RGB={30,60,120}]{structure}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{
+  \leavevmode
+  \hbox{
+    \begin{beamercolorbox}[wd=.45\paperwidth,ht=2.5ex,dp=1ex,left,leftskip=1em]{author in head/foot}
+      \usebeamerfont{author in head/foot}\insertshortauthor
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[wd=.35\paperwidth,ht=2.5ex,dp=1ex,center]{title in head/foot}
+      \usebeamerfont{title in head/foot}MAD1 -- Unidad 5
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[wd=.2\paperwidth,ht=2.5ex,dp=1ex,right,rightskip=1em]{date in head/foot}
+      \usebeamerfont{date in head/foot}\insertframenumber{} / \inserttotalframenumber
+    \end{beamercolorbox}
+  }
+}
+
+\definecolor{unsazul}{RGB}{30,60,120}
+\definecolor{unsazulclaro}{RGB}{220,230,245}
+\definecolor{verdeapp}{RGB}{20,120,60}
+
+\tcbuselibrary{skins, breakable}
+
+\newtcolorbox{aplicacion}{
+  colback=verdeapp!8,
+  colframe=verdeapp,
+  fonttitle=\bfseries\small,
+  title={Aplicaciones reales},
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\newtcolorbox{concepto}{
+  colback=unsazulclaro,
+  colframe=unsazul,
+  fonttitle=\bfseries\small,
+  title={Idea clave},
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\newtcolorbox{atencion}{
+  colback=orange!10,
+  colframe=orange!80!black,
+  fonttitle=\bfseries\small,
+  title={Atenci\'on},
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\title[Unidad 5 -- Representación]{Unidad 5: Aprendizaje No Supervisado}
+\subtitle{Bloque 2 -- Representación de datos}
+\author[MAD1 -- UNS]{Métodos de Análisis de Datos I}
+\institute{Departamento de Matemática -- Universidad Nacional del Sur}
+\date{}
+
+%---------------------------------------------------------------
+\begin{document}
+%---------------------------------------------------------------
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{¿Por qué reducir dimensionalidad?}
+\begin{columns}[T]
+\column{0.55\textwidth}
+Los datos modernos son de alta dimensión: imágenes ($p > 10^6$), genómica ($p > 20{,}000$), texto ($p > 100{,}000$). Esto genera problemas:
+
+\medskip
+\begin{itemize}
+  \item \textbf{Maldición de la dimensionalidad:} en dimensiones altas, todos los puntos quedan ``lejos'' entre sí.
+  \item \textbf{Visualización imposible:} no podemos ver más de 3 dimensiones.
+  \item \textbf{Modelos inestables:} muchas variables correlacionadas generan colinealidad.
+\end{itemize}
+
+\medskip
+\begin{concepto}
+Los métodos de reducción buscan una función $f: \mathbb{R}^p \to \mathbb{R}^q$ con $q \ll p$ que preserve la estructura relevante de los datos.
+\end{concepto}
+
+\column{0.42\textwidth}
+\textbf{Comparativa de métodos:}
+
+\medskip
+{\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Método} & \textbf{Tipo} & \textbf{Supervisado} \\
+\midrule
+PCA   & Lineal    & No \\
+t-SNE & No lineal & No \\
+UMAP  & No lineal & No \\
+LDA   & Lineal    & Sí \\
+\bottomrule
+\end{tabular}
+}
+
+\medskip
+\begin{aplicacion}
+Visualización de datos genómicos, compresión de imágenes, preprocesamiento para clasificadores, exploración de corpus de texto.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{PCA: Análisis de Componentes Principales}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\textbf{Objetivo:} encontrar proyecciones lineales que maximizan la varianza.
+
+\medskip
+Sea $\mathbf{S}$ la matriz de covarianza muestral. PCA resuelve:
+\[
+\mathbf{v}_1 = \arg\max_{\|\mathbf{v}\|=1} \mathbf{v}^\top \mathbf{S}\, \mathbf{v}
+\]
+La solución es el autovector de $\mathbf{S}$ de mayor autovalor.
+
+\medskip
+\textbf{Varianza explicada} por componente $j$:
+\[
+\frac{\lambda_j}{\sum_{l=1}^p \lambda_l}
+\]
+
+\medskip
+\begin{concepto}
+PCA es como encontrar la mejor sombra de una nube de puntos 3D sobre un plano 2D: la que revela más estructura. Las componentes son esos ángulos óptimos.
+\end{concepto}
+
+\column{0.45\textwidth}
+\begin{aplicacion}
+\textbf{Genómica:} reducir 20.000 genes a 10--20 componentes en estudios de expresión génica. Las primeras PCs separan tipos celulares o condiciones experimentales.
+
+\medskip
+\textbf{Neurociencia:} analizar señales de cientos de electrodos simultáneos. PCA extrae los ``modos'' de activación neuronal predominantes.
+
+\medskip
+\textbf{Climatología:} reducir datos de temperatura de miles de estaciones meteorológicas. La primera PC suele capturar el calentamiento global.
+
+\medskip
+\textbf{Finanzas:} los factores de riesgo (mercado, sector, tamaño) emergen como componentes principales de los retornos de activos.
+
+\medskip
+\textbf{Imágenes:} eigenfaces -- representar rostros humanos como combinación de ``rostros base'' (PCA sobre imágenes de caras).
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{PCA: selección de componentes e interpretación}
+\begin{columns}[T]
+\column{0.50\textwidth}
+\textbf{¿Cuántas componentes retener?}
+
+\medskip
+\textbf{Varianza acumulada:} elegir $q$ tal que $\sum_{j=1}^q \lambda_j / \sum \lambda_l \geq 0.90$.
+
+\medskip
+\textbf{Scree plot:} graficar $\lambda_j$ vs.\ $j$. Cortar en el codo.
+
+\medskip
+\textbf{Regla de Kaiser:} retener solo $\lambda_j > 1$ (variables estandarizadas).
+
+\medskip
+\textbf{Interpretación:}
+\begin{itemize}
+  \item \textbf{Loadings} $v_{jl}$: peso de la variable $l$ en la componente $j$.
+  \item \textbf{Scores} $z_{ij}$: coordenada de la observación $i$ en la componente $j$.
+  \item \textbf{Biplot:} superpone scores y loadings en un gráfico.
+\end{itemize}
+
+\column{0.47\textwidth}
+\begin{atencion}
+PCA es sensible a la escala. \textbf{Siempre estandarizar} antes de aplicarlo, salvo que todas las variables estén en la misma unidad y se quiera preservar diferencias de varianza.
+\end{atencion}
+
+\medskip
+\begin{aplicacion}
+\textbf{Psicología:} en tests de inteligencia con 50 ítems, la primera PC suele ser el ``factor $g$'' (inteligencia general), que explica el 30--40\% de la varianza.
+
+\medskip
+\textbf{Química analítica:} espectros de 1.000 longitudes de onda se reducen a 5--10 PCs que representan los compuestos presentes en la muestra.
+
+\medskip
+\textbf{Deportes:} métricas de rendimiento de jugadores (pases, goles, duelos) se comprimen en 2--3 PCs que resumen el ``estilo de juego''.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{t-SNE: visualización no lineal}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\textbf{Idea:} preservar la estructura \textbf{local} de los datos en 2D.
+
+\medskip
+\begin{enumerate}
+  \item Modelar similitudes en alta dimensión con gaussianas ($p_{ij}$).
+  \item Modelar similitudes en 2D con distribución $t$ de Student ($q_{ij}$) --- colas pesadas para evitar colapso.
+  \item Minimizar divergencia KL entre ambas distribuciones.
+\end{enumerate}
+
+\medskip
+\textbf{Parámetro clave:} perplejidad (5--50), controla cuántos vecinos se consideran ``cercanos''.
+
+\medskip
+\begin{atencion}
+Las \textbf{distancias entre clusters} en t-SNE \textbf{no son interpretables}: solo la estructura interna de cada cluster es confiable. Ejecutar siempre con múltiples semillas.
+\end{atencion}
+
+\column{0.45\textwidth}
+\begin{aplicacion}
+\textbf{Inmunología:} visualizar millones de células en experimentos de citometría de flujo. t-SNE revela subpoblaciones de linfocitos no distinguibles a simple vista.
+
+\medskip
+\textbf{NLP:} visualizar embeddings de palabras (Word2Vec, BERT). Palabras semánticamente similares forman clusters visibles en 2D.
+
+\medskip
+\textbf{Dígitos escritos a mano:} el dataset MNIST (70.000 imágenes de dígitos 0--9) forma 10 clusters bien separados en el mapa t-SNE.
+
+\medskip
+\textbf{Oncología:} visualizar perfiles de expresión génica de tumores. Cada tipo de tumor forma un cluster; los casos atípicos quedan aislados.
+
+\medskip
+\textbf{Música:} visualizar canciones por características acústicas. Géneros musicales forman regiones diferenciadas.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{UMAP: alternativa moderna a t-SNE}
+\begin{columns}[T]
+\column{0.52\textwidth}
+UMAP (Uniform Manifold Approximation and Projection) está basado en geometría diferencial y topología algebraica.
+
+\medskip
+\textbf{Ventajas sobre t-SNE:}
+\begin{itemize}
+  \item Más rápido (escala a millones de puntos).
+  \item Preserva mejor la \textbf{estructura global}, no solo local.
+  \item Determinístico con semilla fija.
+  \item Funciona para $q > 2$ dimensiones.
+  \item Permite proyectar nuevas observaciones.
+\end{itemize}
+
+\medskip
+\textbf{Parámetros:}
+\begin{itemize}
+  \item \texttt{n\_neighbors}: balance local/global (típico: 15).
+  \item \texttt{min\_dist}: compacidad del embedding (típico: 0.1).
+\end{itemize}
+
+\medskip
+\begin{concepto}
+PCA aplana una hoja de papel. t-SNE y UMAP estiran y doblan una tela de goma para separar los grupos, aunque la distancia entre grupos no tenga significado geométrico directo.
+\end{concepto}
+
+\column{0.45\textwidth}
+\begin{aplicacion}
+\textbf{Biología celular:} UMAP es el estándar de facto para visualizar datos de secuenciación de ARN de célula única (scRNA-seq). Mapas de decenas de miles de células revelan trayectorias de diferenciación celular.
+
+\medskip
+\textbf{Astronomía:} el relevamiento Gaia de mil millones de estrellas usa UMAP para explorar relaciones entre parámetros estelares.
+
+\medskip
+\textbf{Ciberseguridad:} visualizar tráfico de red para detectar patrones anómalos en espacios de alta dimensión.
+
+\medskip
+\textbf{Materiales:} explorar espacios de composiciones químicas en búsqueda de nuevos materiales con propiedades deseadas.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{LDA: reducción supervisada}
+\begin{columns}[T]
+\column{0.52\textwidth}
+LDA (Linear Discriminant Analysis) maximiza la separabilidad entre clases \textbf{conocidas}.
+
+\medskip
+\textbf{Criterio de Fisher:}
+\[
+J(\mathbf{w}) = \frac{\mathbf{w}^\top \mathbf{S}_B\, \mathbf{w}}{\mathbf{w}^\top \mathbf{S}_W\, \mathbf{w}}
+\]
+
+$\mathbf{S}_B$: dispersión \textbf{entre} clases.\\
+$\mathbf{S}_W$: dispersión \textbf{dentro} de clases.
+
+\medskip
+La solución son los autovectores de $\mathbf{S}_W^{-1}\mathbf{S}_B$.
+
+Con $k$ clases: hasta $\min(k-1, p)$ dimensiones.
+
+\medskip
+\begin{concepto}
+PCA busca la dirección de mayor varianza total. LDA busca la dirección que mejor \textbf{separa} los grupos: que las nubes de cada clase queden juntas entre sí y lejos de las demás.
+\end{concepto}
+
+\column{0.45\textwidth}
+\begin{atencion}
+LDA es \textbf{supervisado}: requiere etiquetas de clase. Es útil como exploración (¿son las clases linealmente separables?) y como preprocesamiento antes de un clasificador.
+\end{atencion}
+
+\medskip
+\begin{aplicacion}
+\textbf{Medicina:} reducir decenas de biomarcadores a 1--2 ejes discriminantes entre ``sano'', ``pre-enfermo'' y ``enfermo''.
+
+\medskip
+\textbf{Reconocimiento facial:} Fisherfaces -- variante de LDA que supera a eigenfaces (PCA) porque maximiza la separación entre personas.
+
+\medskip
+\textbf{Enología:} clasificar vinos por origen a partir de 13 variables químicas. Con LDA, 2 ejes discriminantes separan perfectamente las tres regiones productoras.
+
+\medskip
+\textbf{Arqueometría:} separar vasijas de distintas culturas por composición química de la arcilla.
+
+\medskip
+\textbf{Marketing:} separar compradores de no compradores a partir de variables demográficas.
+\end{aplicacion}
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------------
+\begin{frame}{Resumen: Bloque 2 -- Representación de datos}
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+{\small
+\begin{tabular}{lllll}
+\toprule
+\textbf{Método} & \textbf{Transformación} & \textbf{Estructura} & \textbf{Sup.} & \textbf{Uso típico} \\
+\midrule
+PCA   & Lineal    & Global (varianza)   & No & Preprocesamiento, exploración \\
+t-SNE & No lineal & Local               & No & Visualización 2D \\
+UMAP  & No lineal & Local + global      & No & Visualización, preprocesamiento \\
+LDA   & Lineal    & Separabilidad       & Sí & Exploración supervisada, clasificación \\
+\bottomrule
+\end{tabular}
+}
+\end{center}
+
+\medskip
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{Regla práctica:}
+\begin{itemize}
+  \item Para preprocesamiento y comprensión $\to$ \textbf{PCA}.
+  \item Para visualización exploratoria $\to$ \textbf{UMAP} (o t-SNE).
+  \item Si tengo etiquetas y quiero ver separabilidad $\to$ \textbf{LDA}.
+  \item Nunca usar t-SNE/UMAP para inferir distancias entre clusters.
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{Pipeline típico:}
+\begin{enumerate}
+  \item Estandarizar variables.
+  \item PCA para reducir dimensión y eliminar colinealidad.
+  \item UMAP para visualización del espacio reducido.
+  \item LDA si hay clases y quiero ver su separabilidad.
+\end{enumerate}
+\end{columns}
+\end{frame}
+
+\end{document}
