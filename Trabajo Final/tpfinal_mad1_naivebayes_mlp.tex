@@ -1,0 +1,228 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{parskip}
+
+\definecolor{azulUNS}{RGB}{30,60,120}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=azulUNS,
+    urlcolor=azulUNS,
+    citecolor=azulUNS
+}
+
+\titleformat{\section}
+    {\color{azulUNS}\normalfont\large\bfseries}
+    {\thesection.}{0.6em}{}
+\titleformat{\subsection}
+    {\color{azulUNS}\normalfont\normalsize\bfseries}
+    {\thesubsection}{0.6em}{}
+
+\titlespacing*{\section}{0pt}{1.4em}{0.6em}
+
+\newcommand{\codigo}[1]{\texttt{#1}}
+
+\begin{document}
+
+\begin{center}
+    {\color{azulUNS}\small Universidad Nacional del Sur}\\[2pt]
+    {\color{azulUNS}\Large\bfseries M\'etodos para el An\'alisis de Datos I (MAD1)}\\[6pt]
+    {\color{azulUNS}\rule{\textwidth}{1.2pt}}\\[8pt]
+    {\Large\bfseries Trabajo Final --- Naive Bayes vs MLP}
+\end{center}
+
+\vspace{1em}
+
+\section{Introducci\'on}
+Este trabajo final se basa en el art\'iculo \textit{Deep Learning vs. Machine Learning for Intrusion Detection in Computer Networks: A Comparative Study} (Ali et al., 2025, \textit{Applied Sciences}, 15(4), 1903), en el cual se comparan modelos de aprendizaje autom\'atico cl\'asicos contra modelos de aprendizaje profundo para la detecci\'on de intrusiones en redes de computadoras, utilizando el dataset CICIDS-2017.
+
+El objetivo es que el estudiante replique de forma cr\'itica y documentada la comparaci\'on entre \textbf{Naive Bayes} (modelo cl\'asico) y \textbf{MLP (Multilayer Perceptron)} (modelo de aprendizaje profundo), analice los resultados obtenidos y los contraste con los reportados en el paper.
+
+\section{Dataset}
+El dataset utilizado es el \textbf{CICIDS-2017} (Canadian Institute for Cybersecurity Intrusion Detection Evaluation Dataset 2017), disponible en:
+\begin{center}
+\url{https://www.unb.ca/cic/datasets/ids-2017.html}
+\end{center}
+El dataset contiene tr\'afico de red capturado durante cinco d\'ias, incluyendo tr\'afico normal y distintos tipos de ataques. En su forma original cuenta con 2.830.743 registros y 79 columnas, incluyendo una columna de etiqueta (\textit{Label}) con las categor\'ias de tr\'afico.
+
+\section{Preprocesamiento}
+Seguir los pasos de preprocesamiento descritos en el paper. Se indica el pseudoc\'odigo y los valores de referencia obtenidos por los autores.
+
+\subsection*{Paso 1 --- Eliminar duplicados}
+Identificar y eliminar registros duplicados. El paper reporta \textbf{308.381 duplicados} eliminados.
+
+\subsection*{Paso 2 --- Tratar valores faltantes}
+Identificar columnas con valores nulos e imputar con la media de cada columna. El paper reporta \textbf{353 valores faltantes}.
+
+\subsection*{Paso 3 --- Eliminar valores infinitos}
+Algunas columnas contienen valores $\pm\infty$ producto del c\'alculo de \textit{features} de red. Eliminar las filas que los contengan.
+
+\subsection*{Paso 4 --- Consolidar etiquetas}
+La columna \textit{Label} contiene variantes textuales de los tipos de ataque con diferencias en may\'usculas, espacios y guiones seg\'un el archivo CSV de origen (por ejemplo: ``Web Attack -- Brute Force'', ``Web Attack -- XSS'', ``Web Attack -- Sql Injection''). Para simplificar la clasificaci\'on, consolidar las etiquetas similares bajo una categor\'ia com\'un. Se provee el mapeo a utilizar:
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item etiquetas que contienen ``Web Attack'' $\rightarrow$ ``Web Attack''
+    \item etiquetas que contienen ``DoS'' $\rightarrow$ ``DoS''
+    \item etiquetas que contienen ``DDoS'' $\rightarrow$ ``DDoS''
+    \item etiquetas que contienen ``PortScan'' $\rightarrow$ ``PortScan''
+    \item etiquetas que contienen ``Bot'' $\rightarrow$ ``Bot''
+    \item ``BENIGN'' $\rightarrow$ ``BENIGN''
+    \item resto $\rightarrow$ ``Other''
+\end{itemize}
+\textit{Nota: usar \codigo{str.contains()} con expresiones regulares simples o \codigo{str.strip()} para normalizar espacios antes de aplicar el mapeo.}
+
+\subsection*{Paso 5 --- Escalado de \textit{features}}
+Aplicar estandarizaci\'on (media 0, desv\'io 1) a todas las columnas num\'ericas excepto la etiqueta. Ajustar el \codigo{StandardScaler} sobre el conjunto de entrenamiento y aplicar la transformaci\'on a \textit{train} y \textit{test}.
+
+\subsection*{Paso 6 --- Balanceo de clases con SMOTE}
+El dataset es altamente desbalanceado (la clase BENIGN domina ampliamente). Aplicar SMOTE (Synthetic Minority Over-sampling Technique) \textbf{solo sobre el conjunto de entrenamiento}, luego de separar en \textit{train}/\textit{test} con estratificaci\'on por etiqueta.
+
+\subsection*{Paso 7 --- Selecci\'on de \textit{features} por correlaci\'on}
+Calcular la matriz de correlaci\'on entre \textit{features} y eliminar aquellas con correlaci\'on absoluta superior a 0,85 con otra \textit{feature}, conservando solo una de cada par altamente correlacionado.
+
+\section{Marco te\'orico}
+Elaborar una explicaci\'on te\'orica de cada uno de los dos algoritmos asignados: \textbf{Naive Bayes} y \textbf{MLP (Multilayer Perceptron)}. La explicaci\'on debe incluir:
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Intuici\'on del algoritmo: ?`qu\'e problema resuelve y c\'omo lo aborda?
+    \item Arquitectura o estructura del modelo (con especial \'enfasis en la arquitectura para los modelos de aprendizaje profundo).
+    \item Hiperpar\'ametros principales y su efecto sobre el modelo.
+    \item Fortalezas y limitaciones conocidas del algoritmo.
+\end{itemize}
+
+\textbf{Bibliograf\'ia obligatoria:}
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Para \textbf{Naive Bayes}: Hastie, T., Tibshirani, R. \& Friedman, J. --- \textit{The Elements of Statistical Learning} (\url{https://hastie.su.domains/ElemStatLearn/}). Ver Capítulo 6, Sección 6.6 (Naive Bayes).
+    \item Para \textbf{MLP (Multilayer Perceptron)}: Goodfellow, I., Bengio, Y. \& Courville, A. --- \textit{Deep Learning} (\url{https://www.deeplearningbook.org/}). Ver Capítulo 6 (Redes neuronales profundas / MLP).
+    \item Ali, M.L. et al. (2025). Deep Learning vs. Machine Learning for Intrusion Detection in Computer Networks: A Comparative Study. \textit{Applied Sciences}, 15(4), 1903.
+\end{itemize}
+
+\section{Implementaci\'on}
+Implementar ambos modelos (\textbf{Naive Bayes} y \textbf{MLP (Multilayer Perceptron)}) en un Jupyter Notebook, siguiendo el pipeline de preprocesamiento descripto en la secci\'on 3. El notebook debe ser \textbf{reproducible} y \textbf{auto-contenido}: cualquier persona debe poder ejecutarlo de principio a fin sin intervenci\'on manual, y las celdas de texto (markdown) deben explicar cada etapa.
+
+Para cada modelo, reportar: \textit{accuracy}, F1-score (macro y ponderado), \textit{precision} y \textit{recall}.
+
+\section{Evaluaci\'on y comparaci\'on con el paper}
+Contrastar los resultados obtenidos con los reportados en Ali et al. (2025). Los valores de referencia del paper son:
+
+\begin{center}
+\begin{tabular}{lcc}
+        \toprule
+        \textbf{M\'etrica} & \textbf{Naive Bayes} & \textbf{MLP (Multilayer Perceptron)} \\
+        \midrule
+        Accuracy & 64,59\% & 97,00\% \\
+        F1-score (macro) & 48,70\% & 82,00\% \\
+        F1-score (ponderado) & 71,00\% & 98,00\% \\
+        \bottomrule
+\end{tabular}
+\end{center}
+
+Discutir brevemente las diferencias entre los resultados propios y los del paper, identificando posibles causas (versi\'on del dataset, hiperpar\'ametros, semilla aleatoria, etc.).
+
+\section{An\'alisis cr\'itico}
+Una de las conclusiones m\'as llamativas del paper es que los modelos cl\'asicos de aprendizaje autom\'atico (en particular Random Forest y Decision Tree) superan a los modelos de aprendizaje profundo en este dataset, a pesar de que el aprendizaje profundo suele asociarse con resultados de vanguardia en muchas tareas.
+
+Elaborar un an\'alisis cr\'itico de este fen\'omeno \textbf{para el par asignado (Naive Bayes vs MLP)}, respondiendo al menos las siguientes preguntas:
+\begin{enumerate}[leftmargin=2em,itemsep=2pt]
+    \item ?`Qu\'e resultado obtiene cada modelo (Naive Bayes vs MLP (Multilayer Perceptron)) en t\'erminos de \textit{accuracy} y F1? ?`Cu\'al supera al otro en este experimento?
+    \item ?`Por qu\'e cre\'es que el modelo cl\'asico obtiene ese resultado en un dataset tabular estructurado como CICIDS-2017? ?`Qu\'e caracter\'isticas del dataset favorecen o perjudican a cada tipo de modelo?
+    \item ?`En qu\'e tipo de problemas o datos esperar\'ias que el modelo de aprendizaje profundo superara al cl\'asico? Justificar.
+    \item ?`Qu\'e rol juega el costo computacional en la elecci\'on de un modelo para un sistema de detecci\'on de intrusiones en producci\'on?
+\end{enumerate}
+
+\section{?`Cu\'ando gana el aprendizaje profundo?}
+El resultado del paper no implica que MLP (Multilayer Perceptron) sea un modelo inferior en general. Los modelos de aprendizaje profundo tienen ventajas estructurales en ciertos tipos de datos y problemas. El objetivo de esta secci\'on es identificar y demostrar un caso donde \textbf{MLP (Multilayer Perceptron)} supere claramente a \textbf{Naive Bayes}.
+
+\textbf{Opciones (elegir una):}
+\begin{itemize}[leftmargin=2em,itemsep=3pt]
+    \item \textbf{Opci\'on A --- Paper real:} buscar en la literatura un paper donde el modelo de aprendizaje profundo asignado supere claramente al modelo cl\'asico asignado. Citar el paper, describir el dataset utilizado y los resultados reportados. Justificar por qu\'e ese tipo de dato favorece al aprendizaje profundo.
+    \item \textbf{Opci\'on B --- Toy example:} construir un dataset sint\'etico donde el modelo de aprendizaje profundo tenga una ventaja estructural demostrable (por ejemplo, datos con dependencias temporales, patrones espaciales, o relaciones no lineales complejas). Implementar ambos modelos sobre ese dataset en el notebook y mostrar emp\'iricamente que el aprendizaje profundo gana.
+\end{itemize}
+
+\textbf{En ambos casos, justificar:}
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item ?`Qu\'e caracter\'isticas del dato o del problema favorecen al modelo de aprendizaje profundo?
+    \item ?`Por qu\'e el modelo cl\'asico tiene dificultades en ese contexto?
+    \item ?`Qu\'e conclusi\'on general se puede extraer sobre cu\'ando conviene usar cada tipo de modelo?
+\end{itemize}
+\textit{Esta secci\'on debe estar presente tanto en el notebook (con c\'odigo y an\'alisis) como en las slides Beamer (con resultados y conclusiones).}
+
+\section{Presentaci\'on Beamer}
+Preparar una presentaci\'on en LaTeX/Beamer que acompa\~ne el notebook. La presentaci\'on debe tener entre \textbf{20 y 30 slides} y seguir la siguiente estructura:
+\begin{enumerate}[leftmargin=2em,itemsep=3pt]
+    \item \textbf{Portada.} T\'itulo del trabajo, nombre del estudiante, par de algoritmos asignado, curso y fecha.
+    \item \textbf{Introducci\'on al problema.} Motivaci\'on de la detecci\'on de intrusiones en redes. Presentaci\'on del paper de referencia y su pregunta central. ?`Por qu\'e comparar ML cl\'asico vs aprendizaje profundo?
+    \item \textbf{Descripci\'on del dataset.} Qu\'e es CICIDS-2017, c\'omo fue generado, qu\'e tipos de ataques contiene. Distribuci\'on de clases antes y despu\'es de SMOTE.
+    \item \textbf{Explicaci\'on te\'orica de los algoritmos.} Una secci\'on por algoritmo (Naive Bayes y MLP (Multilayer Perceptron)). Incluir intuici\'on, arquitectura (con especial detalle para el modelo de aprendizaje profundo) e hiperpar\'ametros principales. Apoyarse en figuras o diagramas cuando sea posible.
+    \item \textbf{Pipeline de preprocesamiento.} Resumen visual de los pasos aplicados: eliminaci\'on de duplicados, imputaci\'on, valores infinitos, consolidaci\'on de etiquetas, escalado, SMOTE y selecci\'on de \textit{features}.
+    \item \textbf{Resultados obtenidos vs. paper.} Tabla comparativa de m\'etricas propias vs. las del paper. Gr\'aficos de matriz de confusi\'on para cada modelo.
+    \item \textbf{An\'alisis cr\'itico.} Discusi\'on sobre por qu\'e los cl\'asicos superan al aprendizaje profundo en CICIDS-2017. Reflexi\'on sobre las condiciones bajo las cuales el aprendizaje profundo ser\'ia preferible.
+    \item \textbf{?`Cu\'ando gana el aprendizaje profundo?} Presentaci\'on del paper encontrado o del toy example construido. Resultados comparativos y conclusi\'on general sobre cu\'ando usar cada tipo de modelo.
+\end{enumerate}
+\textit{La presentaci\'on debe entregarse como archivo .tex y .pdf. Debe ser auto-contenida: alguien que no haya visto el notebook debe poder comprender el trabajo leyendo solo las slides.}
+
+\section{Estructura del repositorio (entrega en GitHub)}
+El trabajo se entrega como un repositorio de GitHub, siguiendo la estructura de proyecto vista en la Unidad 6 (Bloque 5: Portfolio profesional):
+\begin{center}
+\begin{minipage}{0.82\textwidth}
+\codigo{mi\_proyecto/}\\
+\codigo{\phantom{x}├── README.md}\\
+\codigo{\phantom{x}├── data/}\\
+\codigo{\phantom{x}│\phantom{xx}├── raw/}\hfill (datos originales, nunca modificados)\\
+\codigo{\phantom{x}│\phantom{xx}└── processed/}\hfill (datos limpios, listos para modelar)\\
+\codigo{\phantom{x}├── notebooks/}\hfill (numerados por orden de ejecuci\'on)\\
+\codigo{\phantom{x}├── src/}\\
+\codigo{\phantom{x}│\phantom{xx}└── utils.py}\hfill (funciones reutilizables)\\
+\codigo{\phantom{x}├── reports/}\hfill (la presentaci\'on Beamer compilada)\\
+\codigo{\phantom{x}└── requirements.txt}
+\end{minipage}
+\end{center}
+
+El \codigo{README.md} debe seguir las siete secciones m\'inimas vistas en clase: (1) t\'itulo y descripci\'on breve; (2) motivaci\'on; (3) datos (origen, tama\~no, variables principales); (4) metodolog\'ia (qu\'e t\'ecnicas se usaron y por qu\'e); (5) resultados principales; (6) c\'omo ejecutar; (7) limitaciones y pr\'oximos pasos.
+
+\textit{Si los datos son grandes o sensibles, subir solo una muestra o las instrucciones para obtenerlos.}
+
+\section{Entregables}
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item \codigo{tpfinal\_mad1\_naivebayes\_mlp.ipynb} --- Jupyter Notebook completo y reproducible
+    \item \codigo{tpfinal\_mad1\_naivebayes\_mlp.tex} --- C\'odigo fuente de la presentaci\'on Beamer
+    \item \codigo{tpfinal\_mad1\_naivebayes\_mlp.pdf} --- PDF compilado de la presentaci\'on
+    \item \codigo{tpfinal\_mad1\_naivebayes\_mlp\_chat.json} --- Conversaci\'on completa con la herramienta de IA utilizada
+\end{itemize}
+
+\section{Documentaci\'on del uso de IA}
+El uso de herramientas de IA (ChatGPT, Claude, etc.) est\'a permitido durante el desarrollo del trabajo.
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Utilizar una \textbf{\'unica sesi\'on de chat} para todo el desarrollo del trabajo, de principio a fin.
+    \item Al finalizar, exportar esa conversaci\'on completa y entregarla junto con el resto de los archivos. En ChatGPT: Configuraci\'on $\rightarrow$ Exportar datos, se entrega el archivo \codigo{conversations.json}. Alternativamente, el chat en texto plano.
+    \item Nombrar el archivo como \codigo{tpfinal\_mad1\_naivebayes\_mlp\_chat.json} (o \codigo{.txt}).
+\end{itemize}
+
+\section{Criterios de evaluaci\'on}
+La mitad de la nota depende del \textbf{Jupyter Notebook}, evaluado en base a:
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Reproducibilidad: el notebook corre de principio a fin sin intervenci\'on.
+    \item Auto-contenido: las celdas markdown explican cada etapa sin necesidad de consultar el paper.
+    \item Claridad del c\'odigo: organizado, comentado y sin celdas innecesarias.
+    \item Correctitud de resultados: m\'etricas comparables a las del paper.
+\end{itemize}
+
+La otra mitad depende de la \textbf{presentaci\'on Beamer}, evaluada en base a:
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Claridad: cada slide transmite una sola idea principal.
+    \item Explicabilidad: los algoritmos quedan explicados para alguien que no los conoce.
+    \item Auto-contenida: la presentaci\'on se entiende sola, sin el notebook.
+    \item Calidad de la presentaci\'on: uso correcto del template, sin exceso de texto.
+\end{itemize}
+
+\textit{La organizaci\'on del repositorio (estructura de carpetas y README) tambi\'en se considera en la evaluaci\'on, en l\'inea con lo visto en la Unidad 6.}
+
+\textit{A criterio del docente, se podr\'a solicitar una presentaci\'on oral como instancia de desempate o verificaci\'on.}
+
+\end{document}

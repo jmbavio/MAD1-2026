@@ -1,0 +1,180 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{parskip}
+
+\definecolor{azulUNS}{RGB}{30,60,120}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=azulUNS,
+    urlcolor=azulUNS,
+    citecolor=azulUNS
+}
+
+\titleformat{\section}
+    {\color{azulUNS}\normalfont\large\bfseries}
+    {\thesection.}{0.6em}{}
+\titleformat{\subsection}
+    {\color{azulUNS}\normalfont\normalsize\bfseries}
+    {\thesubsection}{0.6em}{}
+
+\titlespacing*{\section}{0pt}{1.4em}{0.6em}
+
+\newcommand{\codigo}[1]{\texttt{#1}}
+
+\begin{document}
+
+\begin{center}
+    {\color{azulUNS}\small Universidad Nacional del Sur}\\[2pt]
+    {\color{azulUNS}\Large\bfseries M\'etodos para el An\'alisis de Datos I (MAD1)}\\[6pt]
+    {\color{azulUNS}\rule{\textwidth}{1.2pt}}\\[8pt]
+    {\Large\bfseries Trabajo Final --- Opci\'on Dataset Propio}\\[4pt]
+    {\large Un recorrido completo por las unidades de la materia sobre datos elegidos por el estudiante}
+\end{center}
+
+\vspace{1em}
+
+\section{Introducci\'on}
+A diferencia de las otras opciones del trabajo final, que replican un paper sobre un dataset fijo, esta opci\'on es \textbf{abierta}: el estudiante elige su propio conjunto de datos y lo recorre de punta a punta aplicando las t\'ecnicas vistas en la materia.
+
+El objetivo no es lograr el mejor modelo posible, sino \textbf{demostrar criterio}. En cada etapa el estudiante debe:
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Aplicar una t\'ecnica vista en clase sobre su dataset.
+    \item Justificar por qu\'e eligi\'o esa t\'ecnica y, sobre todo, \textbf{por qu\'e descart\'o las alternativas vistas} en la materia.
+    \item Investigar de forma aut\'onoma una t\'ecnica que qued\'o \textbf{fuera del programa} y explicarla brevemente (una o dos slides). Las t\'ecnicas investigadas \textbf{no se aplican}: solo se explican en el informe.
+\end{itemize}
+
+\section{Elecci\'on del dataset}
+El estudiante elige libremente su dataset, pero este debe cumplir condiciones m\'inimas para que sea posible recorrer todas las unidades de la materia con \'el:
+\begin{itemize}[leftmargin=2em,itemsep=3pt]
+    \item \textbf{Variable objetivo (target):} debe tener al menos una variable que sirva como objetivo de un modelo supervisado (categ\'orica para clasificaci\'on o num\'erica para regresi\'on).
+    \item \textbf{Variables explicativas:} al menos 6--8 variables predictoras, para que la reducci\'on de dimensi\'on, la imputaci\'on y la exploraci\'on tengan sentido.
+    \item \textbf{Tama\~no:} al menos unas 500 observaciones (filas), para que la partici\'on en \textit{train}/\textit{test} sea razonable.
+    \item \textbf{Originalidad:} \textbf{no} puede ser uno de los datasets ``juguete'' de \codigo{sklearn} (Iris, Wine, Breast Cancer, Digits, etc.) ni el CICIDS-2017 usado en las otras opciones.
+    \item \textbf{Realismo:} idealmente que presente algo de ``suciedad'' real (valores faltantes, variables de distinto tipo, escalas dispares), para que la etapa de preparaci\'on no sea trivial.
+\end{itemize}
+En el informe se debe incluir una breve descripci\'on del dataset: origen, cantidad de filas y columnas, tipos de variables, significado de la variable objetivo y por qu\'e resulta interesante de analizar.
+
+\section{Estructura del trabajo por bloques}
+El trabajo se organiza en cinco bloques, que siguen las unidades de la materia. En cada bloque, salvo que se indique lo contrario, el estudiante \textbf{aplica} una t\'ecnica vista (justificando su elecci\'on y el descarte de las alternativas vistas) y adem\'as \textbf{investiga} una t\'ecnica fuera del programa, que solo explica (no aplica). La investigaci\'on es libre: la idea es que el estudiante explore por su cuenta qu\'e existe m\'as all\'a de lo visto, no que complete una lista cerrada.
+
+\subsection*{Bloque 1 --- Obtenci\'on y preparaci\'on de datos (U1)}
+\textbf{Aplicar:} carga y limpieza del dataset, tratamiento de valores faltantes con un m\'etodo visto, escalado o normalizaci\'on de variables num\'ericas, codificaci\'on de variables categ\'oricas. Justificar cada decisi\'on y por qu\'e se descartaron las otras opciones vistas (por ejemplo: ?`por qu\'e mediana y no media? ?`por qu\'e estandarizar y no normalizar?).
+
+\textbf{Investigar (explicar, no aplicar):} un m\'etodo de \textbf{tratamiento de valores faltantes} m\'as sofisticado que los vistos en la materia. Explicar en qu\'e consiste y en qu\'e situaciones aportar\'ia respecto de la imputaci\'on simple.
+
+\subsection*{Bloque 2 --- Exploraci\'on y visualizaci\'on (U2)}
+\textbf{Aplicar:} un an\'alisis exploratorio (EDA) con los gr\'aficos vistos en clase. Justificar qu\'e gr\'afico usa para responder qu\'e pregunta, y por qu\'e ese y no otro de los vistos.
+
+\textbf{Investigar (explicar, no aplicar):} un \textbf{tipo de gr\'afico exploratorio} que no se vio en la materia. Explicar qu\'e tipo de informaci\'on permite ver y en qu\'e caso ser\'ia preferible a los vistos.
+
+\subsection*{Bloque 3 --- Modelado estad\'istico y aprendizaje supervisado (U3 + U4)}
+\textbf{Aplicar:} al menos un modelo supervisado visto en clase (regresi\'on lineal, regresi\'on log\'istica, o un clasificador visto), con su evaluaci\'on correspondiente (m\'etricas, partici\'on \textit{train}/\textit{test}, interpretaci\'on de coeficientes o de la importancia de variables). Justificar la elecci\'on del modelo seg\'un el tipo de problema y de variable objetivo, y por qu\'e se descartaron los otros modelos vistos.
+
+\textbf{Investigar (explicar, no aplicar):} un \textbf{modelo supervisado} que no se vio en la materia. Explicar su idea principal y en qu\'e se diferenciar\'ia del modelo aplicado.
+
+\subsection*{Bloque 4 --- Aprendizaje no supervisado (U5)}
+\textbf{Aplicar:} una t\'ecnica no supervisada vista en clase (clustering o reducci\'on de dimensi\'on), interpretando los resultados sobre su dataset. Justificar la elecci\'on y el descarte de las alternativas vistas (por ejemplo: ?`c\'omo eligi\'o el n\'umero de clusters?).
+
+\textbf{Investigar (explicar, no aplicar):} una \textbf{t\'ecnica no supervisada} que no se vio en la materia. Explicar su idea y en qu\'e se diferencia de la t\'ecnica aplicada.
+
+\subsection*{Bloque 5 --- Predicci\'on y comunicaci\'on de resultados (U6)}
+\textbf{Aplicar:} una s\'intesis visual y narrativa de los resultados del trabajo, con las herramientas de comunicaci\'on vistas en clase: gr\'aficos finales claros, interpretaci\'on de los hallazgos y conclusiones para una audiencia no t\'ecnica. Justificar qu\'e resultados decide destacar y por qu\'e.
+
+\textit{Este bloque no lleva parte de investigaci\'on: es el cierre del recorrido.}
+
+\section{Implementaci\'on}
+El desarrollo se organiza en \textbf{varios notebooks}, numerados por orden de ejecuci\'on y ubicados en la carpeta \codigo{notebooks/} del repositorio (por ejemplo, uno por bloque: \codigo{01\_preparacion.ipynb}, \codigo{02\_exploracion.ipynb}, etc., o el agrupamiento que el estudiante considere m\'as claro). Cada notebook debe ser \textbf{reproducible} y \textbf{auto-contenido}: cualquier persona debe poder ejecutarlo de principio a fin sin intervenci\'on manual, y las celdas de texto (markdown) deben explicar cada etapa, incluyendo las justificaciones pedidas en cada bloque. El dataset debe quedar accesible en la carpeta \codigo{data/} del repositorio o ser descargable desde una URL p\'ublica indicada en el c\'odigo.
+
+\section{Hilo conductor y conclusiones}
+El trabajo no debe leerse como cinco ejercicios sueltos, sino como un \textbf{recorrido coherente} sobre un mismo dataset. En la conclusi\'on, el estudiante debe responder:
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item ?`Qu\'e aprendi\'o sobre su dataset a lo largo del recorrido?
+    \item De las t\'ecnicas que investig\'o por su cuenta, ?`cu\'al le pareci\'o m\'as prometedora para sus datos y por qu\'e?
+    \item Si tuviera que seguir trabajando este dataset, ?`qu\'e har\'ia a continuaci\'on?
+\end{itemize}
+
+\section{Estructura del repositorio (entrega en GitHub)}
+El trabajo se entrega como un repositorio de GitHub, siguiendo la estructura de proyecto vista en la Unidad 6 (Bloque 5: Portfolio profesional):
+\begin{center}
+\begin{minipage}{0.82\textwidth}
+\codigo{mi\_proyecto/}\\
+\codigo{\phantom{x}├── README.md}\\
+\codigo{\phantom{x}├── data/}\\
+\codigo{\phantom{x}│\phantom{xx}├── raw/}\hfill (datos originales, nunca modificados)\\
+\codigo{\phantom{x}│\phantom{xx}└── processed/}\hfill (datos limpios, listos para modelar)\\
+\codigo{\phantom{x}├── notebooks/}\hfill (numerados por orden de ejecuci\'on)\\
+\codigo{\phantom{x}├── src/}\\
+\codigo{\phantom{x}│\phantom{xx}└── utils.py}\hfill (funciones reutilizables)\\
+\codigo{\phantom{x}├── reports/}\hfill (la presentaci\'on Beamer compilada)\\
+\codigo{\phantom{x}└── requirements.txt}
+\end{minipage}
+\end{center}
+
+El \codigo{README.md} debe seguir las siete secciones m\'inimas vistas en clase: (1) t\'itulo y descripci\'on breve; (2) motivaci\'on; (3) datos (origen, tama\~no, variables principales); (4) metodolog\'ia (qu\'e t\'ecnicas se usaron y por qu\'e); (5) resultados principales; (6) c\'omo ejecutar; (7) limitaciones y pr\'oximos pasos.
+
+\textit{Si los datos son grandes o sensibles, subir solo una muestra o las instrucciones para obtenerlos.}
+
+\section{Informe en formato Beamer}
+El informe del trabajo se entrega \textbf{en formato de presentaci\'on Beamer} (no como documento de texto corrido). Debe tener entre \textbf{20 y 30 slides} y seguir el recorrido del trabajo:
+\begin{enumerate}[leftmargin=2em,itemsep=3pt]
+    \item \textbf{Portada.} T\'itulo, nombre del estudiante, dataset elegido, curso y fecha.
+    \item \textbf{Presentaci\'on del dataset.} Origen, variables, variable objetivo, por qu\'e es interesante.
+    \item \textbf{Preparaci\'on (U1).} Decisiones de limpieza e imputaci\'on, con justificaci\'on. Slide(s) con la t\'ecnica investigada.
+    \item \textbf{Exploraci\'on (U2).} Hallazgos del EDA. Slide(s) con el gr\'afico investigado.
+    \item \textbf{Modelado supervisado (U3+U4).} Modelo aplicado con m\'etricas. Slide(s) con el modelo investigado.
+    \item \textbf{No supervisado (U5).} T\'ecnica aplicada e interpretaci\'on. Slide(s) con la t\'ecnica investigada.
+    \item \textbf{Comunicaci\'on y conclusiones (U6).} S\'intesis visual, qu\'e se aprendi\'o del dataset y de las t\'ecnicas nuevas.
+\end{enumerate}
+\textit{La presentaci\'on debe entregarse como archivo .tex y .pdf, y debe ser auto-contenida: alguien que no haya visto el notebook debe poder comprender el trabajo leyendo solo las slides.}
+
+\section{Entregables}
+El trabajo se entrega como un \textbf{repositorio de GitHub} con la estructura de la secci\'on 4, que debe contener:
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Los \textbf{notebooks} completos y reproducibles, numerados por orden de ejecuci\'on (en \codigo{notebooks/}).
+    \item El \textbf{dataset} utilizado, o las instrucciones para obtenerlo (en \codigo{data/}).
+    \item El informe en \textbf{Beamer}: archivos \codigo{.tex} y \codigo{.pdf} (el \codigo{.pdf} en \codigo{reports/}).
+    \item El \codigo{README.md} con las siete secciones.
+    \item El archivo \codigo{requirements.txt} con las dependencias.
+    \item \codigo{tpfinal\_mad1\_dataset\_propio\_chat.json} --- Conversaci\'on completa con la herramienta de IA utilizada. (NO SE SUBE AL REPOSITORIO, SINO QUE SE ENVIA POR MAIL)
+\end{itemize}
+
+\section{Documentaci\'on del uso de IA}
+El uso de herramientas de IA (ChatGPT, Claude, etc.) est\'a permitido durante el desarrollo del trabajo.
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Utilizar una \textbf{\'unica sesi\'on de chat} para todo el desarrollo del trabajo, de principio a fin.
+    \item Al finalizar, exportar esa conversaci\'on completa y entregarla junto con el resto de los archivos. En ChatGPT: Configuraci\'on $\rightarrow$ Exportar datos, se entrega el archivo \codigo{conversations.json}. Alternativamente, el chat en texto plano.
+    \item Nombrar el archivo como \codigo{tpfinal\_mad1\_dataset\_propio\_chat.json} (o \codigo{.txt}).
+\end{itemize}
+
+\section{Criterios de evaluaci\'on}
+La mitad de la nota depende del \textbf{Jupyter Notebook}, evaluado en base a:
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Reproducibilidad: el notebook corre de principio a fin sin intervenci\'on.
+    \item Auto-contenido: las celdas markdown explican y justifican cada etapa.
+    \item \textbf{Calidad de las justificaciones}: por qu\'e se eligi\'o cada t\'ecnica y por qu\'e se descartaron las alternativas vistas. Este es el coraz\'on de esta opci\'on.
+    \item Investigaci\'on aut\'onoma: las t\'ecnicas fuera del programa est\'an bien comprendidas y explicadas.
+    \item Coherencia: el trabajo se lee como un recorrido \'unico, no como ejercicios sueltos.
+\end{itemize}
+
+La otra mitad depende del \textbf{informe en Beamer}, evaluado en base a:
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Claridad: cada slide transmite una sola idea principal.
+    \item Explicabilidad: las t\'ecnicas (aplicadas e investigadas) quedan explicadas para alguien que no las conoce.
+    \item Auto-contenido: la presentaci\'on se entiende sola, sin el notebook.
+    \item Calidad de la presentaci\'on: uso correcto del template, sin exceso de texto.
+\end{itemize}
+
+\textit{La organizaci\'on del repositorio (estructura de carpetas y README) tambi\'en se considera en la evaluaci\'on, en l\'inea con lo visto en la Unidad 6.}
+
+\textit{A criterio del docente, se podr\'a solicitar una presentaci\'on oral como instancia de desempate o verificaci\'on.}
+
+\end{document}

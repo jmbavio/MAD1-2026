@@ -1,0 +1,234 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{parskip}
+
+\definecolor{azulUNS}{RGB}{30,60,120}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=azulUNS,
+    urlcolor=azulUNS,
+    citecolor=azulUNS
+}
+
+\titleformat{\section}
+    {\color{azulUNS}\normalfont\large\bfseries}
+    {\thesection.}{0.6em}{}
+\titleformat{\subsection}
+    {\color{azulUNS}\normalfont\normalsize\bfseries}
+    {\thesubsection}{0.6em}{}
+
+\titlespacing*{\section}{0pt}{1.4em}{0.6em}
+
+\newcommand{\codigo}[1]{\texttt{#1}}
+
+\begin{document}
+
+\begin{center}
+    {\color{azulUNS}\small Universidad Nacional del Sur}\\[2pt]
+    {\color{azulUNS}\Large\bfseries M\'etodos para el An\'alisis de Datos I (MAD1)}\\[6pt]
+    {\color{azulUNS}\rule{\textwidth}{1.2pt}}\\[8pt]
+    {\Large\bfseries Trabajo Final --- Opci\'on E}\\[4pt]
+    {\large Logistic Regression + LDA vs. Autoencoder + Logistic Regression}
+\end{center}
+
+\vspace{1em}
+
+\section{Introducci\'on}
+Este trabajo final se basa en el art\'iculo \textit{A Deterministic Comparison of Classical Machine Learning and Hybrid Deep Representation Models for Intrusion Detection on NSL-KDD and CICIDS2017} (Arcos-Argudo, M., Bojorque, R. \& Torres, A., 2025, \textit{Algorithms}, 18(12), 749), en el cual se comparan clasificadores cl\'asicos contra un pipeline h\'ibrido que incorpora una componente de aprendizaje profundo, evaluados sobre el dataset CICIDS-2017.
+
+El objetivo es que el estudiante replique de forma cr\'itica y documentada la comparaci\'on entre dos clasificadores cl\'asicos lineales (\textbf{Logistic Regression} y \textbf{Linear Discriminant Analysis}) y un pipeline h\'ibrido de representaci\'on (\textbf{Autoencoder + Logistic Regression}), analice los resultados obtenidos y los contraste con los reportados en el paper (Tabla 6, r\'egimen sin SMOTE).
+
+\section{Dataset}
+El dataset utilizado es el \textbf{CICIDS-2017} (Canadian Institute for Cybersecurity Intrusion Detection Evaluation Dataset 2017), disponible en:
+\begin{center}
+\url{https://www.unb.ca/cic/datasets/ids-2017.html}
+\end{center}
+El dataset contiene tr\'afico de red capturado durante cinco d\'ias, incluyendo tr\'afico normal y distintos tipos de ataques, con aproximadamente 80 \textit{features} num\'ericas de flujo. Para este trabajo se considera el problema en su versi\'on \textbf{binaria}: clasificar cada flujo como tr\'afico normal (BENIGN) o ataque.
+
+\section{Preprocesamiento}
+Seguir los pasos de preprocesamiento de forma an\'aloga al paper. El art\'iculo ajusta todas las transformaciones \textbf{solo sobre el conjunto de entrenamiento} (sin fuga de informaci\'on) y eval\'ua sobre el conjunto de test retenido.
+
+\subsection*{Paso 1 --- Tratar valores faltantes}
+Imputar los valores faltantes de las columnas num\'ericas con la mediana, ajustada \'unicamente sobre el conjunto de entrenamiento.
+
+\subsection*{Paso 2 --- Eliminar valores infinitos}
+Algunas columnas contienen valores $\pm\infty$ producto del c\'alculo de \textit{features} de red. Eliminar o imputar las filas que los contengan antes del escalado.
+
+\subsection*{Paso 3 --- Consolidar etiquetas (binarizaci\'on)}
+La columna \textit{Label} contiene variantes textuales de los tipos de ataque con diferencias en may\'usculas, espacios y guiones seg\'un el archivo CSV de origen. Para el problema binario, mapear todas las etiquetas de ataque a una \'unica clase ``Attack'' y conservar ``BENIGN'' como la clase normal:
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item etiqueta ``BENIGN'' $\rightarrow$ 0 (normal)
+    \item cualquier otra etiqueta $\rightarrow$ 1 (ataque)
+\end{itemize}
+\textit{Nota: usar \codigo{str.strip()} para normalizar espacios antes de comparar, ya que los CSV del CIC traen nombres y etiquetas con un espacio inicial.}
+
+\subsection*{Paso 4 --- Escalado de \textit{features}}
+Aplicar escalado min--max al rango $[0,1]$ sobre las columnas num\'ericas, ajustando el escalador \textbf{solo sobre el conjunto de entrenamiento} y aplic\'andolo luego a \textit{train} y \textit{test}.
+
+\subsection*{Paso 5 --- Partici\'on train/test}
+Separar en \textit{train}/\textit{test} con proporci\'on 80/20, estratificada por la etiqueta binaria, usando una semilla fija (por ejemplo \codigo{random\_state=42}) para reproducibilidad.
+
+\textit{Aclaraci\'on: esta opci\'on se trabaja en el r\'egimen \textbf{sin SMOTE}, que es el que reporta la Tabla 6 del paper.}
+
+\section{Marco te\'orico}
+Elaborar una explicaci\'on te\'orica de cada uno de los tres modelos: \textbf{Logistic Regression (LR)}, \textbf{Linear Discriminant Analysis (LDA)} y el pipeline \textbf{Autoencoder + LR (AE+LR)}. La explicaci\'on debe incluir:
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Intuici\'on del modelo: ?`qu\'e problema resuelve y c\'omo lo aborda?
+    \item Para LR y LDA: el supuesto que hace cada uno y c\'omo construye su frontera de decisi\'on lineal. ?`En qu\'e se diferencian LR (modela directamente la probabilidad condicional) y LDA (asume distribuciones gaussianas por clase con igual covarianza)?
+    \item Para el AE+LR: la arquitectura del autoencoder (capas del \textit{encoder} y \textit{decoder}, tama\~no del espacio latente, funciones de activaci\'on) y el rol de cada componente.
+    \item Fortalezas y limitaciones conocidas de cada enfoque (interpretabilidad, costo computacional, capacidad de capturar relaciones no lineales).
+\end{itemize}
+
+\subsection*{Punto conceptual: ?`c\'omo se usa un modelo no supervisado en un problema etiquetado?}
+El autoencoder \textbf{no se usa como clasificador final}. El pipeline correcto, y el que implementa el paper, es:
+\begin{enumerate}[leftmargin=2em,itemsep=2pt]
+    \item Entrenar el autoencoder de forma no supervisada, usando \'unicamente los \textit{features} de los flujos (sin mirar la etiqueta).
+    \item Una vez entrenado, descartar el \textit{decoder} y conservar solo el \textit{encoder}.
+    \item Usar el \textit{encoder} para transformar cada observaci\'on en su representaci\'on comprimida (\textit{embedding}).
+    \item Entrenar una Logistic Regression \textbf{supervisada} sobre esos \textit{embeddings}, que s\'i utiliza las etiquetas.
+\end{enumerate}
+El autoencoder funciona como una etapa de \textit{aprendizaje de representaci\'on} (ingenier\'ia de variables autom\'atica), no como el clasificador en s\'i. Es conceptualmente an\'alogo a aplicar PCA (An\'alisis de Componentes Principales) antes de un clasificador, con la diferencia de que el autoencoder puede aprender relaciones \textbf{no lineales} entre las variables, mientras que PCA solo captura relaciones lineales.
+
+\textbf{Bibliograf\'ia obligatoria:}
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Para \textbf{LR} y \textbf{LDA}: Hastie, T., Tibshirani, R. \& Friedman, J. --- \textit{The Elements of Statistical Learning} (\url{https://hastie.su.domains/ElemStatLearn/}). Ver Cap\'itulo 4 (Linear Methods for Classification): Secci\'on 4.3 (LDA) y Secci\'on 4.4 (Logistic Regression).
+    \item Para el \textbf{Autoencoder}: Goodfellow, I., Bengio, Y. \& Courville, A. --- \textit{Deep Learning} (\url{https://www.deeplearningbook.org/}). Ver Cap\'itulo 14 (Autoencoders).
+    \item Arcos-Argudo, M., Bojorque, R. \& Torres, A. (2025). A Deterministic Comparison of Classical Machine Learning and Hybrid Deep Representation Models for Intrusion Detection on NSL-KDD and CICIDS2017. \textit{Algorithms}, 18(12), 749.
+\end{itemize}
+
+\section{Implementaci\'on}
+Implementar los tres modelos en un Jupyter Notebook, siguiendo el pipeline de preprocesamiento descripto en la secci\'on 3. El notebook debe ser \textbf{reproducible} y \textbf{auto-contenido}: cualquier persona debe poder ejecutarlo de principio a fin sin intervenci\'on manual, y las celdas de texto (markdown) deben explicar cada etapa.
+
+\begin{enumerate}[leftmargin=2em,itemsep=2pt]
+    \item Entrenar una \textbf{Logistic Regression} sobre los \textit{features} originales preprocesados.
+    \item Entrenar un \textbf{Linear Discriminant Analysis} sobre los mismos \textit{features} originales.
+    \item Entrenar un \textbf{Autoencoder} no supervisado sobre los \textit{features} de entrenamiento (sin usar etiquetas). Documentar la arquitectura elegida.
+    \item Extraer los \textit{embeddings} del \textit{encoder} para \textit{train} y \textit{test}, y entrenar una segunda Logistic Regression sobre esos \textit{embeddings} (pipeline AE+LR).
+\end{enumerate}
+Para cada modelo, reportar sobre el conjunto de test: \textit{Accuracy}, \textit{Precision}, \textit{Recall}, F1-score y AUC.
+
+\section{Evaluaci\'on y comparaci\'on con el paper}
+Contrastar los resultados obtenidos con los reportados en Arcos-Argudo et al. (2025), Tabla 6 (CICIDS-2017, sin SMOTE). Los valores de referencia son:
+
+\begin{center}
+\begin{tabular}{lccccc}
+        \toprule
+        \textbf{Modelo} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-score} & \textbf{AUC} \\
+        \midrule
+        Logistic Regression (LR) & 0,9878 & 0,9722 & 0,9783 & 0,9752 & 0,9961 \\
+        LDA & 0,9784 & 0,9426 & 0,9715 & 0,9569 & 0,9923 \\
+        Autoencoder + LR & 0,9859 & 0,9691 & 0,9738 & 0,9715 & 0,9960 \\
+        \bottomrule
+\end{tabular}
+\end{center}
+
+Discutir brevemente las diferencias entre los resultados propios y los del paper, identificando posibles causas (versi\'on del dataset, arquitectura del autoencoder, hiperpar\'ametros, semilla aleatoria, etc.).
+
+\section{An\'alisis cr\'itico}
+A diferencia de otros trabajos donde el modelo de aprendizaje profundo queda por detr\'as de los cl\'asicos, ac\'a el resultado es m\'as sutil: los tres modelos alcanzan un rendimiento muy alto y muy parecido sobre CICIDS-2017, con AUC cercano al techo ($\approx 0,996$ para LR y AE+LR). Elaborar un an\'alisis cr\'itico respondiendo al menos:
+\begin{enumerate}[leftmargin=2em,itemsep=2pt]
+    \item ?`Qu\'e modelo obtiene el mejor resultado en cada m\'etrica? ?`Las diferencias entre LR, LDA y AE+LR son grandes o marginales?
+    \item Si el AE+LR no supera claramente a LR en este dataset, ?`qu\'e justifica el costo adicional de entrenar un autoencoder? (Pista: pensar en el AUC y en la separabilidad, no solo en la accuracy.)
+    \item ?`Por qu\'e un dataset tabular y bien separable como CICIDS-2017 favorece que un modelo lineal simple como LR alcance casi el techo de rendimiento?
+    \item ?`Qu\'e diferencia hay entre LR y LDA en sus supuestos, y por qu\'e pueden dar resultados tan parecidos en este caso?
+\end{enumerate}
+
+\section{?`Cu\'ando gana el aprendizaje profundo?}
+El resultado del paper muestra que, en datos tabulares bien separables, el pipeline h\'ibrido AE+LR apenas empata con una Logistic Regression simple. El objetivo de esta secci\'on es identificar y demostrar un caso donde el aprendizaje de representaci\'on con autoencoder (o un modelo de aprendizaje profundo) aporte una ventaja \textbf{clara} sobre los modelos lineales.
+
+\textbf{Opciones (elegir una):}
+\begin{itemize}[leftmargin=2em,itemsep=3pt]
+    \item \textbf{Opci\'on A --- Paper real:} buscar en la literatura un paper donde un autoencoder o un modelo de aprendizaje profundo supere claramente a los clasificadores lineales, en un dataset apropiado (im\'agenes, texto, se\~nales, etc.). Citar el paper, describir el dataset y los resultados. Justificar por qu\'e ese tipo de dato favorece al aprendizaje profundo.
+    \item \textbf{Opci\'on B --- Toy example:} construir un dataset sint\'etico donde las clases \textbf{no} sean linealmente separables (por ejemplo, dos espirales entrelazadas, o c\'irculos conc\'entricos). Mostrar emp\'iricamente en el notebook que LR/LDA fallan, mientras que el pipeline AE+LR (o una red m\'as expresiva) logra separarlas gracias a la representaci\'on no lineal aprendida.
+\end{itemize}
+
+\textbf{En ambos casos, justificar:}
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item ?`Qu\'e caracter\'isticas del dato o del problema favorecen al aprendizaje de representaci\'on no lineal?
+    \item ?`Por qu\'e los modelos lineales (LR, LDA) tienen dificultades en ese contexto?
+    \item ?`Qu\'e conclusi\'on general se puede extraer sobre cu\'ando conviene cada tipo de modelo?
+\end{itemize}
+\textit{Esta secci\'on debe estar presente tanto en el notebook (con c\'odigo y an\'alisis) como en las slides Beamer (con resultados y conclusiones).}
+
+\section{Presentaci\'on Beamer}
+Preparar una presentaci\'on en LaTeX/Beamer que acompa\~ne el notebook. La presentaci\'on debe tener entre \textbf{20 y 30 slides} y seguir la siguiente estructura:
+\begin{enumerate}[leftmargin=2em,itemsep=3pt]
+    \item \textbf{Portada.} T\'itulo del trabajo, nombre del estudiante, opci\'on asignada, curso y fecha.
+    \item \textbf{Introducci\'on al problema.} Motivaci\'on de la detecci\'on de intrusiones en redes. Presentaci\'on del paper de referencia y su pregunta central. ?`Por qu\'e comparar modelos lineales contra un pipeline de representaci\'on?
+    \item \textbf{Descripci\'on del dataset.} Qu\'e es CICIDS-2017, c\'omo fue generado, qu\'e tipos de ataques contiene. Planteo del problema binario (normal vs ataque).
+    \item \textbf{Explicaci\'on te\'orica de los modelos.} Una secci\'on por modelo (LR, LDA y AE+LR). Incluir supuestos, fronteras de decisi\'on, y la arquitectura del autoencoder. Explicar el punto conceptual del uso de un modelo no supervisado como etapa de representaci\'on.
+    \item \textbf{Pipeline de preprocesamiento.} Resumen visual de los pasos aplicados: imputaci\'on, valores infinitos, binarizaci\'on de etiquetas, escalado y partici\'on estratificada.
+    \item \textbf{Resultados obtenidos vs. paper.} Tabla comparativa de m\'etricas propias vs. las del paper. Curvas ROC y matrices de confusi\'on para cada modelo.
+    \item \textbf{An\'alisis cr\'itico.} Discusi\'on sobre por qu\'e los tres modelos rinden casi igual en este dataset, y qu\'e aporta el AE+LR en t\'erminos de separabilidad (AUC).
+    \item \textbf{?`Cu\'ando gana el aprendizaje profundo?} Presentaci\'on del paper encontrado o del toy example construido. Resultados comparativos y conclusi\'on general.
+\end{enumerate}
+\textit{La presentaci\'on debe entregarse como archivo .tex y .pdf. Debe ser auto-contenida: alguien que no haya visto el notebook debe poder comprender el trabajo leyendo solo las slides.}
+
+\section{Estructura del repositorio (entrega en GitHub)}
+El trabajo se entrega como un repositorio de GitHub, siguiendo la estructura de proyecto vista en la Unidad 6 (Bloque 5: Portfolio profesional):
+\begin{center}
+\begin{minipage}{0.82\textwidth}
+\codigo{mi\_proyecto/}\\
+\codigo{\phantom{x}├── README.md}\\
+\codigo{\phantom{x}├── data/}\\
+\codigo{\phantom{x}│\phantom{xx}├── raw/}\hfill (datos originales, nunca modificados)\\
+\codigo{\phantom{x}│\phantom{xx}└── processed/}\hfill (datos limpios, listos para modelar)\\
+\codigo{\phantom{x}├── notebooks/}\hfill (numerados por orden de ejecuci\'on)\\
+\codigo{\phantom{x}├── src/}\\
+\codigo{\phantom{x}│\phantom{xx}└── utils.py}\hfill (funciones reutilizables)\\
+\codigo{\phantom{x}├── reports/}\hfill (la presentaci\'on Beamer compilada)\\
+\codigo{\phantom{x}└── requirements.txt}
+\end{minipage}
+\end{center}
+
+El \codigo{README.md} debe seguir las siete secciones m\'inimas vistas en clase: (1) t\'itulo y descripci\'on breve; (2) motivaci\'on; (3) datos (origen, tama\~no, variables principales); (4) metodolog\'ia (qu\'e t\'ecnicas se usaron y por qu\'e); (5) resultados principales; (6) c\'omo ejecutar; (7) limitaciones y pr\'oximos pasos.
+
+\textit{Si los datos son grandes o sensibles, subir solo una muestra o las instrucciones para obtenerlos.}
+
+\section{Entregables}
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item \codigo{tpfinal\_mad1\_lr\_lda\_vs\_ae\_lr.ipynb} --- Jupyter Notebook completo y reproducible
+    \item \codigo{tpfinal\_mad1\_lr\_lda\_vs\_ae\_lr.tex} --- C\'odigo fuente de la presentaci\'on Beamer
+    \item \codigo{tpfinal\_mad1\_lr\_lda\_vs\_ae\_lr.pdf} --- PDF compilado de la presentaci\'on
+    \item \codigo{tpfinal\_mad1\_lr\_lda\_vs\_ae\_lr\_chat.json} --- Conversaci\'on completa con la herramienta de IA utilizada. (NO SE SUBE AL REPOSITORIO, SINO QUE SE ENVIA POR MAIL)
+\end{itemize}
+
+\section{Documentaci\'on del uso de IA}
+El uso de herramientas de IA (ChatGPT, Claude, etc.) est\'a permitido durante el desarrollo del trabajo.
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Utilizar una \textbf{\'unica sesi\'on de chat} para todo el desarrollo del trabajo, de principio a fin.
+    \item Al finalizar, exportar esa conversaci\'on completa y entregarla junto con el resto de los archivos. En ChatGPT: Configuraci\'on $\rightarrow$ Exportar datos, se entrega el archivo \codigo{conversations.json}. Alternativamente, el chat en texto plano.
+    \item Nombrar el archivo como \codigo{tpfinal\_mad1\_lr\_lda\_vs\_ae\_lr\_chat.json} (o \codigo{.txt}).
+\end{itemize}
+
+\section{Criterios de evaluaci\'on}
+La mitad de la nota depende del \textbf{Jupyter Notebook}, evaluado en base a:
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Reproducibilidad: el notebook corre de principio a fin sin intervenci\'on.
+    \item Auto-contenido: las celdas markdown explican cada etapa sin necesidad de consultar el paper.
+    \item Claridad del c\'odigo: organizado, comentado y sin celdas innecesarias.
+    \item Correctitud de resultados: m\'etricas comparables a las del paper.
+\end{itemize}
+
+La otra mitad depende de la \textbf{presentaci\'on Beamer}, evaluada en base a:
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+    \item Claridad: cada slide transmite una sola idea principal.
+    \item Explicabilidad: los modelos quedan explicados para alguien que no los conoce.
+    \item Auto-contenida: la presentaci\'on se entiende sola, sin el notebook.
+    \item Calidad de la presentaci\'on: uso correcto del template, sin exceso de texto.
+\end{itemize}
+
+\textit{La organizaci\'on del repositorio (estructura de carpetas y README) tambi\'en se considera en la evaluaci\'on, en l\'inea con lo visto en la Unidad 6.}
+
+\textit{A criterio del docente, se podr\'a solicitar una presentaci\'on oral como instancia de desempate o verificaci\'on.}
+
+\end{document}
